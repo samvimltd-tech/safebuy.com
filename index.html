@@ -1492,5 +1492,15 @@
     renderProducts();
     updateCartCount();
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script>
+  window.safeBuySupabase = window.supabase.createClient(
+    window.SAFEbuySupabaseConfig.url,
+    window.SAFEbuySupabaseConfig.publishableKey
+  );
+
+  console.log("SafeBuy NG: Supabase client initialized.");
+</script>
 </body>
 </html>
