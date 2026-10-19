@@ -1497,25 +1497,24 @@
 <script>
   (async function () {
     var cfg = window.SAFEbuySupabaseConfig;
-    if (!window.supabase || !cfg || !cfg.url || !cfg.publishableKey) {
-      console.warn("Supabase not configured. Showing sample products.");
+    if (!window.supabase || !cfg) {
+      showToast("Supabase: config or library not loaded");
       return;
     }
-    window.safeBuySupabase =
-      window.supabase.createClient(cfg.url, cfg.publishableKey);
-
-    var result = await window.safeBuySupabase
-      .from("products").select("*").order("id");
-
-    if (result.error) {
-      console.warn("Supabase error:", result.error.message);
-      return;
-    }
-    if (result.data && result.data.length) {
+    try {
+      window.safeBuySupabase =
+        window.supabase.createClient(cfg.url, cfg.publishableKey);
+      var result = await window.safeBuySupabase
+        .from("products").select("*").order("id");
+      if (result.error) {
+        showToast("Supabase error: " + result.error.message);
+        return;
+      }
       products = result.data;
       renderProducts();
+      showToast("Loaded " + result.data.length + " products from Supabase");
+    } catch (e) {
+      showToast("Script error: " + e.message);
     }
   })();
 </script>
-</body>
-</html>
