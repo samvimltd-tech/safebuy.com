@@ -194,7 +194,6 @@ html{scroll-behavior:auto}
     </nav>
     <div class="header-actions">
       <button class="button button-outline" type="button" data-action="account">Sign in</button>
-      <button class="button button-light" type="button" id="admin-open" hidden>Admin</button>
       <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
       <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
         🛒 Cart <span class="cart-count" id="cart-count">0</span>
@@ -377,17 +376,6 @@ html{scroll-behavior:auto}
       <button class="icon-button" type="button" id="seller-close" aria-label="Close">✕</button>
     </div>
     <div id="seller-body"></div>
-  </div>
-</div>
-
-<!-- Admin modal -->
-<div class="modal-backdrop" id="admin-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-title">
-  <div class="modal">
-    <div class="modal-top">
-      <h2 id="admin-title">Seller applications</h2>
-      <button class="icon-button" type="button" id="admin-close" aria-label="Close">✕</button>
-    </div>
-    <div id="admin-body"></div>
   </div>
 </div>
 
@@ -828,9 +816,6 @@ updateCartCount();
   var sellerBackdrop = document.getElementById("seller-backdrop");
   var sellerBody = document.getElementById("seller-body");
   var sellerTitle = document.getElementById("seller-title");
-  var adminBackdrop = document.getElementById("admin-backdrop");
-  var adminBody = document.getElementById("admin-body");
-  var adminBtn = document.getElementById("admin-open");
   var currentApp = null;
 
   var CATEGORIES = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
@@ -866,8 +851,6 @@ updateCartCount();
 
   function openSeller() { sellerBackdrop.classList.add("open"); }
   function closeSeller() { sellerBackdrop.classList.remove("open"); }
-  function openAdminModal() { adminBackdrop.classList.add("open"); }
-  function closeAdminModal() { adminBackdrop.classList.remove("open"); }
 
   async function startSelling() {
     if (!client) {
@@ -1065,77 +1048,17 @@ updateCartCount();
     loadProducts();
   });
 
-  /* Admin: list applications and approve or reject them. Only users in the
-     admins table can read all applications or change a status; the database
-     enforces that, so hiding the button is just a convenience. */
-  async function checkAdmin() {
-    if (!client) return;
-    var user = await currentUser();
-    if (!user) { adminBtn.hidden = true; return; }
-    var r = await client.rpc("is_admin");
-    adminBtn.hidden = !(r.data === true);
-  }
-
-  async function renderAdmin() {
-    adminBody.innerHTML = "<p>Loading…</p>";
-    openAdminModal();
-    var r = await client.from("seller_applications").select("*").order("created_at", { ascending: false });
-    if (r.error) { adminBody.innerHTML = "<p>" + esc(r.error.message) + "</p>"; return; }
-    if (!r.data.length) { adminBody.innerHTML = "<p>No applications yet.</p>"; return; }
-
-    var rank = { pending: 0, approved: 1, rejected: 2 };
-    r.data.sort(function (a, b) { return (rank[a.verification_status] || 0) - (rank[b.verification_status] || 0); });
-
-    adminBody.innerHTML = r.data.map(function (a) {
-      var cls = a.verification_status === "approved" ? "ok" : a.verification_status === "rejected" ? "bad" : "";
-      return '<div class="review-card">' +
-        '<span class="status-pill ' + cls + '">' + esc(a.verification_status) + "</span><br>" +
-        "<strong>" + esc(a.shop_name) + "</strong> (" + esc(a.slug) + ")<br>" +
-        "Phone: " + esc(a.phone) + "<br>" +
-        "State: " + esc(a.state || "-") + " · Category: " + esc(a.main_category || "-") + "<br>" +
-        "Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
-        "Address: " + esc(a.business_address || "-") + "<br>" +
-        (a.verification_status !== "approved" ? '<button class="button button-primary" type="button" data-review="approved" data-id="' + esc(a.id) + '">Approve</button>' : "") +
-        (a.verification_status !== "rejected" ? '<button class="button button-outline" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Reject</button>' : "") +
-        "</div>";
-    }).join("");
-  }
-
-  adminBody.addEventListener("click", async function (event) {
-    var button = event.target.closest("[data-review]");
-    if (!button) return;
-    button.disabled = true;
-    var upd = await client.from("seller_applications")
-      .update({ verification_status: button.dataset.review, updated_at: new Date().toISOString() })
-      .eq("id", button.dataset.id)
-      .select("id");
-    if (upd.error || !upd.data || !upd.data.length) {
-      showToast(upd.error ? upd.error.message : "You are not allowed to do that.");
-      button.disabled = false;
-      return;
-    }
-    showToast("Seller " + button.dataset.review + ".");
-    renderAdmin();
-    loadProducts();
-  });
-
   document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
     button.addEventListener("click", startSelling);
   });
-  adminBtn.addEventListener("click", function () { if (client) renderAdmin(); });
   document.getElementById("seller-close").addEventListener("click", closeSeller);
-  document.getElementById("admin-close").addEventListener("click", closeAdminModal);
   sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
-  adminBackdrop.addEventListener("click", function (e) { if (e.target === adminBackdrop) closeAdminModal(); });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeSeller(); closeAdminModal(); }
+    if (e.key === "Escape") closeSeller();
   });
 
   if (client) {
-    client.auth.onAuthStateChange(function () {
-      currentApp = null;
-      setTimeout(checkAdmin, 0);
-    });
+    client.auth.onAuthStateChange(function () { currentApp = null; });
   }
 
   if (client) {
