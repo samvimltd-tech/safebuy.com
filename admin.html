@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SafeBuy NG Admin</title>
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7;--red:#8a1f1f}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{width:min(920px,100% - 28px);margin:0 auto;padding:18px 0 60px}
+.narrow{width:min(420px,100% - 28px);padding-top:12vh}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
+h1{margin:0 0 4px;font-size:24px}
+h2{margin:0 0 14px;font-size:20px}
+.muted{color:var(--muted);font-size:13px}
+label{display:block;margin:14px 0 5px;font-size:13px;font-weight:700}
+input,select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;color:var(--ink)}
+input:focus,select:focus{border-color:var(--green)}
+.button{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--green);color:#fff}
+.button:hover{background:var(--green-dark)}
+.button:disabled{opacity:.6;cursor:default}
+.button.light{background:var(--green-light);color:var(--green-dark)}
+.button.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.button.danger{background:#fdeaea;color:var(--red)}
+.full{width:100%;margin-top:18px}
+.msg{min-height:20px;margin:12px 0 0;font-size:13px}
+.msg.err{color:var(--red)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:30px;padding:9px 16px;font-size:13px;font-weight:700;color:#52645a}
+.tab.active{background:var(--green);border-color:var(--green);color:#fff}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;font-size:14px}
+.item .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.item .actions .button{padding:9px 14px;font-size:13px}
+.pill{display:inline-block;padding:4px 10px;border-radius:30px;font-size:11px;font-weight:800;background:#fff3e0;color:#7a4a05;text-transform:uppercase}
+.pill.approved,.pill.published{background:var(--green-light);color:var(--green-dark)}
+.pill.rejected{background:#fdeaea;color:var(--red)}
+.row{display:flex;gap:12px;align-items:flex-start}
+.thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:#edf6ef;flex-shrink:0}
+.grow{flex:1;min-width:0}
+</style>
+</head>
+<body>
+
+<main class="wrap narrow card" id="login-view" hidden>
+  <h1>SafeBuy NG Admin</h1>
+  <p class="muted">Authorised staff only.</p>
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="button full" type="submit" id="login-btn">Sign in</button>
+  </form>
+  <p class="msg" id="login-msg" role="status" aria-live="polite"></p>
+</main>
+
+<main class="wrap" id="dash-view" hidden>
+  <div class="topbar">
+    <div>
+      <h1>SafeBuy NG Admin</h1>
+      <span class="muted" id="who"></span>
+    </div>
+    <button class="button outline" type="button" id="logout-btn">Sign out</button>
+  </div>
+
+  <div class="tabs" id="main-tabs">
+    <button class="tab active" type="button" data-tab="applications">Seller applications</button>
+    <button class="tab" type="button" data-tab="products">Products</button>
+  </div>
+
+  <div class="tabs" id="filter-tabs">
+    <button class="tab active" type="button" data-filter="pending">Pending</button>
+    <button class="tab" type="button" data-filter="approved">Approved</button>
+    <button class="tab" type="button" data-filter="rejected">Rejected</button>
+    <button class="tab" type="button" data-filter="all">All</button>
+  </div>
+
+  <p class="msg" id="dash-msg" role="status" aria-live="polite"></p>
+  <div id="list"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.SAFEbuySupabaseConfig;
+  var loginView = document.getElementById("login-view");
+  var dashView = document.getElementById("dash-view");
+  var loginMsg = document.getElementById("login-msg");
+  var dashMsg = document.getElementById("dash-msg");
+  var list = document.getElementById("list");
+  var client = null;
+  var tab = "applications";
+  var filter = "pending";
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function money(kobo) { return "₦" + (Number(kobo || 0) / 100).toLocaleString("en-NG"); }
+
+  function showLogin(message) {
+    dashView.hidden = true;
+    loginView.hidden = false;
+    loginMsg.className = "msg" + (message ? " err" : "");
+    loginMsg.textContent = message || "";
+  }
+  function showDash() {
+    loginView.hidden = true;
+    dashView.hidden = false;
+  }
+  function note(text, isError) {
+    dashMsg.className = "msg" + (isError ? " err" : "");
+    dashMsg.textContent = text || "";
+  }
+
+  if (!window.supabase || !cfg || !cfg.url || !cfg.publishableKey) {
+    showLogin("Admin is unavailable: the Supabase settings did not load.");
+    return;
+  }
+
+  // A separate storage key keeps this session independent from the public shop.
+  client = window.supabase.createClient(cfg.url, cfg.publishableKey, {
+    auth: { storageKey: "safebuy-admin-auth" }
+  });
+
+  /* ---------- Sign in ---------- */
+  async function enter() {
+    var r = await client.rpc("is_admin");
+    if (r.error || r.data !== true) {
+      await client.auth.signOut();
+      showLogin("This account does not have admin access.");
+      return;
+    }
+    var u = await client.auth.getUser();
+    document.getElementById("who").textContent = u.data && u.data.user ? u.data.user.email : "";
+    showDash();
+    load();
+  }
+
+  document.getElementById("login-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var btn = document.getElementById("login-btn");
+    btn.disabled = true;
+    loginMsg.className = "msg";
+    loginMsg.textContent = "Signing in…";
+    var res = await client.auth.signInWithPassword({
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value
+    });
+    btn.disabled = false;
+    if (res.error) {
+      showLogin("Incorrect email or password.");
+      return;
+    }
+    document.getElementById("password").value = "";
+    await enter();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async function () {
+    await client.auth.signOut();
+    list.innerHTML = "";
+    showLogin("");
+  });
+
+  /* ---------- Tabs ---------- */
+  document.getElementById("main-tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]");
+    if (!b) return;
+    tab = b.dataset.tab;
+    document.querySelectorAll("[data-tab]").forEach(function (x) { x.classList.toggle("active", x === b); });
+    document.getElementById("filter-tabs").hidden = tab !== "applications";
+    load();
+  });
+  document.getElementById("filter-tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-filter]");
+    if (!b) return;
+    filter = b.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach(function (x) { x.classList.toggle("active", x === b); });
+    load();
+  });
+
+  function load() {
+    note("");
+    list.innerHTML = '<p class="muted">Loading…</p>';
+    if (tab === "applications") loadApplications(); else loadProducts();
+  }
+
+  /* ---------- Seller applications ---------- */
+  async function loadApplications() {
+    var q = client.from("seller_applications").select("*").order("created_at", { ascending: false });
+    if (filter !== "all") q = q.eq("verification_status", filter);
+    var r = await q;
+    if (r.error) { list.innerHTML = ""; note(r.error.message, true); return; }
+    if (!r.data.length) { list.innerHTML = '<p class="muted">Nothing here.</p>'; return; }
+
+    list.innerHTML = r.data.map(function (a) {
+      var s = a.verification_status;
+      return '<div class="item">' +
+        '<span class="pill ' + esc(s) + '">' + esc(s) + "</span> " +
+        "<strong>" + esc(a.shop_name) + "</strong> <span class=\"muted\">(" + esc(a.slug) + ")</span><br>" +
+        "Phone: " + esc(a.phone) + " · State: " + esc(a.state || "-") + "<br>" +
+        "Category: " + esc(a.main_category || "-") + " · Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
+        "Address: " + esc(a.business_address || "-") + "<br>" +
+        '<span class="muted">Applied ' + esc(new Date(a.created_at).toLocaleString("en-NG")) + "</span>" +
+        '<div class="actions">' +
+        (s !== "approved" ? '<button class="button" type="button" data-review="approved" data-id="' + esc(a.id) + '">Approve</button>' : "") +
+        (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Reject</button>' : "") +
+        (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">Back to pending</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  /* ---------- Products ---------- */
+  async function loadProducts() {
+    var pr = await client.from("seller_products").select("*").order("created_at", { ascending: false });
+    if (pr.error) { list.innerHTML = ""; note(pr.error.message, true); return; }
+    var ar = await client.from("seller_applications").select("id,shop_name");
+    var shops = {};
+    (ar.data || []).forEach(function (a) { shops[a.id] = a.shop_name; });
+
+    if (!pr.data.length) { list.innerHTML = '<p class="muted">No products yet.</p>'; return; }
+
+    list.innerHTML = pr.data.map(function (p) {
+      var live = p.status === "published";
+      return '<div class="item"><div class="row">' +
+        (p.image_url && /^https:\/\//.test(p.image_url) ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">' : '<div class="thumb"></div>') +
+        '<div class="grow"><span class="pill ' + esc(p.status) + '">' + esc(p.status) + "</span> " +
+        "<strong>" + esc(p.name) + "</strong><br>" +
+        money(p.price_kobo) + " · " + esc(p.category) + "<br>" +
+        '<span class="muted">Shop: ' + esc(shops[p.seller_application_id] || "unknown") + "</span>" +
+        '<div class="actions">' +
+        '<button class="button ' + (live ? "outline" : "") + '" type="button" data-pstatus="' + (live ? "pending" : "published") + '" data-id="' + esc(p.id) + '">' + (live ? "Unpublish" : "Publish") + "</button>" +
+        '<button class="button danger" type="button" data-pdel="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
+        "</div></div></div></div>";
+    }).join("");
+  }
+
+  /* ---------- Actions ---------- */
+  list.addEventListener("click", async function (event) {
+    var b = event.target.closest("button");
+    if (!b) return;
+    b.disabled = true;
+    note("");
+
+    if (b.dataset.review) {
+      var u = await client.from("seller_applications")
+        .update({ verification_status: b.dataset.review, updated_at: new Date().toISOString() })
+        .eq("id", b.dataset.id).select("id");
+      if (u.error || !u.data || !u.data.length) {
+        note(u.error ? u.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      load();
+      return;
+    }
+
+    if (b.dataset.pstatus) {
+      var s = await client.from("seller_products")
+        .update({ status: b.dataset.pstatus }).eq("id", b.dataset.id).select("id");
+      if (s.error || !s.data || !s.data.length) {
+        note(s.error ? s.error.message : "The change was not saved. Run admin_patch.sql first.", true);
+        b.disabled = false;
+        return;
+      }
+      load();
+      return;
+    }
+
+    if (b.dataset.pdel) {
+      if (!window.confirm("Delete this product permanently?")) { b.disabled = false; return; }
+      var d = await client.from("seller_products").delete().eq("id", b.dataset.pdel).select("id");
+      if (d.error || !d.data || !d.data.length) {
+        note(d.error ? d.error.message : "The product was not deleted.", true);
+        b.disabled = false;
+        return;
+      }
+      if (b.dataset.path) await client.storage.from("product-images").remove([b.dataset.path]);
+      load();
+    }
+  });
+
+  /* ---------- Start ---------- */
+  client.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) enter(); else showLogin("");
+  });
+})();
+</script>
+</body>
+</html>
