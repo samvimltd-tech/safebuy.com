@@ -1,11 +1,4 @@
-<script>
-  window.onerror = function (msg, src, line) {
-    var d = document.createElement("div");
-    d.style = "position:fixed;top:0;left:0;right:0;background:#b00020;color:#fff;padding:8px;font-size:12px;z-index:9999";
-    d.textContent = "Error: " + msg + " (" + (src||"").split("/").pop() + ":" + line + ")";
-    document.body ? document.body.appendChild(d) : document.addEventListener("DOMContentLoaded", function(){document.body.appendChild(d)});
-  };
-</script>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1119,7 +1112,7 @@
   <script>
     "use strict";
 
-    const products = [
+    let products = [
       {
         id: 1,
         name: "Wireless headphones",
@@ -1502,12 +1495,27 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
 <script>
-  window.safeBuySupabase = window.supabase.createClient(
-    window.SAFEbuySupabaseConfig.url,
-    window.SAFEbuySupabaseConfig.publishableKey
-  );
+  (async function () {
+    var cfg = window.SAFEbuySupabaseConfig;
+    if (!window.supabase || !cfg || !cfg.url || !cfg.publishableKey) {
+      console.warn("Supabase not configured. Showing sample products.");
+      return;
+    }
+    window.safeBuySupabase =
+      window.supabase.createClient(cfg.url, cfg.publishableKey);
 
-  console.log("SafeBuy NG: Supabase client initialized.");
+    var result = await window.safeBuySupabase
+      .from("products").select("*").order("id");
+
+    if (result.error) {
+      console.warn("Supabase error:", result.error.message);
+      return;
+    }
+    if (result.data && result.data.length) {
+      products = result.data;
+      renderProducts();
+    }
+  })();
 </script>
 </body>
 </html>
