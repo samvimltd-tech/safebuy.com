@@ -105,6 +105,10 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .modal label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}
 .modal input{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none}
 .modal input:focus{border-color:var(--green)}
+.source-banner{margin:0 0 14px;padding:11px 14px;border-radius:12px;font-size:13px;border:1px solid var(--line);background:#fff}
+.source-banner.supabase{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark);font-weight:700}
+.source-banner.sample{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
+.source-banner.loading{color:var(--muted)}
 @media (max-width:900px){
 .desktop-nav{gap:13px}
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -216,7 +220,7 @@ html{scroll-behavior:auto}
       <div class="section-heading">
         <div>
           <h2>Find your next favourite</h2>
-          <p>Explore sample products across popular categories.</p>
+          <p id="shop-subtitle">Explore products across popular categories.</p>
         </div>
       </div>
 
@@ -237,7 +241,8 @@ html{scroll-behavior:auto}
         <button class="category-button" type="button" data-category="Groceries">Groceries</button>
       </div>
 
-      <p class="results-line" id="results-line" aria-live="polite">Showing all sample products</p>
+      <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
+  <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
       <div class="product-grid" id="product-grid"></div>
     </div>
   </section>
@@ -351,7 +356,7 @@ html{scroll-behavior:auto}
 <script>
 "use strict";
 
-let products = [
+const sampleProducts = [
   {id:1,name:"Wireless headphones",category:"Electronics",price:18500,seller:"Demo Gadgets",emoji:"🎧",background:"#e9eaff",tag:"Popular",description:"Sample wireless headphones for everyday listening."},
   {id:2,name:"Classic wristwatch",category:"Fashion",price:12500,seller:"Demo Style Store",emoji:"⌚",background:"#f8e8d5",tag:"Everyday pick",description:"A sample classic-style wristwatch."},
   {id:3,name:"Quality rice, 5kg",category:"Groceries",price:10500,seller:"Demo Food Mart",emoji:"🍚",background:"#fff0cc",tag:"Home essential",description:"A sample five-kilogram rice listing. The price is illustrative."},
@@ -365,6 +370,10 @@ let products = [
   {id:11,name:"Everyday backpack",category:"Fashion",price:17000,seller:"Demo Style Store",emoji:"🎒",background:"#eee7ff",tag:"Daily essential",description:"A sample everyday backpack listing."},
   {id:12,name:"Electric kettle",category:"Home",price:14500,seller:"Demo Home Store",emoji:"🫖",background:"#e0f3f7",tag:"Kitchen pick",description:"A sample electric kettle listing."}
 ];
+
+let products = [];
+let productSource = "loading"; // loading | supabase | sample
+let sourceMessage = "";
 
 let selectedCategory = "All";
 let searchTerm = "";
@@ -396,7 +405,7 @@ function normalizeProduct(p, i) {
     name: p.name || "Unnamed product",
     category: p.category || "Other",
     price: Number(p.price) || 0,
-    seller: p.seller || "Demo seller",
+    seller: p.seller || "Seller not listed",
     emoji: p.emoji || "🛍️",
     background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
     tag: p.tag || "",
@@ -421,14 +430,27 @@ function getVisibleProducts() {
 }
 
 function renderProducts() {
+  if (productSource === "loading") {
+    resultsLine.textContent = "Loading products…";
+    productGrid.innerHTML = "";
+    return;
+  }
+
   const visible = getVisibleProducts();
-  resultsLine.textContent = "Showing " + visible.length + " sample product" + (visible.length === 1 ? "" : "s");
+  const label = productSource === "supabase" ? "Supabase" : "sample";
+  resultsLine.textContent = "Showing " + visible.length + " " + label + " product" + (visible.length === 1 ? "" : "s");
 
   if (visible.length === 0) {
-    productGrid.innerHTML =
-      '<div class="empty-state"><h3>No matching products found</h3>' +
-      '<p>Try another search or choose a different category.</p>' +
-      '<button class="button button-light" type="button" data-action="clear-search">Clear search</button></div>';
+    if (products.length === 0 && productSource === "supabase") {
+      productGrid.innerHTML =
+        '<div class="empty-state"><h3>No products yet</h3>' +
+        '<p>The database is connected but returned no products. Add rows to the <strong>products</strong> table in Supabase.</p></div>';
+    } else {
+      productGrid.innerHTML =
+        '<div class="empty-state"><h3>No matching products found</h3>' +
+        '<p>Try another search or choose a different category.</p>' +
+        '<button class="button button-light" type="button" data-action="clear-search">Clear search</button></div>';
+    }
     return;
   }
 
@@ -445,7 +467,7 @@ function renderProducts() {
           <p class="seller-name">Sold by ${esc(p.seller)}</p>
           <div class="product-bottom">
             <span class="price">${money(p.price)}</span>
-            <span class="rating">★ Sample</span>
+            ${productSource === "sample" ? '<span class="rating">★ Sample</span>' : ""}
           </div>
           <div class="product-actions">
             <button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>
@@ -487,9 +509,9 @@ function openProduct(id) {
     <div class="modal-art" style="background:${esc(product.background)}">${esc(product.emoji)}</div>
     <p><strong>${money(product.price)}</strong></p>
     <p>Category: ${esc(product.category)}</p>
-    <p>Sample seller: ${esc(product.seller)}</p>
+    <p>${productSource === "sample" ? "Sample seller" : "Seller"}: ${esc(product.seller)}</p>
     <p>${esc(product.description)}</p>
-    <p><strong>Demo only:</strong> this is sample content. No real stock, seller verification, payment or delivery service is connected.</p>
+    <p><strong>${productSource === "sample" ? "Sample product:" : "Demo only:"}</strong> ${productSource === "sample" ? "the database is unavailable, so this is placeholder content. " : ""}No real stock, seller verification, payment or delivery service is connected.</p>
     <button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`;
 
   modalBackdrop.classList.add("open");
@@ -567,6 +589,32 @@ document.addEventListener("keydown", function (event) {
 
 document.getElementById("year").textContent = new Date().getFullYear();
 
+function renderSource() {
+  const banner = document.getElementById("source-banner");
+  const sub = document.getElementById("shop-subtitle");
+  banner.className = "source-banner " + productSource;
+
+  if (productSource === "supabase") {
+    banner.textContent = "✓ Supabase products — loaded live from the database.";
+    sub.textContent = "Browse products from our database.";
+  } else if (productSource === "sample") {
+    banner.innerHTML = "<strong>⚠ Database unavailable.</strong> These are sample products, not real listings. " + esc(sourceMessage);
+    sub.textContent = "Showing sample products only.";
+  } else {
+    banner.textContent = "Connecting to Supabase…";
+    sub.textContent = "Explore products across popular categories.";
+  }
+}
+
+function setProducts(list, source, message) {
+  products = list;
+  productSource = source;
+  sourceMessage = message || "";
+  renderSource();
+  renderProducts();
+}
+
+renderSource();
 renderProducts();
 updateCartCount();
 </script>
@@ -579,32 +627,46 @@ updateCartCount();
 
   var cfg = window.SAFEbuySupabaseConfig;
   var client = null;
+  var failReason = "";
 
-  if (window.supabase && cfg && cfg.url && cfg.publishableKey) {
+  if (!window.supabase) {
+    failReason = "The Supabase library did not load.";
+  } else if (!cfg || !cfg.url || !cfg.publishableKey) {
+    failReason = "supabase-config.js is missing, not loaded, or incomplete.";
+  } else {
     try {
       client = window.supabase.createClient(cfg.url, cfg.publishableKey);
       window.safeBuySupabase = client;
     } catch (e) {
+      failReason = "Could not create the Supabase client: " + e.message;
       console.error("SafeBuy: could not create Supabase client.", e);
     }
-  } else {
-    console.warn("SafeBuy: Supabase library or supabase-config.js not loaded. Using sample data.");
   }
 
   /* ---------- Load products ---------- */
-  if (client) {
-    client.from("products").select("*").order("id").then(function (result) {
-      if (result.error) {
-        console.warn("SafeBuy: Supabase products error:", result.error.message);
-        return;
-      }
-      if (result.data && result.data.length) {
-        products = result.data.map(normalizeProduct);
-        renderProducts();
-      }
-    }).catch(function (e) {
-      console.warn("SafeBuy: products request failed:", e);
+  function fail(message) {
+    console.warn("SafeBuy:", message);
+    setProducts(sampleProducts, "sample", message);
+  }
+
+  if (!client) {
+    fail(failReason);
+  } else {
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
+
+    Promise.race([client.from("products").select("*").order("id"), timeout])
+      .then(function (result) {
+        if (result.error) {
+          fail("Supabase error: " + result.error.message);
+          return;
+        }
+        setProducts((result.data || []).map(normalizeProduct), "supabase");
+      })
+      .catch(function (e) {
+        fail("Could not reach Supabase: " + e.message);
+      });
   }
 
   /* ---------- Account ---------- */
@@ -734,4 +796,4 @@ updateCartCount();
 })();
 </script>
 </body>
-  </html>
+</html>
