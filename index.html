@@ -1,1646 +1,680 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
-  <title>SafeBuy NG | Shop with Confidence</title>
-
-  <style>
-    :root {
-      --green: #087f5b;
-      --green-dark: #066548;
-      --green-light: #e7f7ef;
-      --ink: #172b24;
-      --muted: #718078;
-      --line: #e6ece8;
-      --background: #f7f9f7;
-      --white: #ffffff;
-      --orange: #ffb454;
-      --radius: 18px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      background: var(--background);
-      color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.5;
-    }
-
-    button, input {
-      font: inherit;
-    }
-
-    button, a {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .announcement {
-      padding: 9px 16px;
-      text-align: center;
-      background: var(--green-dark);
-      color: white;
-      font-size: 12px;
-    }
-
-    .container {
-      width: min(1160px, 100% - 36px);
-      margin: auto;
-    }
-
-    header {
-      background: white;
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .header-row {
-      min-height: 76px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      flex-shrink: 0;
-    }
-
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      color: white;
-      background: var(--green);
-      font-size: 23px;
-      font-weight: 800;
-    }
-
-    .brand-name {
-      font-size: 23px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-    }
-
-    .brand-name span {
-      color: var(--green);
-    }
-
-    .desktop-nav {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .desktop-nav a:hover {
-      color: var(--green);
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .button {
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 17px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .button-primary {
-      background: var(--green);
-      color: white;
-    }
-
-    .button-primary:hover {
-      background: var(--green-dark);
-    }
-
-    .button-light {
-      background: var(--green-light);
-      color: var(--green-dark);
-    }
-
-    .button-outline {
-      background: white;
-      border: 1px solid var(--line);
-      color: var(--ink);
-    }
-
-    .cart-button {
-      position: relative;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 11px 13px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .cart-count {
-      display: inline-grid;
-      place-items: center;
-      min-width: 22px;
-      height: 22px;
-      padding: 0 5px;
-      margin-left: 4px;
-      background: var(--green);
-      color: white;
-      border-radius: 20px;
-      font-size: 12px;
-    }
-
-    .hero {
-      padding: 38px 0 28px;
-    }
-
-    .hero-panel {
-      display: grid;
-      grid-template-columns: 1.25fr 0.75fr;
-      align-items: center;
-      gap: 28px;
-      min-height: 335px;
-      padding: clamp(25px, 5vw, 55px);
-      border-radius: 28px;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 85% 20%, #d5f2df 0, transparent 32%),
-        linear-gradient(120deg, #eaf8ef, #f6fbf6);
-    }
-
-    .eyebrow {
-      display: inline-block;
-      padding: 7px 11px;
-      border-radius: 30px;
-      background: white;
-      color: var(--green-dark);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
-    }
-
-    .hero h1 {
-      margin: 17px 0 13px;
-      max-width: 620px;
-      font-size: clamp(34px, 5.5vw, 56px);
-      line-height: 1.08;
-      letter-spacing: -1.8px;
-    }
-
-    .hero h1 span {
-      color: var(--green);
-    }
-
-    .hero p {
-      max-width: 520px;
-      color: #52675c;
-      font-size: 16px;
-      line-height: 1.8;
-    }
-
-    .hero-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 11px;
-      margin-top: 22px;
-    }
-
-    .hero-art {
-      min-height: 220px;
-      display: grid;
-      place-items: center;
-      position: relative;
-    }
-
-    .art-circle {
-      width: min(240px, 100%);
-      aspect-ratio: 1;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: #c7ecd4;
-      font-size: clamp(80px, 12vw, 130px);
-      box-shadow: 0 20px 50px #087f5b18;
-    }
-
-    .floating-note {
-      position: absolute;
-      bottom: 5px;
-      right: 0;
-      background: white;
-      padding: 12px 15px;
-      border-radius: 14px;
-      box-shadow: 0 8px 25px #173b2812;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .prototype-notice {
-      margin: 0 auto 25px;
-      padding: 13px 16px;
-      border: 1px solid #f1d69a;
-      background: #fff8e8;
-      border-radius: 13px;
-      color: #79551b;
-      font-size: 13px;
-    }
-
-    .prototype-notice strong {
-      color: #66440c;
-    }
-
-    .section {
-      padding: 24px 0;
-      scroll-margin-top: 100px;
-    }
-
-    .section-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 16px;
-      margin-bottom: 19px;
-    }
-
-    .section-heading h2 {
-      margin: 0;
-      font-size: clamp(24px, 4vw, 31px);
-      letter-spacing: -0.7px;
-    }
-
-    .section-heading p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .search-wrap {
-      margin-bottom: 18px;
-    }
-
-    .search-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: white;
-      border: 1px solid #dce5de;
-      border-radius: 15px;
-      padding: 5px 6px 5px 16px;
-      box-shadow: 0 5px 20px #173b2806;
-    }
-
-    .search-icon {
-      color: var(--green);
-      font-size: 22px;
-    }
-
-    .search-box input {
-      width: 100%;
-      min-width: 0;
-      border: 0;
-      outline: none;
-      background: transparent;
-      padding: 12px 0;
-      color: var(--ink);
-    }
-
-    .search-box input::placeholder {
-      color: #98a39c;
-    }
-
-    .search-box button {
-      flex-shrink: 0;
-    }
-
-    .categories {
-      display: flex;
-      gap: 9px;
-      overflow-x: auto;
-      padding: 2px 0 8px;
-      margin-bottom: 15px;
-      scrollbar-width: thin;
-    }
-
-    .category-button {
-      flex-shrink: 0;
-      border: 1px solid var(--line);
-      background: white;
-      border-radius: 30px;
-      padding: 10px 17px;
-      color: #52645a;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .category-button.active,
-    .category-button:hover {
-      background: var(--green);
-      color: white;
-      border-color: var(--green);
-    }
-
-    .results-line {
-      margin: 0 0 14px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .product-card {
-      min-width: 0;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .product-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 30px #173b2810;
-    }
-
-    .product-art {
-      position: relative;
-      min-height: 175px;
-      aspect-ratio: 1.15 / 1;
-      display: grid;
-      place-items: center;
-      font-size: 75px;
-      background: #edf6ef;
-    }
-
-    .product-art .tag {
-      position: absolute;
-      top: 11px;
-      left: 11px;
-      padding: 5px 8px;
-      border-radius: 8px;
-      background: white;
-      color: var(--green-dark);
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .product-info {
-      padding: 14px;
-    }
-
-    .product-category {
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .product-info h3 {
-      margin: 7px 0 8px;
-      font-size: 15px;
-      line-height: 1.4;
-      min-height: 42px;
-    }
-
-    .seller-name {
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .product-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .price {
-      color: var(--ink);
-      font-size: 17px;
-      font-weight: 800;
-    }
-
-    .product-bottom .rating {
-      color: #a66a0b;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .product-actions {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 7px;
-    }
-
-    .product-actions .button {
-      padding: 10px 9px;
-      font-size: 12px;
-    }
-
-    .icon-button {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: white;
-      padding: 8px 10px;
-      color: var(--green);
-      font-size: 17px;
-    }
-
-    .empty-state {
-      grid-column: 1 / -1;
-      padding: 40px 18px;
-      border: 1px dashed #cbd9ce;
-      border-radius: 18px;
-      text-align: center;
-      background: white;
-    }
-
-    .empty-state p {
-      color: var(--muted);
-    }
-
-    .trust-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-    }
-
-    .trust-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 22px;
-    }
-
-    .trust-icon {
-      display: grid;
-      place-items: center;
-      width: 43px;
-      height: 43px;
-      background: var(--green-light);
-      border-radius: 13px;
-      font-size: 22px;
-    }
-
-    .trust-card h3 {
-      margin: 13px 0 7px;
-      font-size: 16px;
-    }
-
-    .trust-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .sell-panel {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 22px;
-      padding: clamp(24px, 4vw, 38px);
-      border-radius: 22px;
-      background: #173b2c;
-      color: white;
-    }
-
-    .sell-panel h2 {
-      margin: 0 0 9px;
-      font-size: clamp(24px, 4vw, 32px);
-    }
-
-    .sell-panel p {
-      max-width: 580px;
-      margin: 0;
-      color: #d4e6dc;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    .sell-panel .button {
-      flex-shrink: 0;
-      background: #d8f5e3;
-      color: #145338;
-    }
-
-    footer {
-      margin-top: 38px;
-      padding: 35px 0 100px;
-      background: white;
-      border-top: 1px solid var(--line);
-    }
-
-    .footer-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .footer-row p {
-      color: var(--muted);
-      font-size: 13px;
-      max-width: 500px;
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 17px;
-      flex-wrap: wrap;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .footer-links a:hover {
-      color: var(--green);
-    }
-
-    .mobile-nav {
-      display: none;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 85px;
-      transform: translateX(-50%);
-      width: max-content;
-      max-width: calc(100% - 32px);
-      padding: 13px 18px;
-      border-radius: 13px;
-      background: #173b2c;
-      color: white;
-      font-size: 14px;
-      box-shadow: 0 8px 30px #0002;
-      z-index: 30;
-      display: none;
-    }
-
-    .toast.show {
-      display: block;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-      padding: 20px;
-      background: #10271dcc;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal {
-      width: min(450px, 100%);
-      max-height: 85vh;
-      overflow-y: auto;
-      padding: 24px;
-      background: white;
-      border-radius: 22px;
-    }
-
-    .modal-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 12px;
-    }
-
-    .modal h2 {
-      margin: 0 0 12px;
-    }
-
-    .modal-art {
-      display: grid;
-      place-items: center;
-      min-height: 180px;
-      margin: 14px 0;
-      border-radius: 16px;
-      background: #edf6ef;
-      font-size: 90px;
-    }
-
-    .modal p {
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .modal .button {
-      width: 100%;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 900px) {
-      .desktop-nav {
-        gap: 13px;
-      }
-
-      .product-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .hero-panel {
-        grid-template-columns: 1.15fr 0.85fr;
-      }
-    }
-
-    @media (max-width: 650px) {
-      .container {
-        width: calc(100% - 26px);
-      }
-
-      .announcement {
-        font-size: 11px;
-      }
-
-      .header-row {
-        min-height: 65px;
-        gap: 8px;
-      }
-
-      .brand-mark {
-        width: 36px;
-        height: 36px;
-        font-size: 20px;
-      }
-
-      .brand-name {
-        font-size: 19px;
-      }
-
-      .desktop-nav {
-        display: none;
-      }
-
-      .header-actions .sell-header {
-        display: none;
-      }
-
-      .cart-button {
-        padding: 9px 10px;
-        font-size: 13px;
-      }
-
-      .hero {
-        padding-top: 18px;
-      }
-
-      .hero-panel {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 27px 22px;
-        min-height: auto;
-        border-radius: 22px;
-      }
-
-      .hero h1 {
-        font-size: 37px;
-        letter-spacing: -1.2px;
-      }
-
-      .hero p {
-        font-size: 14px;
-      }
-
-      .hero-art {
-        min-height: 155px;
-      }
-
-      .art-circle {
-        width: 150px;
-        font-size: 78px;
-      }
-
-      .floating-note {
-        right: 2px;
-        bottom: 0;
-        font-size: 11px;
-      }
-
-      .section {
-        padding: 19px 0;
-      }
-
-      .section-heading {
-        align-items: start;
-      }
-
-      .section-heading h2 {
-        font-size: 25px;
-      }
-
-      .search-box {
-        padding-left: 12px;
-      }
-
-      .search-box .button {
-        padding: 11px;
-      }
-
-      .product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 11px;
-      }
-
-      .product-art {
-        min-height: 135px;
-        font-size: 58px;
-      }
-
-      .product-info {
-        padding: 11px;
-      }
-
-      .product-info h3 {
-        font-size: 14px;
-        min-height: 40px;
-      }
-
-      .product-bottom {
-        align-items: start;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .price {
-        font-size: 16px;
-      }
-
-      .product-actions {
-        grid-template-columns: 1fr;
-      }
-
-      .product-actions .icon-button {
-        display: none;
-      }
-
-      .product-actions .button {
-        width: 100%;
-      }
-
-      .trust-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .trust-card {
-        padding: 18px;
-      }
-
-      .sell-panel {
-        align-items: start;
-        flex-direction: column;
-      }
-
-      .sell-panel .button {
-        width: 100%;
-      }
-
-      .footer-row {
-        flex-direction: column;
-      }
-
-      .mobile-nav {
-        position: fixed;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 20;
-        padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
-        background: white;
-        border-top: 1px solid var(--line);
-        box-shadow: 0 -5px 20px #173b2808;
-      }
-
-      .mobile-nav a,
-      .mobile-nav button {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        border: 0;
-        background: transparent;
-        color: #65756b;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 4px 0;
-      }
-
-      .mobile-nav .nav-icon {
-        font-size: 20px;
-      }
-
-      .mobile-nav .current {
-        color: var(--green);
-      }
-
-      footer {
-        padding-bottom: 115px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html {
-        scroll-behavior: auto;
-      }
-
-      *, *::before, *::after {
-        transition: none !important;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
+<title>SafeBuy NG | Shop with Confidence</title>
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--background);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
+button,input{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.announcement{padding:9px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
+.container{width:min(1160px,100% - 36px);margin:auto}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.header-row{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.brand-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;color:#fff;background:var(--green);font-size:23px;font-weight:800}
+.brand-name{font-size:23px;font-weight:800;letter-spacing:-.8px}
+.brand-name span{color:var(--green)}
+.desktop-nav{display:flex;align-items:center;gap:25px;font-size:14px;font-weight:700}
+.desktop-nav a:hover{color:var(--green)}
+.header-actions{display:flex;align-items:center;gap:10px}
+.button{border:0;border-radius:12px;padding:12px 17px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.button-primary{background:var(--green);color:#fff}
+.button-primary:hover{background:var(--green-dark)}
+.button-light{background:var(--green-light);color:var(--green-dark)}
+.button-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.cart-button{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-weight:700;white-space:nowrap}
+.cart-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;margin-left:4px;background:var(--green);color:#fff;border-radius:20px;font-size:12px}
+.hero{padding:38px 0 28px}
+.hero-panel{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:28px;min-height:335px;padding:clamp(25px,5vw,55px);border-radius:28px;overflow:hidden;background:radial-gradient(circle at 85% 20%,#d5f2df 0,transparent 32%),linear-gradient(120deg,#eaf8ef,#f6fbf6)}
+.eyebrow{display:inline-block;padding:7px 11px;border-radius:30px;background:#fff;color:var(--green-dark);font-size:12px;font-weight:800;letter-spacing:.4px}
+.hero h1{margin:17px 0 13px;max-width:620px;font-size:clamp(34px,5.5vw,56px);line-height:1.08;letter-spacing:-1.8px}
+.hero h1 span{color:var(--green)}
+.hero p{max-width:520px;color:#52675c;font-size:16px;line-height:1.8}
+.hero-buttons{display:flex;flex-wrap:wrap;gap:11px;margin-top:22px}
+.hero-art{min-height:220px;display:grid;place-items:center;position:relative}
+.art-circle{width:min(240px,100%);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#c7ecd4;font-size:clamp(80px,12vw,130px);box-shadow:0 20px 50px #087f5b18}
+.floating-note{position:absolute;bottom:5px;right:0;background:#fff;padding:12px 15px;border-radius:14px;box-shadow:0 8px 25px #173b2812;font-size:13px;font-weight:700}
+.prototype-notice{margin:0 auto 25px;padding:13px 16px;border:1px solid #f1d69a;background:#fff8e8;border-radius:13px;color:#79551b;font-size:13px}
+.prototype-notice strong{color:#66440c}
+.section{padding:24px 0;scroll-margin-top:100px}
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:19px}
+.section-heading h2{margin:0;font-size:clamp(24px,4vw,31px);letter-spacing:-.7px}
+.section-heading p{margin:5px 0 0;color:var(--muted);font-size:14px}
+.search-wrap{margin-bottom:18px}
+.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce5de;border-radius:15px;padding:5px 6px 5px 16px;box-shadow:0 5px 20px #173b2806}
+.search-icon{color:var(--green);font-size:22px}
+.search-box input{width:100%;min-width:0;border:0;outline:none;background:transparent;padding:12px 0;color:var(--ink)}
+.search-box input::placeholder{color:#98a39c}
+.search-box button{flex-shrink:0}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px;margin-bottom:15px;scrollbar-width:thin}
+.category-button{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 17px;color:#52645a;font-size:13px;font-weight:700}
+.category-button.active,.category-button:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.results-line{margin:0 0 14px;color:var(--muted);font-size:13px}
+.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.product-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #173b2810}
+.product-art{position:relative;min-height:175px;aspect-ratio:1.15/1;display:grid;place-items:center;font-size:75px;background:#edf6ef}
+.product-art .tag{position:absolute;top:11px;left:11px;padding:5px 8px;border-radius:8px;background:#fff;color:var(--green-dark);font-size:10px;font-weight:800}
+.product-info{padding:14px}
+.product-category{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.product-info h3{margin:7px 0 8px;font-size:15px;line-height:1.4;min-height:42px}
+.seller-name{margin:0 0 10px;color:var(--muted);font-size:12px}
+.product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.price{color:var(--ink);font-size:17px;font-weight:800}
+.product-bottom .rating{color:#a66a0b;font-size:11px;white-space:nowrap}
+.product-actions{display:grid;grid-template-columns:1fr auto;gap:7px}
+.product-actions .button{padding:10px 9px;font-size:12px}
+.icon-button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--green);font-size:17px}
+.empty-state{grid-column:1/-1;padding:40px 18px;border:1px dashed #cbd9ce;border-radius:18px;text-align:center;background:#fff}
+.empty-state p{color:var(--muted)}
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.trust-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.trust-icon{display:grid;place-items:center;width:43px;height:43px;background:var(--green-light);border-radius:13px;font-size:22px}
+.trust-card h3{margin:13px 0 7px;font-size:16px}
+.trust-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.sell-panel{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:clamp(24px,4vw,38px);border-radius:22px;background:#173b2c;color:#fff}
+.sell-panel h2{margin:0 0 9px;font-size:clamp(24px,4vw,32px)}
+.sell-panel p{max-width:580px;margin:0;color:#d4e6dc;font-size:14px;line-height:1.8}
+.sell-panel .button{flex-shrink:0;background:#d8f5e3;color:#145338}
+footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid var(--line)}
+.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.footer-row p{color:var(--muted);font-size:13px;max-width:500px}
+.footer-links{display:flex;gap:17px;flex-wrap:wrap;font-size:13px;font-weight:700}
+.footer-links a:hover{color:var(--green)}
+.mobile-nav{display:none}
+.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:13px;background:#173b2c;color:#fff;font-size:14px;box-shadow:0 8px 30px #0002;z-index:60;display:none}
+.toast.show{display:block}
+.modal-backdrop{position:fixed;inset:0;z-index:40;padding:20px;background:#10271dcc;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{width:min(450px,100%);max-height:85vh;overflow-y:auto;padding:24px;background:#fff;border-radius:22px}
+.modal-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.modal h2{margin:0 0 12px}
+.modal-art{display:grid;place-items:center;min-height:180px;margin:14px 0;border-radius:16px;background:#edf6ef;font-size:90px}
+.modal p{color:var(--muted);line-height:1.7}
+.modal .button{width:100%;margin-top:12px}
+.modal label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}
+.modal input{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none}
+.modal input:focus{border-color:var(--green)}
+@media (max-width:900px){
+.desktop-nav{gap:13px}
+.product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hero-panel{grid-template-columns:1.15fr .85fr}
+}
+@media (max-width:650px){
+.container{width:calc(100% - 26px)}
+.announcement{font-size:11px}
+.header-row{min-height:65px;gap:8px}
+.brand-mark{width:36px;height:36px;font-size:20px}
+.brand-name{font-size:19px}
+.desktop-nav{display:none}
+.header-actions .sell-header{display:none}
+.header-actions .button{padding:9px 11px;font-size:13px}
+.cart-button{padding:9px 10px;font-size:13px}
+.hero{padding-top:18px}
+.hero-panel{grid-template-columns:1fr;gap:8px;padding:27px 22px;min-height:auto;border-radius:22px}
+.hero h1{font-size:37px;letter-spacing:-1.2px}
+.hero p{font-size:14px}
+.hero-art{min-height:155px}
+.art-circle{width:150px;font-size:78px}
+.floating-note{right:2px;bottom:0;font-size:11px}
+.section{padding:19px 0}
+.section-heading{align-items:start}
+.section-heading h2{font-size:25px}
+.search-box{padding-left:12px}
+.search-box .button{padding:11px}
+.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.product-art{min-height:135px;font-size:58px}
+.product-info{padding:11px}
+.product-info h3{font-size:14px;min-height:40px}
+.product-bottom{align-items:start;flex-direction:column;gap:3px}
+.price{font-size:16px}
+.product-actions{grid-template-columns:1fr}
+.product-actions .icon-button{display:none}
+.product-actions .button{width:100%}
+.trust-grid{grid-template-columns:1fr}
+.trust-card{padding:18px}
+.sell-panel{align-items:start;flex-direction:column}
+.sell-panel .button{width:100%}
+.footer-row{flex-direction:column}
+.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;z-index:20;padding:8px 4px calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
+.mobile-nav a,.mobile-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0}
+.mobile-nav .nav-icon{font-size:20px}
+.mobile-nav .current{color:var(--green)}
+footer{padding-bottom:115px}
+}
+@media (prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+*,*::before,*::after{transition:none!important}
+}
+</style>
 </head>
-
 <body>
-  <div class="announcement">
-    Made for Nigerian shoppers and sellers · NGN prices
+<div class="announcement">Made for Nigerian shoppers and sellers · NGN prices</div>
+
+<header>
+  <div class="container header-row">
+    <a class="brand" href="#home" aria-label="SafeBuy NG home">
+      <span class="brand-mark">S</span>
+      <span class="brand-name">SafeBuy <span>NG</span></span>
+    </a>
+    <nav class="desktop-nav" aria-label="Main navigation">
+      <a href="#home">Home</a>
+      <a href="#shop">Shop</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#sell">Sell with us</a>
+    </nav>
+    <div class="header-actions">
+      <button class="button button-outline" type="button" data-action="account">Sign in</button>
+      <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
+      <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
+        🛒 Cart <span class="cart-count" id="cart-count">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <div class="container">
+      <div class="hero-panel">
+        <div>
+          <span class="eyebrow">YOUR EVERYDAY MARKETPLACE</span>
+          <h1>Good finds.<br><span>Better shopping.</span></h1>
+          <p>Discover fashion, electronics, home essentials and more from one simple marketplace made for Nigeria.</p>
+          <div class="hero-buttons">
+            <a class="button button-primary" href="#shop">Explore products →</a>
+            <a class="button button-outline" href="#how-it-works">How it works</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-circle">🛍️</div>
+          <div class="floating-note">✨ Discover something good</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="prototype-notice">
+      <strong>Prototype notice:</strong>
+      This is a demonstration. Payments, escrow, seller verification, delivery protection and real orders are not active. Do not send money based on this demo.
+    </div>
   </div>
 
-  <header>
-    <div class="container header-row">
-      <a class="brand" href="#home" aria-label="SafeBuy NG home">
+  <section class="section" id="shop">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Find your next favourite</h2>
+          <p>Explore sample products across popular categories.</p>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <form class="search-box" id="search-form" role="search">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" placeholder="Search phones, fashion, groceries..." aria-label="Search products">
+          <button class="button button-primary" type="submit">Search</button>
+        </form>
+      </div>
+
+      <div class="categories" id="categories" aria-label="Product categories">
+        <button class="category-button active" type="button" data-category="All">All products</button>
+        <button class="category-button" type="button" data-category="Electronics">Electronics</button>
+        <button class="category-button" type="button" data-category="Fashion">Fashion</button>
+        <button class="category-button" type="button" data-category="Home">Home &amp; living</button>
+        <button class="category-button" type="button" data-category="Beauty">Beauty</button>
+        <button class="category-button" type="button" data-category="Groceries">Groceries</button>
+      </div>
+
+      <p class="results-line" id="results-line" aria-live="polite">Showing all sample products</p>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Shopping should feel simple</h2>
+          <p>Our planned marketplace is being built around clearer information.</p>
+        </div>
+      </div>
+      <div class="trust-grid">
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🔎</div>
+          <h3>Discover products</h3>
+          <p>Compare product details and prices before deciding what to buy.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">👤</div>
+          <h3>Know the seller</h3>
+          <p>Seller identity checks and reliable review records are planned features, not active verification services in this demo.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🧾</div>
+          <h3>Clear order records</h3>
+          <p>The future service will need real order tracking, payment confirmation and a documented process for resolving problems.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="sell">
+    <div class="container">
+      <div class="sell-panel">
+        <div>
+          <h2>Have products to sell?</h2>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Seller registration and publishing are not connected yet.</p>
+        </div>
+        <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-row">
+    <div>
+      <a class="brand" href="#home">
         <span class="brand-mark">S</span>
         <span class="brand-name">SafeBuy <span>NG</span></span>
       </a>
-
-      <nav class="desktop-nav" aria-label="Main navigation">
-        <a href="#home">Home</a>
-        <a href="#shop">Shop</a>
-        <a href="#how-it-works">How it works</a>
-        <a href="#sell">Sell with us</a>
-      </nav>
-
-      <div class="header-actions">
-  <button class="button button-outline"
-    type="button" data-action="account">Sign in</button>
-  <button class="button button-light sell-header"
-    type="button" data-action="sell">Start selling</button>
-  <button class="cart-button" type="button" data-action="cart"
-    aria-label="Open demo cart">
-    🛒 Cart <span class="cart-count" id="cart-count">0</span>
-  </button>
-      </div>
-
-  <main id="home">
-    <section class="hero">
-      <div class="container">
-        <div class="hero-panel">
-          <div>
-            <span class="eyebrow">YOUR EVERYDAY MARKETPLACE</span>
-            <h1>Good finds.<br><span>Better shopping.</span></h1>
-            <p>
-              Discover fashion, electronics, home essentials and more
-              from one simple marketplace made for Nigeria.
-            </p>
-            <div class="hero-buttons">
-              <a class="button button-primary" href="#shop">Explore products →</a>
-              <a class="button button-outline" href="#how-it-works">How it works</a>
-            </div>
-          </div>
-
-          <div class="hero-art" aria-hidden="true">
-            <div class="art-circle">🛍️</div>
-            <div class="floating-note">✨ Discover something good</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="container">
-      <div class="prototype-notice">
-        <strong>Prototype notice:</strong>
-        This is a demonstration. Payments, escrow, seller verification,
-        delivery protection and real orders are not active. Do not send
-        money based on this demo.
-      </div>
+      <p>A Nigerian marketplace prototype in development. No real payments or buyer-protection services are currently active.</p>
+      <p>© <span id="year">2026</span> SafeBuy NG</p>
     </div>
+    <nav class="footer-links" aria-label="Footer navigation">
+      <a href="#shop">Shop</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#sell">Sell with us</a>
+      <a href="#home">Back to top ↑</a>
+    </nav>
+  </div>
+</footer>
 
-    <section class="section" id="shop">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2>Find your next favourite</h2>
-            <p>Explore sample products across popular categories.</p>
-          </div>
-        </div>
+<nav class="mobile-nav" aria-label="Mobile navigation">
+  <a class="current" href="#home"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="#shop"><span class="nav-icon">⌕</span><span>Shop</span></a>
+  <button type="button" data-action="cart"><span class="nav-icon">🛒</span><span>Cart</span></button>
+  <a href="#sell"><span class="nav-icon">＋</span><span>Sell</span></a>
+</nav>
 
-        <div class="search-wrap">
-          <form class="search-box" id="search-form" role="search">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <input id="search-input" type="search"
-              placeholder="Search phones, fashion, groceries..."
-              aria-label="Search products">
-            <button class="button button-primary" type="submit">Search</button>
-          </form>
-        </div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-        <div class="categories" id="categories" aria-label="Product categories">
-          <button class="category-button active" type="button"
-            data-category="All">All products</button>
-          <button class="category-button" type="button"
-            data-category="Electronics">Electronics</button>
-          <button class="category-button" type="button"
-            data-category="Fashion">Fashion</button>
-          <button class="category-button" type="button"
-            data-category="Home">Home & living</button>
-          <button class="category-button" type="button"
-            data-category="Beauty">Beauty</button>
-          <button class="category-button" type="button"
-            data-category="Groceries">Groceries</button>
-        </div>
-
-        <p class="results-line" id="results-line" aria-live="polite">
-          Showing all sample products
-        </p>
-
-        <div class="product-grid" id="product-grid"></div>
-      </div>
-    </section>
-
-    <section class="section" id="how-it-works">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2>Shopping should feel simple</h2>
-            <p>Our planned marketplace is being built around clearer information.</p>
-          </div>
-        </div>
-
-        <div class="trust-grid">
-          <article class="trust-card">
-            <div class="trust-icon" aria-hidden="true">🔎</div>
-            <h3>Discover products</h3>
-            <p>Compare product details and prices before deciding what to buy.</p>
-          </article>
-
-          <article class="trust-card">
-            <div class="trust-icon" aria-hidden="true">👤</div>
-            <h3>Know the seller</h3>
-            <p>Seller identity checks and reliable review records are planned features,
-              not active verification services in this demo.</p>
-          </article>
-
-          <article class="trust-card">
-            <div class="trust-icon" aria-hidden="true">🧾</div>
-            <h3>Clear order records</h3>
-            <p>The future service will need real order tracking, payment confirmation
-              and a documented process for resolving problems.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="sell">
-      <div class="container">
-        <div class="sell-panel">
-          <div>
-            <h2>Have products to sell?</h2>
-            <p>
-              SafeBuy NG is being designed for Nigerian businesses and independent
-              sellers. Seller registration and publishing are not connected yet.
-            </p>
-          </div>
-          <button class="button" type="button" data-action="sell">
-            I'm interested in selling →
-          </button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container footer-row">
-      <div>
-        <a class="brand" href="#home">
-          <span class="brand-mark">S</span>
-          <span class="brand-name">SafeBuy <span>NG</span></span>
-        </a>
-        <p>
-          A Nigerian marketplace prototype in development.
-          No real payments or buyer-protection services are currently active.
-        </p>
-        <p>© <span id="year">2026</span> SafeBuy NG</p>
-      </div>
-
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="#shop">Shop</a>
-        <a href="#how-it-works">How it works</a>
-        <a href="#sell">Sell with us</a>
-        <a href="#home">Back to top ↑</a>
-      </nav>
+<!-- Product modal -->
+<div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="modal-title"></h2>
+      <button class="icon-button" type="button" id="close-modal" aria-label="Close">✕</button>
     </div>
-  </footer>
+    <div id="modal-content"></div>
+  </div>
+</div>
 
-  <nav class="mobile-nav" aria-label="Mobile navigation">
-    <a class="current" href="#home">
-      <span class="nav-icon">⌂</span><span>Home</span>
-    </a>
-    <a href="#shop">
-      <span class="nav-icon">⌕</span><span>Shop</span>
-    </a>
-    <button type="button" data-action="cart">
-      <span class="nav-icon">🛒</span><span>Cart</span>
-    </button>
-    <a href="#sell">
-      <span class="nav-icon">＋</span><span>Sell</span>
-    </a>
-  </nav>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <div class="modal-backdrop" id="account-backdrop"
-  role="dialog" aria-modal="true" aria-labelledby="account-title">
+<!-- Account modal -->
+<div class="modal-backdrop" id="account-backdrop" role="dialog" aria-modal="true" aria-labelledby="account-title">
   <div class="modal">
     <div class="modal-top">
       <h2 id="account-title">Welcome to SafeBuy NG</h2>
-      <button class="icon-button" type="button"
-        id="account-close" aria-label="Close">✕</button>
+      <button class="icon-button" type="button" id="account-close" aria-label="Close">✕</button>
     </div>
-
     <form id="account-form">
-      <label for="account-name">Full name</label>
-      <input id="account-name" type="text" autocomplete="name"
-        placeholder="Your full name" required>
+      <label for="account-name" id="account-name-label">Full name</label>
+      <input id="account-name" type="text" autocomplete="name" placeholder="Your full name">
 
       <label for="account-email">Email address</label>
-      <input id="account-email" type="email" autocomplete="email"
-        placeholder="you@example.com" required>
+      <input id="account-email" type="email" autocomplete="email" placeholder="you@example.com" required>
 
       <label for="account-password">Password</label>
-      <input id="account-password" type="password"
-        autocomplete="current-password" minlength="8"
-        placeholder="At least 8 characters" required>
+      <input id="account-password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required>
 
-      <button class="button button-primary" type="submit"
-        id="account-submit">Sign in</button>
+      <button class="button button-primary" type="submit" id="account-submit">Sign in</button>
     </form>
-
     <p id="account-message" role="status" aria-live="polite"></p>
-    <button class="button button-outline" type="button"
-      id="account-toggle">Need an account? Sign up</button>
-    <button class="button button-outline" type="button"
-      id="account-reset">Forgot password?</button>
-    <button class="button button-outline" type="button"
-      id="account-logout" hidden>Sign out</button>
+    <button class="button button-outline" type="button" id="account-toggle">Need an account? Sign up</button>
+    <button class="button button-outline" type="button" id="account-reset">Forgot password?</button>
+    <button class="button button-outline" type="button" id="account-logout" hidden>Sign out</button>
   </div>
-  </div>
+</div>
 
-  <script>
-    "use strict";
-
-    let products = [
-      {
-        id: 1,
-        name: "Wireless headphones",
-        category: "Electronics",
-        price: 18500,
-        seller: "Demo Gadgets",
-        emoji: "🎧",
-        background: "#e9eaff",
-        tag: "Popular",
-        description: "Sample wireless headphones for everyday listening."
-      },
-      {
-        id: 2,
-        name: "Classic wristwatch",
-        category: "Fashion",
-        price: 12500,
-        seller: "Demo Style Store",
-        emoji: "⌚",
-        background: "#f8e8d5",
-        tag: "Everyday pick",
-        description: "A sample classic-style wristwatch."
-      },
-      {
-        id: 3,
-        name: "Quality rice, 5kg",
-        category: "Groceries",
-        price: 10500,
-        seller: "Demo Food Mart",
-        emoji: "🍚",
-        background: "#fff0cc",
-        tag: "Home essential",
-        description: "A sample five-kilogram rice listing. The price is illustrative."
-      },
-      {
-        id: 4,
-        name: "Kitchen blender",
-        category: "Home",
-        price: 28500,
-        seller: "Demo Home Store",
-        emoji: "🥤",
-        background: "#dff4ec",
-        tag: "Useful find",
-        description: "A sample kitchen blender listing."
-      },
-      {
-        id: 5,
-        name: "Everyday sneakers",
-        category: "Fashion",
-        price: 22000,
-        seller: "Demo Style Store",
-        emoji: "👟",
-        background: "#e7f0ff",
-        tag: "New",
-        description: "Sample casual sneakers for everyday wear."
-      },
-      {
-        id: 6,
-        name: "Smartphone",
-        category: "Electronics",
-        price: 145000,
-        seller: "Demo Gadgets",
-        emoji: "📱",
-        background: "#e7eefa",
-        tag: "Tech pick",
-        description: "A sample smartphone listing. No device is actually for sale."
-      },
-      {
-        id: 7,
-        name: "Skincare essentials",
-        category: "Beauty",
-        price: 9500,
-        seller: "Demo Beauty Shop",
-        emoji: "🧴",
-        background: "#ffe8ef",
-        tag: "Self-care",
-        description: "A sample skincare product listing."
-      },
-      {
-        id: 8,
-        name: "Decorative table lamp",
-        category: "Home",
-        price: 16500,
-        seller: "Demo Home Store",
-        emoji: "💡",
-        background: "#fff1d7",
-        tag: "Home style",
-        description: "A sample decorative lamp listing."
-      },
-      {
-        id: 9,
-        name: "Ankara fabric",
-        category: "Fashion",
-        price: 18500,
-        seller: "Demo Fabrics",
-        emoji: "🧵",
-        background: "#ffebd9",
-        tag: "Made for style",
-        description: "A sample Ankara fabric listing."
-      },
-      {
-        id: 10,
-        name: "Fresh fruit basket",
-        category: "Groceries",
-        price: 8000,
-        seller: "Demo Food Mart",
-        emoji: "🍍",
-        background: "#eaf6d9",
-        tag: "Fresh pick",
-        description: "A sample fruit basket listing."
-      },
-      {
-        id: 11,
-        name: "Everyday backpack",
-        category: "Fashion",
-        price: 17000,
-        seller: "Demo Style Store",
-        emoji: "🎒",
-        background: "#eee7ff",
-        tag: "Daily essential",
-        description: "A sample everyday backpack listing."
-      },
-      {
-        id: 12,
-        name: "Electric kettle",
-        category: "Home",
-        price: 14500,
-        seller: "Demo Home Store",
-        emoji: "🫖",
-        background: "#e0f3f7",
-        tag: "Kitchen pick",
-        description: "A sample electric kettle listing."
-      }
-    ];
-
-    let selectedCategory = "All";
-    let searchTerm = "";
-    let cart = [];
-    let toastTimer;
-
-    const productGrid = document.getElementById("product-grid");
-    const searchInput = document.getElementById("search-input");
-    const resultsLine = document.getElementById("results-line");
-    const cartCount = document.getElementById("cart-count");
-    const toast = document.getElementById("toast");
-    const modalBackdrop = document.getElementById("modal-backdrop");
-    const modalContent = document.getElementById("modal-content");
-
-    function money(amount) {
-      return "₦" + amount.toLocaleString("en-NG");
-    }
-
-    function showToast(message) {
-      toast.textContent = message;
-      toast.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(function () {
-        toast.classList.remove("show");
-      }, 2800);
-    }
-
-    function getVisibleProducts() {
-      return products.filter(function (product) {
-        const matchesCategory =
-          selectedCategory === "All" ||
-          product.category === selectedCategory;
-
-        const text = (
-          product.name + " " +
-          product.category + " " +
-          product.seller + " " +
-          product.description
-        ).toLowerCase();
-
-        return matchesCategory && text.includes(searchTerm.toLowerCase());
-      });
-    }
-
-    function renderProducts() {
-      const visible = getVisibleProducts();
-
-      resultsLine.textContent =
-        "Showing " + visible.length +
-        " sample product" + (visible.length === 1 ? "" : "s");
-
-      if (visible.length === 0) {
-        productGrid.innerHTML =
-          '<div class="empty-state">' +
-          '<h3>No matching products found</h3>' +
-          '<p>Try another search or choose a different category.</p>' +
-          '<button class="button button-light" type="button" data-action="clear-search">' +
-          'Clear search</button></div>';
-        return;
-      }
-
-      productGrid.innerHTML = visible.map(function (product) {
-        return `
-          <article class="product-card">
-            <div class="product-art"
-              style="background:${product.background}"
-              role="img"
-              aria-label="${product.name}">
-              <span class="tag">${product.tag}</span>
-              <span aria-hidden="true">${product.emoji}</span>
-            </div>
-            <div class="product-info">
-              <div class="product-category">${product.category}</div>
-              <h3>${product.name}</h3>
-              <p class="seller-name">Sold by ${product.seller}</p>
-              <div class="product-bottom">
-                <span class="price">${money(product.price)}</span>
-                <span class="rating">★ Sample</span>
-              </div>
-              <div class="product-actions">
-                <button class="button button-primary"
-                  type="button" data-action="add" data-id="${product.id}">
-                  Add to cart
-                </button>
-                <button class="icon-button"
-                  type="button" data-action="view" data-id="${product.id}"
-                  aria-label="View ${product.name}">↗</button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join("");
-    }
-
-    function updateCartCount() {
-      cartCount.textContent = cart.reduce(function (total, item) {
-        return total + item.quantity;
-      }, 0);
-    }
-
-    function addToCart(id) {
-      const product = products.find(function (item) {
-        return item.id === id;
-      });
-
-      if (!product) return;
-
-      const existing = cart.find(function (item) {
-        return item.id === id;
-      });
-
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        cart.push({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          quantity: 1
-        });
-      }
-
-      updateCartCount();
-      showToast(product.name + " added to your demo cart.");
-    }
-
-    function openProduct(id) {
-      const product = products.find(function (item) {
-        return item.id === id;
-      });
-
-      if (!product) return;
-
-      document.getElementById("modal-title").textContent = product.name;
-
-      modalContent.innerHTML = `
-        <div class="modal-art" style="background:${product.background}">
-          ${product.emoji}
-        </div>
-        <p><strong>${money(product.price)}</strong></p>
-        <p>Category: ${product.category}</p>
-        <p>Sample seller: ${product.seller}</p>
-        <p>${product.description}</p>
-        <p><strong>Demo only:</strong> this is sample content. No real stock,
-        seller verification, payment or delivery service is connected.</p>
-        <button class="button button-primary" type="button"
-          data-action="add" data-id="${product.id}">Add to demo cart</button>
-      `;
-
-      modalBackdrop.classList.add("open");
-      document.getElementById("close-modal").focus();
-    }
-
-    function closeModal() {
-      modalBackdrop.classList.remove("open");
-    }
-
-    function showCart() {
-      if (cart.length === 0) {
-        showToast("Your demo cart is empty. Add a sample product first.");
-        return;
-      }
-
-      const total = cart.reduce(function (sum, item) {
-        return sum + item.price * item.quantity;
-      }, 0);
-
-      const summary = cart.map(function (item) {
-        return item.quantity + " × " + item.name;
-      }).join("; ");
-
-      showToast("Demo cart: " + summary + ". Total: " + money(total) +
-        ". Checkout is not connected.");
-    }
-
-    function chooseCategory(category) {
-      selectedCategory = category;
-
-      document.querySelectorAll("[data-category]").forEach(function (button) {
-        const active = button.dataset.category === category;
-        button.classList.toggle("active", active);
-
-        if (active) {
-          button.setAttribute("aria-pressed", "true");
-        } else {
-          button.setAttribute("aria-pressed", "false");
-        }
-      });
-
-      renderProducts();
-    }
-
-    document.getElementById("categories").addEventListener("click", function (event) {
-      const button = event.target.closest("[data-category]");
-      if (button) chooseCategory(button.dataset.category);
-    });
-
-    searchInput.addEventListener("input", function () {
-      searchTerm = searchInput.value.trim();
-      renderProducts();
-    });
-
-    document.getElementById("search-form").addEventListener("submit", function (event) {
-      event.preventDefault();
-      searchTerm = searchInput.value.trim();
-      renderProducts();
-      document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
-    });
-
-    document.addEventListener("click", function (event) {
-      const button = event.target.closest("[data-action]");
-      if (!button) return;
-
-      const action = button.dataset.action;
-      const id = Number(button.dataset.id);
-
-      if (action === "add") addToCart(id);
-      if (action === "view") openProduct(id);
-      if (action === "cart") showCart();
-
-      if (action === "sell") {
-        showToast("Seller registration is not available in this prototype yet.");
-      }
-
-      if (action === "clear-search") {
-        searchInput.value = "";
-        searchTerm = "";
-        chooseCategory("All");
-      }
-    });
-
-    document.getElementById("close-modal").addEventListener("click", closeModal);
-
-    modalBackdrop.addEventListener("click", function (event) {
-      if (event.target === modalBackdrop) closeModal();
-    });
-
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") closeModal();
-    });
-
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    renderProducts();
-    updateCartCount();
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./supabase-config.js"></script>
 <script>
-  (async function () {
-    var cfg = window.SAFEbuySupabaseConfig;
-    if (!window.supabase || !cfg) {
-      showToast("Supabase: config or library not loaded");
-      return;
-    }
-    try {
-      window.safeBuySupabase =
-        window.supabase.createClient(cfg.url, cfg.publishableKey);
-      var result = await window.safeBuySupabase
-        .from("products").select("*").order("id");
-      if (result.error) {
-        showToast("Supabase error: " + result.error.message);
-        return;
-      }
-      products = result.data;
-      renderProducts();
-      showToast("Loaded " + result.data.length + " products from Supabase");
-    } catch (e) {
-      showToast("Script error: " + e.message);
-    }
-  })();
-</script>
-<script>
-(function () {
-  const client = window.safeBuySupabase;
-  if (!client) {
-    console.error("SafeBuy: Supabase client not ready.");
+"use strict";
+
+let products = [
+  {id:1,name:"Wireless headphones",category:"Electronics",price:18500,seller:"Demo Gadgets",emoji:"🎧",background:"#e9eaff",tag:"Popular",description:"Sample wireless headphones for everyday listening."},
+  {id:2,name:"Classic wristwatch",category:"Fashion",price:12500,seller:"Demo Style Store",emoji:"⌚",background:"#f8e8d5",tag:"Everyday pick",description:"A sample classic-style wristwatch."},
+  {id:3,name:"Quality rice, 5kg",category:"Groceries",price:10500,seller:"Demo Food Mart",emoji:"🍚",background:"#fff0cc",tag:"Home essential",description:"A sample five-kilogram rice listing. The price is illustrative."},
+  {id:4,name:"Kitchen blender",category:"Home",price:28500,seller:"Demo Home Store",emoji:"🥤",background:"#dff4ec",tag:"Useful find",description:"A sample kitchen blender listing."},
+  {id:5,name:"Everyday sneakers",category:"Fashion",price:22000,seller:"Demo Style Store",emoji:"👟",background:"#e7f0ff",tag:"New",description:"Sample casual sneakers for everyday wear."},
+  {id:6,name:"Smartphone",category:"Electronics",price:145000,seller:"Demo Gadgets",emoji:"📱",background:"#e7eefa",tag:"Tech pick",description:"A sample smartphone listing. No device is actually for sale."},
+  {id:7,name:"Skincare essentials",category:"Beauty",price:9500,seller:"Demo Beauty Shop",emoji:"🧴",background:"#ffe8ef",tag:"Self-care",description:"A sample skincare product listing."},
+  {id:8,name:"Decorative table lamp",category:"Home",price:16500,seller:"Demo Home Store",emoji:"💡",background:"#fff1d7",tag:"Home style",description:"A sample decorative lamp listing."},
+  {id:9,name:"Ankara fabric",category:"Fashion",price:18500,seller:"Demo Fabrics",emoji:"🧵",background:"#ffebd9",tag:"Made for style",description:"A sample Ankara fabric listing."},
+  {id:10,name:"Fresh fruit basket",category:"Groceries",price:8000,seller:"Demo Food Mart",emoji:"🍍",background:"#eaf6d9",tag:"Fresh pick",description:"A sample fruit basket listing."},
+  {id:11,name:"Everyday backpack",category:"Fashion",price:17000,seller:"Demo Style Store",emoji:"🎒",background:"#eee7ff",tag:"Daily essential",description:"A sample everyday backpack listing."},
+  {id:12,name:"Electric kettle",category:"Home",price:14500,seller:"Demo Home Store",emoji:"🫖",background:"#e0f3f7",tag:"Kitchen pick",description:"A sample electric kettle listing."}
+];
+
+let selectedCategory = "All";
+let searchTerm = "";
+let cart = [];
+let toastTimer;
+
+const productGrid = document.getElementById("product-grid");
+const searchInput = document.getElementById("search-input");
+const resultsLine = document.getElementById("results-line");
+const cartCount = document.getElementById("cart-count");
+const toast = document.getElementById("toast");
+const modalBackdrop = document.getElementById("modal-backdrop");
+const modalContent = document.getElementById("modal-content");
+const accountBackdrop = document.getElementById("account-backdrop");
+
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function money(amount) {
+  return "₦" + Number(amount || 0).toLocaleString("en-NG");
+}
+
+function normalizeProduct(p, i) {
+  return {
+    id: p.id != null ? p.id : i + 1,
+    name: p.name || "Unnamed product",
+    category: p.category || "Other",
+    price: Number(p.price) || 0,
+    seller: p.seller || "Demo seller",
+    emoji: p.emoji || "🛍️",
+    background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
+    tag: p.tag || "",
+    description: p.description || ""
+  };
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2800);
+}
+
+function getVisibleProducts() {
+  const term = searchTerm.toLowerCase();
+  return products.filter(function (product) {
+    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const text = (product.name + " " + product.category + " " + product.seller + " " + product.description).toLowerCase();
+    return matchesCategory && text.includes(term);
+  });
+}
+
+function renderProducts() {
+  const visible = getVisibleProducts();
+  resultsLine.textContent = "Showing " + visible.length + " sample product" + (visible.length === 1 ? "" : "s");
+
+  if (visible.length === 0) {
+    productGrid.innerHTML =
+      '<div class="empty-state"><h3>No matching products found</h3>' +
+      '<p>Try another search or choose a different category.</p>' +
+      '<button class="button button-light" type="button" data-action="clear-search">Clear search</button></div>';
     return;
   }
 
-  const backdrop = document.getElementById("account-backdrop");
-  const form = document.getElementById("account-form");
-  const nameInput = document.getElementById("account-name");
-  const emailInput = document.getElementById("account-email");
-  const passwordInput = document.getElementById("account-password");
-  const submit = document.getElementById("account-submit");
-  const toggle = document.getElementById("account-toggle");
-  const message = document.getElementById("account-message");
-  const logout = document.getElementById("account-logout");
-  const reset = document.getElementById("account-reset");
+  productGrid.innerHTML = visible.map(function (p) {
+    return `
+      <article class="product-card">
+        <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
+          ${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
+          <span aria-hidden="true">${esc(p.emoji)}</span>
+        </div>
+        <div class="product-info">
+          <div class="product-category">${esc(p.category)}</div>
+          <h3>${esc(p.name)}</h3>
+          <p class="seller-name">Sold by ${esc(p.seller)}</p>
+          <div class="product-bottom">
+            <span class="price">${money(p.price)}</span>
+            <span class="rating">★ Sample</span>
+          </div>
+          <div class="product-actions">
+            <button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>
+            <button class="icon-button" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}">↗</button>
+          </div>
+        </div>
+      </article>`;
+  }).join("");
+}
 
-  let mode = "signin";
+function updateCartCount() {
+  cartCount.textContent = cart.reduce(function (total, item) { return total + item.quantity; }, 0);
+}
 
-  function say(text) {
-    message.textContent = text;
+function findProduct(id) {
+  return products.find(function (item) { return String(item.id) === String(id); });
+}
+
+function addToCart(id) {
+  const product = findProduct(id);
+  if (!product) return;
+
+  const existing = cart.find(function (item) { return String(item.id) === String(id); });
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1 });
+  }
+  updateCartCount();
+  showToast(product.name + " added to your demo cart.");
+}
+
+function openProduct(id) {
+  const product = findProduct(id);
+  if (!product) return;
+
+  document.getElementById("modal-title").textContent = product.name;
+  modalContent.innerHTML = `
+    <div class="modal-art" style="background:${esc(product.background)}">${esc(product.emoji)}</div>
+    <p><strong>${money(product.price)}</strong></p>
+    <p>Category: ${esc(product.category)}</p>
+    <p>Sample seller: ${esc(product.seller)}</p>
+    <p>${esc(product.description)}</p>
+    <p><strong>Demo only:</strong> this is sample content. No real stock, seller verification, payment or delivery service is connected.</p>
+    <button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`;
+
+  modalBackdrop.classList.add("open");
+  document.getElementById("close-modal").focus();
+}
+
+function closeModal() {
+  modalBackdrop.classList.remove("open");
+}
+
+function showCart() {
+  if (cart.length === 0) {
+    showToast("Your demo cart is empty. Add a sample product first.");
+    return;
+  }
+  const total = cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
+  const summary = cart.map(function (item) { return item.quantity + " × " + item.name; }).join("; ");
+  showToast("Demo cart: " + summary + ". Total: " + money(total) + ". Checkout is not connected.");
+}
+
+function chooseCategory(category) {
+  selectedCategory = category;
+  document.querySelectorAll("[data-category]").forEach(function (button) {
+    const active = button.dataset.category === category;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  renderProducts();
+}
+
+document.getElementById("categories").addEventListener("click", function (event) {
+  const button = event.target.closest("[data-category]");
+  if (button) chooseCategory(button.dataset.category);
+});
+
+searchInput.addEventListener("input", function () {
+  searchTerm = searchInput.value.trim();
+  renderProducts();
+});
+
+document.getElementById("search-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  searchTerm = searchInput.value.trim();
+  renderProducts();
+  document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+});
+
+document.addEventListener("click", function (event) {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+
+  if (action === "add") addToCart(id);
+  if (action === "view") openProduct(id);
+  if (action === "cart") showCart();
+  if (action === "clear-search") {
+    searchInput.value = "";
+    searchTerm = "";
+    chooseCategory("All");
+  }
+});
+
+document.getElementById("close-modal").addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", function (event) {
+  if (event.target === modalBackdrop) closeModal();
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    closeModal();
+    accountBackdrop.classList.remove("open");
+  }
+});
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+renderProducts();
+updateCartCount();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.SAFEbuySupabaseConfig;
+  var client = null;
+
+  if (window.supabase && cfg && cfg.url && cfg.publishableKey) {
+    try {
+      client = window.supabase.createClient(cfg.url, cfg.publishableKey);
+      window.safeBuySupabase = client;
+    } catch (e) {
+      console.error("SafeBuy: could not create Supabase client.", e);
+    }
+  } else {
+    console.warn("SafeBuy: Supabase library or supabase-config.js not loaded. Using sample data.");
   }
 
-  function openAccount() {
-    backdrop.classList.add("open");
-    say("");
+  /* ---------- Load products ---------- */
+  if (client) {
+    client.from("products").select("*").order("id").then(function (result) {
+      if (result.error) {
+        console.warn("SafeBuy: Supabase products error:", result.error.message);
+        return;
+      }
+      if (result.data && result.data.length) {
+        products = result.data.map(normalizeProduct);
+        renderProducts();
+      }
+    }).catch(function (e) {
+      console.warn("SafeBuy: products request failed:", e);
+    });
   }
 
-  function closeAccount() {
-    backdrop.classList.remove("open");
-  }
+  /* ---------- Account ---------- */
+  var form = document.getElementById("account-form");
+  var nameInput = document.getElementById("account-name");
+  var nameLabel = document.getElementById("account-name-label");
+  var emailInput = document.getElementById("account-email");
+  var passwordInput = document.getElementById("account-password");
+  var submit = document.getElementById("account-submit");
+  var toggle = document.getElementById("account-toggle");
+  var message = document.getElementById("account-message");
+  var logout = document.getElementById("account-logout");
+  var reset = document.getElementById("account-reset");
+  var mode = "signin";
+  var unavailable = "Accounts are unavailable right now. Please try again later.";
+
+  function say(text) { message.textContent = text; }
+  function openAccount() { accountBackdrop.classList.add("open"); say(""); }
+  function closeAccount() { accountBackdrop.classList.remove("open"); }
 
   function setMode(next) {
     mode = next;
-    nameInput.hidden = mode !== "signup";
-    nameInput.required = mode === "signup";
-    passwordInput.autocomplete =
-      mode === "signup" ? "new-password" : "current-password";
-    submit.textContent = mode === "signup" ? "Create account" : "Sign in";
-    toggle.textContent = mode === "signup"
-      ? "Already registered? Sign in"
-      : "Need an account? Sign up";
+    var signup = mode === "signup";
+    nameInput.hidden = !signup;
+    nameLabel.hidden = !signup;
+    nameInput.required = signup;
+    passwordInput.autocomplete = signup ? "new-password" : "current-password";
+    submit.textContent = signup ? "Create account" : "Sign in";
+    toggle.textContent = signup ? "Already registered? Sign in" : "Need an account? Sign up";
     say("");
   }
 
-  document.querySelectorAll('[data-action="account"]').forEach(function (button) {
-    button.addEventListener("click", openAccount);
+  document.querySelectorAll('[data-action="account"]').forEach(function (b) {
+    b.addEventListener("click", openAccount);
   });
-
-  document.getElementById("account-close")
-    .addEventListener("click", closeAccount);
-
-  backdrop.addEventListener("click", function (event) {
-    if (event.target === backdrop) closeAccount();
+  document.getElementById("account-close").addEventListener("click", closeAccount);
+  accountBackdrop.addEventListener("click", function (e) {
+    if (e.target === accountBackdrop) closeAccount();
   });
-
   toggle.addEventListener("click", function () {
     setMode(mode === "signin" ? "signup" : "signin");
   });
 
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
+    if (!client) { say(unavailable); return; }
     submit.disabled = true;
     say("Please wait…");
 
     try {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+      var email = emailInput.value.trim();
+      var password = passwordInput.value;
 
       if (mode === "signup") {
-        const fullName = nameInput.value.trim();
-
-        const result = await client.auth.signUp({
+        var result = await client.auth.signUp({
           email: email,
           password: password,
           options: {
-            data: { full_name: fullName },
-            emailRedirectTo: window.location.origin +
-              window.location.pathname
+            data: { full_name: nameInput.value.trim() },
+            emailRedirectTo: window.location.origin + window.location.pathname
           }
         });
-
         if (result.error) throw result.error;
-
-        say(
-          result.data.session
-            ? "Account created. You are signed in."
-            : "Account created. Check your email to confirm your address before signing in."
-        );
+        if (result.data.session) logout.hidden = false;
+        say(result.data.session
+          ? "Account created. You are signed in."
+          : "Account created. Check your email to confirm your address before signing in.");
       } else {
-        const result = await client.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-
-        if (result.error) throw result.error;
+        var res = await client.auth.signInWithPassword({ email: email, password: password });
+        if (res.error) throw res.error;
         say("Signed in successfully.");
         logout.hidden = false;
       }
@@ -1652,17 +686,13 @@
   });
 
   reset.addEventListener("click", async function () {
-    const email = emailInput.value.trim();
-    if (!email) {
-      say("Enter your email address first.");
-      return;
-    }
-
+    if (!client) { say(unavailable); return; }
+    var email = emailInput.value.trim();
+    if (!email) { say("Enter your email address first."); return; }
     try {
-      const result = await client.auth.resetPasswordForEmail(email, {
+      var result = await client.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + window.location.pathname
       });
-
       if (result.error) throw result.error;
       say("If the address is registered, a password-reset email will be sent.");
     } catch (error) {
@@ -1671,35 +701,37 @@
   });
 
   logout.addEventListener("click", async function () {
-    const result = await client.auth.signOut();
-    if (result.error) {
-      say(result.error.message);
-      return;
-    }
+    if (!client) return;
+    var result = await client.auth.signOut();
+    if (result.error) { say(result.error.message); return; }
     logout.hidden = true;
     say("You have signed out.");
   });
 
   document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
     button.addEventListener("click", async function () {
-      const result = await client.auth.getUser();
-      if (result.error || !result.data.user) {
-        openAccount();
-        say("Sign in or create an account before applying to sell.");
+      if (!client) {
+        showToast("Seller registration is not available in this prototype yet.");
         return;
       }
-
-      say("You're signed in. Seller applications and product publishing are the next setup step.");
+      var result = await client.auth.getUser();
       openAccount();
+      if (result.error || !result.data.user) {
+        say("Sign in or create an account before applying to sell.");
+      } else {
+        say("You're signed in. Seller applications and product publishing are the next setup step.");
+      }
     });
   });
 
-  client.auth.getSession().then(function (result) {
-    if (result.data.session) {
-      logout.hidden = false;
-    }
-  });
+  if (client) {
+    client.auth.getSession().then(function (result) {
+      if (result.data && result.data.session) logout.hidden = false;
+    });
+  }
 
   setMode("signin");
 })();
 </script>
+</body>
+</html>
