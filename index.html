@@ -920,15 +920,15 @@
       </nav>
 
       <div class="header-actions">
-        <button class="button button-light sell-header"
-          type="button" data-action="sell"<button class="button button-outline" type="button" data-action="account">Sign in</button>Start selling</button>
-        <button class="cart-button" type="button" data-action="cart"
-          aria-label="Open demo cart">
-          🛒 Cart <span class="cart-count" id="cart-count">0</span>
-        </button>
+  <button class="button button-outline"
+    type="button" data-action="account">Sign in</button>
+  <button class="button button-light sell-header"
+    type="button" data-action="sell">Start selling</button>
+  <button class="cart-button" type="button" data-action="cart"
+    aria-label="Open demo cart">
+    🛒 Cart <span class="cart-count" id="cart-count">0</span>
+  </button>
       </div>
-    </div>
-  </header>
 
   <main id="home">
     <section class="hero">
@@ -1097,16 +1097,41 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <div class="modal-backdrop" id="modal-backdrop" role="dialog"
-    aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-      <div class="modal-top">
-        <h2 id="modal-title">Product details</h2>
-        <button class="icon-button" type="button" id="close-modal"
-          aria-label="Close product details">✕</button>
-      </div>
-      <div id="modal-content"></div>
+  <div class="modal-backdrop" id="account-backdrop"
+  role="dialog" aria-modal="true" aria-labelledby="account-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="account-title">Welcome to SafeBuy NG</h2>
+      <button class="icon-button" type="button"
+        id="account-close" aria-label="Close">✕</button>
     </div>
+
+    <form id="account-form">
+      <label for="account-name">Full name</label>
+      <input id="account-name" type="text" autocomplete="name"
+        placeholder="Your full name" required>
+
+      <label for="account-email">Email address</label>
+      <input id="account-email" type="email" autocomplete="email"
+        placeholder="you@example.com" required>
+
+      <label for="account-password">Password</label>
+      <input id="account-password" type="password"
+        autocomplete="current-password" minlength="8"
+        placeholder="At least 8 characters" required>
+
+      <button class="button button-primary" type="submit"
+        id="account-submit">Sign in</button>
+    </form>
+
+    <p id="account-message" role="status" aria-live="polite"></p>
+    <button class="button button-outline" type="button"
+      id="account-toggle">Need an account? Sign up</button>
+    <button class="button button-outline" type="button"
+      id="account-reset">Forgot password?</button>
+    <button class="button button-outline" type="button"
+      id="account-logout" hidden>Sign out</button>
+  </div>
   </div>
 
   <script>
@@ -1517,4 +1542,164 @@
       showToast("Script error: " + e.message);
     }
   })();
+</script>
+<script>
+(function () {
+  const client = window.safeBuySupabase;
+  if (!client) {
+    console.error("SafeBuy: Supabase client not ready.");
+    return;
+  }
+
+  const backdrop = document.getElementById("account-backdrop");
+  const form = document.getElementById("account-form");
+  const nameInput = document.getElementById("account-name");
+  const emailInput = document.getElementById("account-email");
+  const passwordInput = document.getElementById("account-password");
+  const submit = document.getElementById("account-submit");
+  const toggle = document.getElementById("account-toggle");
+  const message = document.getElementById("account-message");
+  const logout = document.getElementById("account-logout");
+  const reset = document.getElementById("account-reset");
+
+  let mode = "signin";
+
+  function say(text) {
+    message.textContent = text;
+  }
+
+  function openAccount() {
+    backdrop.classList.add("open");
+    say("");
+  }
+
+  function closeAccount() {
+    backdrop.classList.remove("open");
+  }
+
+  function setMode(next) {
+    mode = next;
+    nameInput.hidden = mode !== "signup";
+    nameInput.required = mode === "signup";
+    passwordInput.autocomplete =
+      mode === "signup" ? "new-password" : "current-password";
+    submit.textContent = mode === "signup" ? "Create account" : "Sign in";
+    toggle.textContent = mode === "signup"
+      ? "Already registered? Sign in"
+      : "Need an account? Sign up";
+    say("");
+  }
+
+  document.querySelectorAll('[data-action="account"]').forEach(function (button) {
+    button.addEventListener("click", openAccount);
+  });
+
+  document.getElementById("account-close")
+    .addEventListener("click", closeAccount);
+
+  backdrop.addEventListener("click", function (event) {
+    if (event.target === backdrop) closeAccount();
+  });
+
+  toggle.addEventListener("click", function () {
+    setMode(mode === "signin" ? "signup" : "signin");
+  });
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    submit.disabled = true;
+    say("Please wait…");
+
+    try {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (mode === "signup") {
+        const fullName = nameInput.value.trim();
+
+        const result = await client.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: window.location.origin +
+              window.location.pathname
+          }
+        });
+
+        if (result.error) throw result.error;
+
+        say(
+          result.data.session
+            ? "Account created. You are signed in."
+            : "Account created. Check your email to confirm your address before signing in."
+        );
+      } else {
+        const result = await client.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (result.error) throw result.error;
+        say("Signed in successfully.");
+        logout.hidden = false;
+      }
+    } catch (error) {
+      say(error.message || "We couldn't complete that request.");
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  reset.addEventListener("click", async function () {
+    const email = emailInput.value.trim();
+    if (!email) {
+      say("Enter your email address first.");
+      return;
+    }
+
+    try {
+      const result = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+
+      if (result.error) throw result.error;
+      say("If the address is registered, a password-reset email will be sent.");
+    } catch (error) {
+      say(error.message || "Unable to request a password reset.");
+    }
+  });
+
+  logout.addEventListener("click", async function () {
+    const result = await client.auth.signOut();
+    if (result.error) {
+      say(result.error.message);
+      return;
+    }
+    logout.hidden = true;
+    say("You have signed out.");
+  });
+
+  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
+    button.addEventListener("click", async function () {
+      const result = await client.auth.getUser();
+      if (result.error || !result.data.user) {
+        openAccount();
+        say("Sign in or create an account before applying to sell.");
+        return;
+      }
+
+      say("You're signed in. Seller applications and product publishing are the next setup step.");
+      openAccount();
+    });
+  });
+
+  client.auth.getSession().then(function (result) {
+    if (result.data.session) {
+      logout.hidden = false;
+    }
+  });
+
+  setMode("signin");
+})();
 </script>
