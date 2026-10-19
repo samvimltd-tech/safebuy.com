@@ -109,6 +109,21 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .source-banner.supabase{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark);font-weight:700}
 .source-banner.sample{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
 .source-banner.loading{color:var(--muted)}
+.product-art img,.modal-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.modal-art{position:relative;overflow:hidden}
+.modal textarea,.modal select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;font:inherit;color:var(--ink)}
+.modal textarea{min-height:84px;resize:vertical}
+.modal textarea:focus,.modal select:focus{border-color:var(--green)}
+.modal h3{margin:20px 0 8px;font-size:16px}
+.modal .muted{color:var(--muted);font-size:13px}
+.status-pill{display:inline-block;margin:0 0 6px;padding:5px 11px;border-radius:30px;font-size:12px;font-weight:800;background:#fff3e0;color:#7a4a05}
+.status-pill.ok{background:var(--green-light);color:var(--green-dark)}
+.status-pill.bad{background:#fdeaea;color:#8a1f1f}
+.seller-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14px}
+.seller-row .button{width:auto;margin:0;padding:8px 12px;font-size:12px}
+.review-card{padding:14px;margin:10px 0;border:1px solid var(--line);border-radius:14px;font-size:13px;line-height:1.6}
+.review-card .button{width:auto;margin:8px 8px 0 0;padding:9px 14px;font-size:13px}
+.form-message{min-height:20px;margin:10px 0 0;font-size:13px}
 @media (max-width:900px){
 .desktop-nav{gap:13px}
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -179,6 +194,7 @@ html{scroll-behavior:auto}
     </nav>
     <div class="header-actions">
       <button class="button button-outline" type="button" data-action="account">Sign in</button>
+      <button class="button button-light" type="button" id="admin-open" hidden>Admin</button>
       <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
       <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
         🛒 Cart <span class="cart-count" id="cart-count">0</span>
@@ -211,7 +227,7 @@ html{scroll-behavior:auto}
   <div class="container">
     <div class="prototype-notice">
       <strong>Prototype notice:</strong>
-      This is a demonstration. Payments, escrow, seller verification, delivery protection and real orders are not active. Do not send money based on this demo.
+      This is a demonstration. Payments, escrow, delivery protection and real orders are not active. Do not send money based on this demo.
     </div>
   </div>
 
@@ -264,7 +280,7 @@ html{scroll-behavior:auto}
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">👤</div>
           <h3>Know the seller</h3>
-          <p>Seller identity checks and reliable review records are planned features, not active verification services in this demo.</p>
+          <p>Sellers apply and are approved by an administrator before they can list products. Detailed identity checks and reviews are not active in this demo.</p>
         </article>
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">🧾</div>
@@ -280,7 +296,7 @@ html{scroll-behavior:auto}
       <div class="sell-panel">
         <div>
           <h2>Have products to sell?</h2>
-          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Seller registration and publishing are not connected yet.</p>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Apply to sell, and once an administrator approves your shop you can list products with photos.</p>
         </div>
         <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
       </div>
@@ -353,6 +369,28 @@ html{scroll-behavior:auto}
   </div>
 </div>
 
+<!-- Seller modal -->
+<div class="modal-backdrop" id="seller-backdrop" role="dialog" aria-modal="true" aria-labelledby="seller-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="seller-title">Sell on SafeBuy NG</h2>
+      <button class="icon-button" type="button" id="seller-close" aria-label="Close">✕</button>
+    </div>
+    <div id="seller-body"></div>
+  </div>
+</div>
+
+<!-- Admin modal -->
+<div class="modal-backdrop" id="admin-backdrop" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="admin-title">Seller applications</h2>
+      <button class="icon-button" type="button" id="admin-close" aria-label="Close">✕</button>
+    </div>
+    <div id="admin-body"></div>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -407,6 +445,7 @@ function normalizeProduct(p, i) {
     price: Number(p.price) || 0,
     seller: p.seller || "Seller not listed",
     emoji: p.emoji || "🛍️",
+    image: typeof p.image === "string" && /^https:\/\//.test(p.image) ? p.image : "",
     background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
     tag: p.tag || "",
     description: p.description || ""
@@ -444,7 +483,7 @@ function renderProducts() {
     if (products.length === 0 && productSource === "supabase") {
       productGrid.innerHTML =
         '<div class="empty-state"><h3>No products yet</h3>' +
-        '<p>The database is connected but returned no products. Add rows to the <strong>products</strong> table in Supabase.</p></div>';
+        '<p>No approved seller has published a listing yet. Check back soon.</p></div>';
     } else {
       productGrid.innerHTML =
         '<div class="empty-state"><h3>No matching products found</h3>' +
@@ -459,7 +498,7 @@ function renderProducts() {
       <article class="product-card">
         <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
           ${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
-          <span aria-hidden="true">${esc(p.emoji)}</span>
+          ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
         </div>
         <div class="product-info">
           <div class="product-category">${esc(p.category)}</div>
@@ -506,7 +545,7 @@ function openProduct(id) {
 
   document.getElementById("modal-title").textContent = product.name;
   modalContent.innerHTML = `
-    <div class="modal-art" style="background:${esc(product.background)}">${esc(product.emoji)}</div>
+    <div class="modal-art" style="background:${esc(product.background)}">${product.image ? `<img src="${esc(product.image)}" alt="${esc(product.name)}">` : esc(product.emoji)}</div>
     <p><strong>${money(product.price)}</strong></p>
     <p>Category: ${esc(product.category)}</p>
     <p>${productSource === "sample" ? "Sample seller" : "Seller"}: ${esc(product.seller)}</p>
@@ -649,25 +688,40 @@ updateCartCount();
     setProducts(sampleProducts, "sample", message);
   }
 
-  if (!client) {
-    fail(failReason);
-  } else {
+  function loadProducts() {
+    if (!client) { fail(failReason); return; }
+
     var timeout = new Promise(function (_, reject) {
       setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
 
-    Promise.race([client.from("products").select("*").order("id"), timeout])
+    Promise.race([
+      client.from("seller_products_public").select("*").order("created_at", { ascending: false }),
+      timeout
+    ])
       .then(function (result) {
         if (result.error) {
           fail("Supabase error: " + result.error.message);
           return;
         }
-        setProducts((result.data || []).map(normalizeProduct), "supabase");
+        setProducts((result.data || []).map(function (r, i) {
+          return normalizeProduct({
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            price: Number(r.price_kobo) / 100, // stored in kobo, shown in naira
+            seller: r.shop_name,
+            image: r.image_url,
+            description: r.description
+          }, i);
+        }), "supabase");
       })
       .catch(function (e) {
         fail("Could not reach Supabase: " + e.message);
       });
   }
+
+  loadProducts();
 
   /* ---------- Account ---------- */
   var form = document.getElementById("account-form");
@@ -770,21 +824,319 @@ updateCartCount();
     say("You have signed out.");
   });
 
-  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
-    button.addEventListener("click", async function () {
-      if (!client) {
-        showToast("Seller registration is not available in this prototype yet.");
+  /* ---------- Seller application, listings and admin review ---------- */
+  var sellerBackdrop = document.getElementById("seller-backdrop");
+  var sellerBody = document.getElementById("seller-body");
+  var sellerTitle = document.getElementById("seller-title");
+  var adminBackdrop = document.getElementById("admin-backdrop");
+  var adminBody = document.getElementById("admin-body");
+  var adminBtn = document.getElementById("admin-open");
+  var currentApp = null;
+
+  var CATEGORIES = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
+  var CATEGORY_LABELS = { Home: "Home & living" };
+  var IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+  var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  function categoryOptions() {
+    return CATEGORIES.map(function (c) {
+      return '<option value="' + esc(c) + '">' + esc(CATEGORY_LABELS[c] || c) + "</option>";
+    }).join("");
+  }
+
+  function slugify(text) {
+    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "shop";
+  }
+
+  function randomId() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function formMessage(text) {
+    var el = document.getElementById("form-message");
+    if (el) el.textContent = text;
+  }
+
+  async function currentUser() {
+    if (!client) return null;
+    var r = await client.auth.getUser();
+    return r.data && r.data.user ? r.data.user : null;
+  }
+
+  function openSeller() { sellerBackdrop.classList.add("open"); }
+  function closeSeller() { sellerBackdrop.classList.remove("open"); }
+  function openAdminModal() { adminBackdrop.classList.add("open"); }
+  function closeAdminModal() { adminBackdrop.classList.remove("open"); }
+
+  async function startSelling() {
+    if (!client) {
+      showToast("Selling is unavailable right now. Please try again later.");
+      return;
+    }
+    var user = await currentUser();
+    if (!user) {
+      openAccount();
+      say("Sign in or create an account before applying to sell.");
+      return;
+    }
+
+    sellerTitle.textContent = "Sell on SafeBuy NG";
+    sellerBody.innerHTML = "<p>Loading…</p>";
+    openSeller();
+
+    var res = await client.from("seller_applications").select("*").eq("user_id", user.id).maybeSingle();
+    if (res.error) {
+      sellerBody.innerHTML = "<p>" + esc(res.error.message) + "</p>";
+      return;
+    }
+    if (!res.data) { renderApplyForm(user); return; }
+
+    currentApp = res.data;
+    if (res.data.verification_status === "approved") renderDashboard();
+    else renderStatus(res.data);
+  }
+
+  function renderStatus(app) {
+    var rejected = app.verification_status === "rejected";
+    sellerTitle.textContent = app.shop_name;
+    sellerBody.innerHTML =
+      '<p class="status-pill ' + (rejected ? "bad" : "") + '">' + (rejected ? "Not approved" : "Under review") + "</p>" +
+      "<p>" + (rejected
+        ? "Your application was not approved. Contact SafeBuy NG if you think this is a mistake."
+        : "Thanks for applying. An administrator will review your shop. You can list products once it is approved.") + "</p>";
+  }
+
+  function renderApplyForm(user) {
+    sellerTitle.textContent = "Apply to sell";
+    sellerBody.innerHTML =
+      "<p>Tell us about your shop. Every application is reviewed before you can list products.</p>" +
+      '<form id="apply-form">' +
+      '<label for="ap-shop">Shop name</label><input id="ap-shop" type="text" required maxlength="80">' +
+      '<label for="ap-phone">Phone number</label><input id="ap-phone" type="tel" required placeholder="08012345678">' +
+      '<label for="ap-state">State</label><input id="ap-state" type="text" placeholder="e.g. Lagos">' +
+      '<label for="ap-cat">Main category</label><select id="ap-cat">' + categoryOptions() + "</select>" +
+      '<label for="ap-ig">Instagram handle (optional)</label><input id="ap-ig" type="text" placeholder="@yourshop">' +
+      '<label for="ap-addr">Business address (optional)</label><input id="ap-addr" type="text">' +
+      '<button class="button button-primary" type="submit" id="ap-submit">Submit application</button>' +
+      "</form>" +
+      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>';
+
+    document.getElementById("apply-form").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      var btn = document.getElementById("ap-submit");
+      btn.disabled = true;
+      formMessage("Submitting…");
+
+      var shop = document.getElementById("ap-shop").value.trim();
+      var row = {
+        user_id: user.id,
+        shop_name: shop,
+        slug: slugify(shop) + "-" + Math.random().toString(36).slice(2, 6),
+        phone: document.getElementById("ap-phone").value.trim(),
+        state: document.getElementById("ap-state").value.trim() || null,
+        main_category: document.getElementById("ap-cat").value || null,
+        instagram_handle: document.getElementById("ap-ig").value.trim() || null,
+        business_address: document.getElementById("ap-addr").value.trim() || null,
+        verification_status: "pending"
+      };
+
+      var result = await client.from("seller_applications").insert(row);
+      if (result.error) {
+        var msg = result.error.message || "We could not submit your application.";
+        if (result.error.code === "23505" && /user/i.test(msg)) msg = "You already have an application.";
+        else if (/phone_format/.test(msg)) msg = "Please check your phone number format, for example 08012345678.";
+        formMessage(msg);
+        btn.disabled = false;
         return;
       }
-      var result = await client.auth.getUser();
-      openAccount();
-      if (result.error || !result.data.user) {
-        say("Sign in or create an account before applying to sell.");
-      } else {
-        say("You're signed in. Seller applications and product publishing are the next setup step.");
-      }
+      showToast("Application submitted. We will review it soon.");
+      startSelling();
     });
+  }
+
+  function renderDashboard() {
+    var app = currentApp;
+    sellerTitle.textContent = app.shop_name;
+    sellerBody.innerHTML =
+      '<p class="status-pill ok">Approved seller</p>' +
+      "<h3>Add a product</h3>" +
+      '<form id="product-form">' +
+      '<label for="pf-name">Product name</label><input id="pf-name" type="text" required maxlength="120">' +
+      '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions() + "</select>" +
+      '<label for="pf-price">Price (₦)</label><input id="pf-price" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="e.g. 18500">' +
+      '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000"></textarea>' +
+      '<label for="pf-photo">Photo (JPG, PNG or WebP, up to 5 MB)</label><input id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">' +
+      '<button class="button button-primary" type="submit" id="pf-submit">Publish product</button>' +
+      "</form>" +
+      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>' +
+      "<h3>Your listings</h3>" +
+      '<div id="my-products">Loading…</div>';
+
+    document.getElementById("product-form").addEventListener("submit", submitProduct);
+    loadMyProducts();
+  }
+
+  async function submitProduct(event) {
+    event.preventDefault();
+    var btn = document.getElementById("pf-submit");
+    var user = await currentUser();
+    if (!user || !currentApp) { formMessage("Please sign in again."); return; }
+
+    var naira = Number(document.getElementById("pf-price").value);
+    var priceKobo = Math.round(naira * 100);
+    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero."); return; }
+
+    var file = document.getElementById("pf-photo").files[0];
+    if (file) {
+      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP."); return; }
+      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB."); return; }
+    }
+
+    btn.disabled = true;
+    formMessage("Publishing…");
+
+    var imagePath = null;
+    var imageUrl = null;
+    if (file) {
+      imagePath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
+      var up = await client.storage.from("product-images").upload(imagePath, file, { contentType: file.type, upsert: false });
+      if (up.error) {
+        formMessage("Photo upload failed: " + up.error.message);
+        btn.disabled = false;
+        return;
+      }
+      imageUrl = client.storage.from("product-images").getPublicUrl(imagePath).data.publicUrl;
+    }
+
+    var ins = await client.from("seller_products").insert({
+      seller_application_id: currentApp.id,
+      name: document.getElementById("pf-name").value.trim(),
+      description: document.getElementById("pf-desc").value.trim(),
+      category: document.getElementById("pf-cat").value,
+      price_kobo: priceKobo,
+      image_path: imagePath,
+      image_url: imageUrl,
+      status: "published"
+    });
+
+    if (ins.error) {
+      if (imagePath) await client.storage.from("product-images").remove([imagePath]);
+      formMessage("Could not save the product: " + ins.error.message);
+      btn.disabled = false;
+      return;
+    }
+
+    showToast("Product published.");
+    renderDashboard();
+    loadProducts();
+  }
+
+  async function loadMyProducts() {
+    var box = document.getElementById("my-products");
+    if (!box || !currentApp) return;
+    var r = await client.from("seller_products")
+      .select("id,name,price_kobo,status,image_path")
+      .eq("seller_application_id", currentApp.id)
+      .order("created_at", { ascending: false });
+    if (r.error) { box.textContent = r.error.message; return; }
+    if (!r.data.length) { box.textContent = "No listings yet."; return; }
+    box.innerHTML = r.data.map(function (p) {
+      return '<div class="seller-row"><div><strong>' + esc(p.name) + '</strong><br><span class="muted">' +
+        esc(money(Number(p.price_kobo) / 100)) + " · " + esc(p.status) + "</span></div>" +
+        '<button class="button button-outline" type="button" data-del="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button></div>';
+    }).join("");
+  }
+
+  sellerBody.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-del]");
+    if (!button) return;
+    if (!window.confirm("Delete this listing?")) return;
+    button.disabled = true;
+    var del = await client.from("seller_products").delete().eq("id", button.dataset.del).select("id");
+    if (del.error || !del.data || !del.data.length) {
+      showToast(del.error ? del.error.message : "Could not delete that listing.");
+      button.disabled = false;
+      return;
+    }
+    if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
+    showToast("Listing deleted.");
+    loadMyProducts();
+    loadProducts();
   });
+
+  /* Admin: list applications and approve or reject them. Only users in the
+     admins table can read all applications or change a status; the database
+     enforces that, so hiding the button is just a convenience. */
+  async function checkAdmin() {
+    if (!client) return;
+    var user = await currentUser();
+    if (!user) { adminBtn.hidden = true; return; }
+    var r = await client.rpc("is_admin");
+    adminBtn.hidden = !(r.data === true);
+  }
+
+  async function renderAdmin() {
+    adminBody.innerHTML = "<p>Loading…</p>";
+    openAdminModal();
+    var r = await client.from("seller_applications").select("*").order("created_at", { ascending: false });
+    if (r.error) { adminBody.innerHTML = "<p>" + esc(r.error.message) + "</p>"; return; }
+    if (!r.data.length) { adminBody.innerHTML = "<p>No applications yet.</p>"; return; }
+
+    var rank = { pending: 0, approved: 1, rejected: 2 };
+    r.data.sort(function (a, b) { return (rank[a.verification_status] || 0) - (rank[b.verification_status] || 0); });
+
+    adminBody.innerHTML = r.data.map(function (a) {
+      var cls = a.verification_status === "approved" ? "ok" : a.verification_status === "rejected" ? "bad" : "";
+      return '<div class="review-card">' +
+        '<span class="status-pill ' + cls + '">' + esc(a.verification_status) + "</span><br>" +
+        "<strong>" + esc(a.shop_name) + "</strong> (" + esc(a.slug) + ")<br>" +
+        "Phone: " + esc(a.phone) + "<br>" +
+        "State: " + esc(a.state || "-") + " · Category: " + esc(a.main_category || "-") + "<br>" +
+        "Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
+        "Address: " + esc(a.business_address || "-") + "<br>" +
+        (a.verification_status !== "approved" ? '<button class="button button-primary" type="button" data-review="approved" data-id="' + esc(a.id) + '">Approve</button>' : "") +
+        (a.verification_status !== "rejected" ? '<button class="button button-outline" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Reject</button>' : "") +
+        "</div>";
+    }).join("");
+  }
+
+  adminBody.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-review]");
+    if (!button) return;
+    button.disabled = true;
+    var upd = await client.from("seller_applications")
+      .update({ verification_status: button.dataset.review, updated_at: new Date().toISOString() })
+      .eq("id", button.dataset.id)
+      .select("id");
+    if (upd.error || !upd.data || !upd.data.length) {
+      showToast(upd.error ? upd.error.message : "You are not allowed to do that.");
+      button.disabled = false;
+      return;
+    }
+    showToast("Seller " + button.dataset.review + ".");
+    renderAdmin();
+    loadProducts();
+  });
+
+  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
+    button.addEventListener("click", startSelling);
+  });
+  adminBtn.addEventListener("click", function () { if (client) renderAdmin(); });
+  document.getElementById("seller-close").addEventListener("click", closeSeller);
+  document.getElementById("admin-close").addEventListener("click", closeAdminModal);
+  sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
+  adminBackdrop.addEventListener("click", function (e) { if (e.target === adminBackdrop) closeAdminModal(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeSeller(); closeAdminModal(); }
+  });
+
+  if (client) {
+    client.auth.onAuthStateChange(function () {
+      currentApp = null;
+      setTimeout(checkAdmin, 0);
+    });
+  }
 
   if (client) {
     client.auth.getSession().then(function (result) {
@@ -796,4 +1148,4 @@ updateCartCount();
 })();
 </script>
 </body>
-</html>
+  </html>
