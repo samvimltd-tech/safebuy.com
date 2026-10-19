@@ -124,6 +124,20 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .review-card{padding:14px;margin:10px 0;border:1px solid var(--line);border-radius:14px;font-size:13px;line-height:1.6}
 .review-card .button{width:auto;margin:8px 8px 0 0;padding:9px 14px;font-size:13px}
 .form-message{min-height:20px;margin:10px 0 0;font-size:13px}
+.modal label.check{display:flex;align-items:flex-start;gap:9px;margin:14px 0 4px;font-weight:400;font-size:13px;line-height:1.5}
+.modal label.check input{width:auto;margin-top:3px}
+.modal .button-outline{margin-top:10px}
+.badge{display:inline-block;margin-left:5px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#fff3e0;color:#7a4a05;vertical-align:1px}
+.badge.ok{background:var(--green-light);color:var(--green-dark)}
+.sort-row{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;color:var(--muted)}
+.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
+.seller-item{padding:12px 0;border-top:1px solid var(--line)}
+.seller-item-top{display:flex;gap:12px;align-items:center}
+.seller-item .thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;background:#edf6ef;flex-shrink:0}
+.seller-item .grow{flex:1;min-width:0;font-size:14px}
+.seller-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.seller-actions .button{width:auto;margin:0;padding:8px 11px;font-size:12px}
+.modal-note{padding:11px 13px;border-radius:12px;background:#fff8e8;border:1px solid #f1d69a;color:#79551b!important;font-size:13px;line-height:1.6}
 @media (max-width:900px){
 .desktop-nav{gap:13px}
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -247,6 +261,15 @@ html{scroll-behavior:auto}
         </form>
       </div>
 
+      <div class="sort-row">
+        <label for="sort-select">Sort by</label>
+        <select id="sort-select">
+          <option value="newest">Newest first</option>
+          <option value="low">Price: low to high</option>
+          <option value="high">Price: high to low</option>
+        </select>
+      </div>
+
       <div class="categories" id="categories" aria-label="Product categories">
         <button class="category-button active" type="button" data-category="All">All products</button>
         <button class="category-button" type="button" data-category="Electronics">Electronics</button>
@@ -279,7 +302,7 @@ html{scroll-behavior:auto}
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">👤</div>
           <h3>Know the seller</h3>
-          <p>Sellers apply and are approved by an administrator before they can list products. Detailed identity checks and reviews are not active in this demo.</p>
+          <p>Every shop shows a clear Verified or Unverified label. Verification is added by SafeBuy NG, and shops that break the rules can be suspended. Detailed identity checks and reviews are limited in this demo.</p>
         </article>
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">🧾</div>
@@ -295,7 +318,7 @@ html{scroll-behavior:auto}
       <div class="sell-panel">
         <div>
           <h2>Have products to sell?</h2>
-          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Apply to sell, and once an administrator approves your shop you can list products with photos.</p>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Create a shop in one step and list products with photos straight away. Shoppers contact you directly on WhatsApp.</p>
         </div>
         <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
       </div>
@@ -402,6 +425,7 @@ let productSource = "loading"; // loading | supabase | sample
 let sourceMessage = "";
 
 let selectedCategory = "All";
+let sortMode = "newest";
 let searchTerm = "";
 let cart = [];
 let toastTimer;
@@ -436,7 +460,9 @@ function normalizeProduct(p, i) {
     image: typeof p.image === "string" && /^https:\/\//.test(p.image) ? p.image : "",
     background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
     tag: p.tag || "",
-    description: p.description || ""
+    description: p.description || "",
+    verified: !!p.verified,
+    inStock: p.inStock !== false
   };
 }
 
@@ -449,11 +475,14 @@ function showToast(message) {
 
 function getVisibleProducts() {
   const term = searchTerm.toLowerCase();
-  return products.filter(function (product) {
+  const list = products.filter(function (product) {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     const text = (product.name + " " + product.category + " " + product.seller + " " + product.description).toLowerCase();
     return matchesCategory && text.includes(term);
   });
+  if (sortMode === "low") list.sort(function (a, b) { return a.price - b.price; });
+  if (sortMode === "high") list.sort(function (a, b) { return b.price - a.price; });
+  return list;
 }
 
 function renderProducts() {
@@ -485,19 +514,21 @@ function renderProducts() {
     return `
       <article class="product-card">
         <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
-          ${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
+          ${!p.inStock ? '<span class="tag">Sold out</span>' : p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
           ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
         </div>
         <div class="product-info">
           <div class="product-category">${esc(p.category)}</div>
           <h3>${esc(p.name)}</h3>
-          <p class="seller-name">Sold by ${esc(p.seller)}</p>
+          <p class="seller-name">Sold by ${esc(p.seller)}${productSource === "supabase" ? (p.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
           <div class="product-bottom">
             <span class="price">${money(p.price)}</span>
             ${productSource === "sample" ? '<span class="rating">★ Sample</span>' : ""}
           </div>
           <div class="product-actions">
-            <button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>
+            ${productSource === "supabase"
+              ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(p.id)}"${p.inStock ? "" : " disabled"}>${p.inStock ? "Chat seller" : "Sold out"}</button>`
+              : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>`}
             <button class="icon-button" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}">↗</button>
           </div>
         </div>
@@ -536,10 +567,14 @@ function openProduct(id) {
     <div class="modal-art" style="background:${esc(product.background)}">${product.image ? `<img src="${esc(product.image)}" alt="${esc(product.name)}">` : esc(product.emoji)}</div>
     <p><strong>${money(product.price)}</strong></p>
     <p>Category: ${esc(product.category)}</p>
-    <p>${productSource === "sample" ? "Sample seller" : "Seller"}: ${esc(product.seller)}</p>
+    <p>${productSource === "sample" ? "Sample seller" : "Seller"}: ${esc(product.seller)}${productSource === "supabase" ? (product.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
     <p>${esc(product.description)}</p>
-    <p><strong>${productSource === "sample" ? "Sample product:" : "Demo only:"}</strong> ${productSource === "sample" ? "the database is unavailable, so this is placeholder content. " : ""}No real stock, seller verification, payment or delivery service is connected.</p>
-    <button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`;
+    ${productSource === "sample"
+      ? '<p class="modal-note"><strong>Sample product:</strong> the database is unavailable, so this is placeholder content.</p>'
+      : '<p class="modal-note"><strong>Stay safe:</strong> SafeBuy NG does not handle payments or delivery yet. Agree details with the seller, meet in a public place, and inspect the item before you pay.</p>'}
+    ${productSource === "supabase"
+      ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(product.id)}"${product.inStock ? "" : " disabled"}>${product.inStock ? "Chat seller on WhatsApp" : "Sold out"}</button>`
+      : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`}`;
 
   modalBackdrop.classList.add("open");
   document.getElementById("close-modal").focus();
@@ -568,6 +603,11 @@ function chooseCategory(category) {
   });
   renderProducts();
 }
+
+document.getElementById("sort-select").addEventListener("change", function (event) {
+  sortMode = event.target.value;
+  renderProducts();
+});
 
 document.getElementById("categories").addEventListener("click", function (event) {
   const button = event.target.closest("[data-category]");
@@ -700,7 +740,9 @@ updateCartCount();
             price: Number(r.price_kobo) / 100, // stored in kobo, shown in naira
             seller: r.shop_name,
             image: r.image_url,
-            description: r.description
+            description: r.description,
+            verified: r.verified,
+            inStock: r.in_stock
           }, i);
         }), "supabase");
       })
@@ -812,20 +854,23 @@ updateCartCount();
     say("You have signed out.");
   });
 
-  /* ---------- Seller application, listings and admin review ---------- */
+  /* ---------- Shop setup, instant listing and product management ---------- */
   var sellerBackdrop = document.getElementById("seller-backdrop");
   var sellerBody = document.getElementById("seller-body");
   var sellerTitle = document.getElementById("seller-title");
   var currentApp = null;
+  var myProducts = [];
+  var editingId = null;
 
   var CATEGORIES = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
   var CATEGORY_LABELS = { Home: "Home & living" };
   var IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
   var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-  function categoryOptions() {
+  function categoryOptions(selected) {
     return CATEGORIES.map(function (c) {
-      return '<option value="' + esc(c) + '">' + esc(CATEGORY_LABELS[c] || c) + "</option>";
+      return '<option value="' + esc(c) + '"' + (c === selected ? " selected" : "") + ">" +
+        esc(CATEGORY_LABELS[c] || c) + "</option>";
     }).join("");
   }
 
@@ -838,9 +883,19 @@ updateCartCount();
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
 
-  function formMessage(text) {
+  function waNumber(phone) {
+    var d = String(phone || "").replace(/\D/g, "");
+    if (d.indexOf("234") === 0) return d;
+    if (d.charAt(0) === "0") return "234" + d.slice(1);
+    if (d.length === 10) return "234" + d;
+    return d;
+  }
+
+  function formMessage(text, isError) {
     var el = document.getElementById("form-message");
-    if (el) el.textContent = text;
+    if (!el) return;
+    el.textContent = text || "";
+    el.style.color = isError ? "#8a1f1f" : "";
   }
 
   async function currentUser() {
@@ -860,7 +915,7 @@ updateCartCount();
     var user = await currentUser();
     if (!user) {
       openAccount();
-      say("Sign in or create an account before applying to sell.");
+      say("Sign in or create an account to start selling.");
       return;
     }
 
@@ -873,144 +928,194 @@ updateCartCount();
       sellerBody.innerHTML = "<p>" + esc(res.error.message) + "</p>";
       return;
     }
-    if (!res.data) { renderApplyForm(user); return; }
+    if (!res.data) { renderSetup(user); return; }
 
     currentApp = res.data;
-    if (res.data.verification_status === "approved") renderDashboard();
-    else renderStatus(res.data);
+    editingId = null;
+    if (res.data.verification_status === "rejected") renderSuspended();
+    else renderDashboard();
   }
 
-  function renderStatus(app) {
-    var rejected = app.verification_status === "rejected";
-    sellerTitle.textContent = app.shop_name;
+  function renderSuspended() {
+    sellerTitle.textContent = currentApp.shop_name;
     sellerBody.innerHTML =
-      '<p class="status-pill ' + (rejected ? "bad" : "") + '">' + (rejected ? "Not approved" : "Under review") + "</p>" +
-      "<p>" + (rejected
-        ? "Your application was not approved. Contact SafeBuy NG if you think this is a mistake."
-        : "Thanks for applying. An administrator will review your shop. You can list products once it is approved.") + "</p>";
+      '<p class="status-pill bad">Suspended</p>' +
+      "<p>This shop is suspended and its products are hidden. Contact SafeBuy NG if you think this is a mistake.</p>";
   }
 
-  function renderApplyForm(user) {
-    sellerTitle.textContent = "Apply to sell";
+  /* One-step shop setup, then straight to listing */
+  function renderSetup(user) {
+    sellerTitle.textContent = "Set up your shop";
     sellerBody.innerHTML =
-      "<p>Tell us about your shop. Every application is reviewed before you can list products.</p>" +
-      '<form id="apply-form">' +
-      '<label for="ap-shop">Shop name</label><input id="ap-shop" type="text" required maxlength="80">' +
-      '<label for="ap-phone">Phone number</label><input id="ap-phone" type="tel" required placeholder="08012345678">' +
-      '<label for="ap-state">State</label><input id="ap-state" type="text" placeholder="e.g. Lagos">' +
-      '<label for="ap-cat">Main category</label><select id="ap-cat">' + categoryOptions() + "</select>" +
-      '<label for="ap-ig">Instagram handle (optional)</label><input id="ap-ig" type="text" placeholder="@yourshop">' +
-      '<label for="ap-addr">Business address (optional)</label><input id="ap-addr" type="text">' +
-      '<button class="button button-primary" type="submit" id="ap-submit">Submit application</button>' +
+      "<p>Create your shop in one step, then list your first product right away.</p>" +
+      '<form id="setup-form">' +
+      '<label for="su-shop">Shop name</label><input id="su-shop" type="text" required maxlength="80">' +
+      '<label for="su-phone">WhatsApp / phone number</label><input id="su-phone" type="tel" required placeholder="08012345678">' +
+      '<label for="su-state">State</label><input id="su-state" type="text" placeholder="e.g. Lagos">' +
+      '<label for="su-cat">Main category</label><select id="su-cat">' + categoryOptions("") + "</select>" +
+      '<label for="su-ig">Instagram handle (optional)</label><input id="su-ig" type="text" placeholder="@yourshop">' +
+      '<label class="check"><input id="su-consent" type="checkbox" required> ' +
+      "I agree that buyers can contact me on this number when they tap “Chat seller”.</label>" +
+      '<button class="button button-primary" type="submit" id="su-submit">Create shop</button>' +
       "</form>" +
       '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>';
 
-    document.getElementById("apply-form").addEventListener("submit", async function (event) {
+    document.getElementById("setup-form").addEventListener("submit", async function (event) {
       event.preventDefault();
-      var btn = document.getElementById("ap-submit");
+      var btn = document.getElementById("su-submit");
       btn.disabled = true;
-      formMessage("Submitting…");
+      formMessage("Creating your shop…");
 
-      var shop = document.getElementById("ap-shop").value.trim();
+      var shop = document.getElementById("su-shop").value.trim();
       var row = {
         user_id: user.id,
         shop_name: shop,
         slug: slugify(shop) + "-" + Math.random().toString(36).slice(2, 6),
-        phone: document.getElementById("ap-phone").value.trim(),
-        state: document.getElementById("ap-state").value.trim() || null,
-        main_category: document.getElementById("ap-cat").value || null,
-        instagram_handle: document.getElementById("ap-ig").value.trim() || null,
-        business_address: document.getElementById("ap-addr").value.trim() || null,
+        phone: document.getElementById("su-phone").value.trim(),
+        state: document.getElementById("su-state").value.trim() || null,
+        main_category: document.getElementById("su-cat").value || null,
+        instagram_handle: document.getElementById("su-ig").value.trim() || null,
         verification_status: "pending"
       };
 
-      var result = await client.from("seller_applications").insert(row);
+      var result = await client.from("seller_applications").insert(row).select().single();
       if (result.error) {
-        var msg = result.error.message || "We could not submit your application.";
-        if (result.error.code === "23505" && /user/i.test(msg)) msg = "You already have an application.";
+        var msg = result.error.message || "We could not create your shop.";
+        if (result.error.code === "23505" && /user/i.test(msg)) msg = "You already have a shop. Close this and tap Sell again.";
         else if (/phone_format/.test(msg)) msg = "Please check your phone number format, for example 08012345678.";
-        formMessage(msg);
+        formMessage(msg, true);
         btn.disabled = false;
         return;
       }
-      showToast("Application submitted. We will review it soon.");
-      startSelling();
+      currentApp = result.data;
+      showToast("Shop created. Add your first product.");
+      renderDashboard();
     });
   }
 
-  function renderDashboard() {
-    var app = currentApp;
-    sellerTitle.textContent = app.shop_name;
-    sellerBody.innerHTML =
-      '<p class="status-pill ok">Approved seller</p>' +
-      "<h3>Add a product</h3>" +
+  function productFormHtml() {
+    return (
+      '<h3 id="pf-heading">Add a product</h3>' +
       '<form id="product-form">' +
       '<label for="pf-name">Product name</label><input id="pf-name" type="text" required maxlength="120">' +
-      '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions() + "</select>" +
+      '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions("") + "</select>" +
       '<label for="pf-price">Price (₦)</label><input id="pf-price" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="e.g. 18500">' +
-      '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000"></textarea>' +
-      '<label for="pf-photo">Photo (JPG, PNG or WebP, up to 5 MB)</label><input id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">' +
+      '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000" placeholder="Condition, size, delivery areas…"></textarea>' +
+      '<label for="pf-photo" id="pf-photo-label">Photo (JPG, PNG or WebP, up to 5 MB)</label>' +
+      '<input id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">' +
+      '<label class="check"><input id="pf-stock" type="checkbox" checked> In stock</label>' +
       '<button class="button button-primary" type="submit" id="pf-submit">Publish product</button>' +
-      "</form>" +
+      '<button class="button button-outline" type="button" id="pf-cancel" hidden>Cancel edit</button>' +
+      "</form>"
+    );
+  }
+
+  function renderDashboard() {
+    var verified = currentApp.verification_status === "approved";
+    sellerTitle.textContent = currentApp.shop_name;
+    sellerBody.innerHTML =
+      (verified
+        ? '<p class="status-pill ok">✓ Verified seller</p>'
+        : '<p class="status-pill">Unverified shop</p><p class="muted">You can list right now. Buyers see an “Unverified” label until SafeBuy NG verifies your shop.</p>') +
+      productFormHtml() +
       '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>' +
       "<h3>Your listings</h3>" +
       '<div id="my-products">Loading…</div>';
 
     document.getElementById("product-form").addEventListener("submit", submitProduct);
+    document.getElementById("pf-cancel").addEventListener("click", function () {
+      editingId = null;
+      renderDashboard();
+    });
     loadMyProducts();
+  }
+
+  function startEdit(id) {
+    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!p) return;
+    editingId = p.id;
+    document.getElementById("pf-heading").textContent = "Edit product";
+    document.getElementById("pf-name").value = p.name || "";
+    document.getElementById("pf-cat").value = p.category || CATEGORIES[0];
+    document.getElementById("pf-price").value = (Number(p.price_kobo) / 100).toString();
+    document.getElementById("pf-desc").value = p.description || "";
+    document.getElementById("pf-stock").checked = p.in_stock !== false;
+    document.getElementById("pf-photo-label").textContent = "Replace photo (optional)";
+    document.getElementById("pf-submit").textContent = "Save changes";
+    document.getElementById("pf-cancel").hidden = false;
+    formMessage("");
+    document.getElementById("pf-heading").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function submitProduct(event) {
     event.preventDefault();
     var btn = document.getElementById("pf-submit");
     var user = await currentUser();
-    if (!user || !currentApp) { formMessage("Please sign in again."); return; }
+    if (!user || !currentApp) { formMessage("Please sign in again.", true); return; }
 
     var naira = Number(document.getElementById("pf-price").value);
     var priceKobo = Math.round(naira * 100);
-    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero."); return; }
+    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero.", true); return; }
 
     var file = document.getElementById("pf-photo").files[0];
     if (file) {
-      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP."); return; }
-      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB."); return; }
+      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP.", true); return; }
+      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB.", true); return; }
     }
 
     btn.disabled = true;
-    formMessage("Publishing…");
+    formMessage(editingId ? "Saving…" : "Publishing…");
 
-    var imagePath = null;
-    var imageUrl = null;
+    var newPath = null;
+    var newUrl = null;
     if (file) {
-      imagePath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
-      var up = await client.storage.from("product-images").upload(imagePath, file, { contentType: file.type, upsert: false });
+      newPath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
+      var up = await client.storage.from("product-images").upload(newPath, file, { contentType: file.type, upsert: false });
       if (up.error) {
-        formMessage("Photo upload failed: " + up.error.message);
+        formMessage("Photo upload failed: " + up.error.message, true);
         btn.disabled = false;
         return;
       }
-      imageUrl = client.storage.from("product-images").getPublicUrl(imagePath).data.publicUrl;
+      newUrl = client.storage.from("product-images").getPublicUrl(newPath).data.publicUrl;
     }
 
-    var ins = await client.from("seller_products").insert({
-      seller_application_id: currentApp.id,
+    var fields = {
       name: document.getElementById("pf-name").value.trim(),
       description: document.getElementById("pf-desc").value.trim(),
       category: document.getElementById("pf-cat").value,
       price_kobo: priceKobo,
-      image_path: imagePath,
-      image_url: imageUrl,
-      status: "published"
-    });
+      in_stock: document.getElementById("pf-stock").checked
+    };
 
-    if (ins.error) {
-      if (imagePath) await client.storage.from("product-images").remove([imagePath]);
-      formMessage("Could not save the product: " + ins.error.message);
+    var editing = editingId
+      ? myProducts.filter(function (x) { return String(x.id) === String(editingId); })[0]
+      : null;
+    var failure = null;
+
+    if (editing) {
+      if (newPath) { fields.image_path = newPath; fields.image_url = newUrl; }
+      fields.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(fields).eq("id", editing.id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) failure = upd.error ? upd.error.message : "The change was not saved.";
+      else if (newPath && editing.image_path) await client.storage.from("product-images").remove([editing.image_path]);
+    } else {
+      fields.seller_application_id = currentApp.id;
+      fields.status = "published";
+      fields.image_path = newPath;
+      fields.image_url = newUrl;
+      var ins = await client.from("seller_products").insert(fields);
+      if (ins.error) failure = ins.error.message;
+    }
+
+    if (failure) {
+      if (newPath) await client.storage.from("product-images").remove([newPath]);
+      formMessage("Could not save the product: " + failure, true);
       btn.disabled = false;
       return;
     }
 
-    showToast("Product published.");
+    showToast(editing ? "Changes saved." : "Product published. It is live now.");
+    editingId = null;
     renderDashboard();
     loadProducts();
   }
@@ -1019,33 +1124,89 @@ updateCartCount();
     var box = document.getElementById("my-products");
     if (!box || !currentApp) return;
     var r = await client.from("seller_products")
-      .select("id,name,price_kobo,status,image_path")
+      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock")
       .eq("seller_application_id", currentApp.id)
       .order("created_at", { ascending: false });
     if (r.error) { box.textContent = r.error.message; return; }
-    if (!r.data.length) { box.textContent = "No listings yet."; return; }
-    box.innerHTML = r.data.map(function (p) {
-      return '<div class="seller-row"><div><strong>' + esc(p.name) + '</strong><br><span class="muted">' +
-        esc(money(Number(p.price_kobo) / 100)) + " · " + esc(p.status) + "</span></div>" +
-        '<button class="button button-outline" type="button" data-del="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button></div>';
+    myProducts = r.data || [];
+    if (!myProducts.length) { box.textContent = "No listings yet. Add your first product above."; return; }
+
+    box.innerHTML = myProducts.map(function (p) {
+      var live = p.status === "published";
+      var thumb = p.image_url && /^https:\/\//.test(p.image_url)
+        ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
+        : '<div class="thumb"></div>';
+      return '<div class="seller-item">' +
+        '<div class="seller-item-top">' + thumb + '<div class="grow"><strong>' + esc(p.name) + "</strong><br>" +
+        '<span class="muted">' + esc(money(Number(p.price_kobo) / 100)) + " · " +
+        (live ? "Live" : "Hidden") + (p.in_stock === false ? " · Sold out" : "") + "</span></div></div>" +
+        '<div class="seller-actions">' +
+        '<button class="button button-outline" type="button" data-act="edit" data-id="' + esc(p.id) + '">Edit</button>' +
+        '<button class="button button-outline" type="button" data-act="stock" data-id="' + esc(p.id) + '">' + (p.in_stock === false ? "Back in stock" : "Mark sold out") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="visible" data-id="' + esc(p.id) + '">' + (live ? "Hide" : "Show") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="delete" data-id="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
+        "</div></div>";
     }).join("");
   }
 
   sellerBody.addEventListener("click", async function (event) {
-    var button = event.target.closest("[data-del]");
+    var button = event.target.closest("[data-act]");
     if (!button) return;
-    if (!window.confirm("Delete this listing?")) return;
+    var id = button.dataset.id;
+    var act = button.dataset.act;
+    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!p) return;
+
+    if (act === "edit") { startEdit(id); return; }
     button.disabled = true;
-    var del = await client.from("seller_products").delete().eq("id", button.dataset.del).select("id");
-    if (del.error || !del.data || !del.data.length) {
-      showToast(del.error ? del.error.message : "Could not delete that listing.");
-      button.disabled = false;
-      return;
+
+    if (act === "delete") {
+      if (!window.confirm("Delete this listing permanently?")) { button.disabled = false; return; }
+      var del = await client.from("seller_products").delete().eq("id", id).select("id");
+      if (del.error || !del.data || !del.data.length) {
+        showToast(del.error ? del.error.message : "Could not delete that listing.");
+        button.disabled = false;
+        return;
+      }
+      if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
+      showToast("Listing deleted.");
+    } else {
+      var change = act === "stock"
+        ? { in_stock: p.in_stock === false }
+        : { status: p.status === "published" ? "hidden" : "published" };
+      change.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(change).eq("id", id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) {
+        showToast(upd.error ? upd.error.message : "The change was not saved.");
+        button.disabled = false;
+        return;
+      }
     }
-    if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
-    showToast("Listing deleted.");
     loadMyProducts();
     loadProducts();
+  });
+
+  /* Buyer: "Chat seller" opens WhatsApp. The number is fetched only when tapped. */
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest('[data-action="whatsapp"]');
+    if (!button || !client) return;
+    var product = findProduct(button.dataset.id);
+    if (!product) return;
+
+    var win = window.open("about:blank", "_blank");
+    button.disabled = true;
+    var r = await client.rpc("seller_contact", { p_product: product.id });
+    button.disabled = false;
+
+    var number = r.error ? "" : waNumber(r.data);
+    if (!number) {
+      if (win) win.close();
+      showToast("This seller's contact is not available right now.");
+      return;
+    }
+    var text = "Hello, I'm interested in \"" + product.name + "\" (" + money(product.price) + ") on SafeBuy NG. Is it still available?";
+    var url = "https://wa.me/" + number + "?text=" + encodeURIComponent(text);
+    if (win) win.location.href = url; else window.location.href = url;
   });
 
   document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
@@ -1053,9 +1214,7 @@ updateCartCount();
   });
   document.getElementById("seller-close").addEventListener("click", closeSeller);
   sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeSeller();
-  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSeller(); });
 
   if (client) {
     client.auth.onAuthStateChange(function () { currentApp = null; });
@@ -1071,4 +1230,4 @@ updateCartCount();
 })();
 </script>
 </body>
-  </html>
+      </html>
