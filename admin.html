@@ -136,7 +136,12 @@ input:focus,select:focus{border-color:var(--green)}
   /* ---------- Sign in ---------- */
   async function enter() {
     var r = await client.rpc("is_admin");
-    if (r.error || r.data !== true) {
+    if (r.error) {
+      await client.auth.signOut();
+      showLogin("Admin check failed: " + r.error.message + " (run schema.sql in Supabase first).");
+      return;
+    }
+    if (r.data !== true) {
       await client.auth.signOut();
       showLogin("This account does not have admin access.");
       return;
