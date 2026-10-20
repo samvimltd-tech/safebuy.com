@@ -1252,5 +1252,17 @@ updateCartCount();
 })();
 </script>
   <script src="./shop-extras.js"></script>.
+  <style>
+.product-art{cursor:pointer}
+</style>
+<script>
+document.addEventListener("click", function (e) {
+  var art = e.target.closest(".product-art");
+  if (!art) return;
+  var card = art.closest(".product-card");
+  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
+  if (link) window.location.href = link.getAttribute("href");
+});
+</script>
 </body>
   </html>
