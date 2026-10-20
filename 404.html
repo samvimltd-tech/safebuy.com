@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SafeBuy NG</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f7f9f7;color:#172b24}
+main{max-width:560px;margin:auto;padding:16px}
+.hero{position:relative;cursor:pointer}
+.hero img{width:100%;border-radius:16px;display:block}
+.more{position:absolute;right:10px;bottom:10px;background:#000a;color:#fff;font-size:13px;font-weight:700;padding:6px 10px;border-radius:20px}
+.btn{display:block;width:100%;border:0;text-align:center;background:#087f5b;color:#fff;padding:14px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;margin:16px 0}
+.btn[disabled]{background:#999}
+.note{background:#fff8e8;border:1px solid #f1d69a;padding:12px;border-radius:12px;font-size:13px}
+a{color:#087f5b}
+#gal{position:fixed;inset:0;background:#000e;z-index:50;display:none;flex-direction:column}
+#gal.open{display:flex}
+#gal .strip{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+#gal .strip img{flex:0 0 100%;width:100%;object-fit:contain;scroll-snap-align:center}
+#gal button{align-self:flex-end;margin:12px;border:0;background:#fff;border-radius:20px;padding:8px 14px;font-weight:700}
+#gal .count{color:#fff;text-align:center;padding:10px;font-size:13px}
+</style></head>
+<body>
+<main id="app"><p>Loading…</p></main>
+<div id="gal"><button type="button" id="gclose">Close ✕</button><div class="strip" id="strip"></div><div class="count" id="gcount"></div></div>
+<script>
+(async function(){
+  var app=document.getElementById("app");
+  var path=location.pathname;
+  var m=path.match(/^(.*\/)p\/([a-z0-9-]+)\/?$/);
+  var base=m?m[1]:"/safebuy.com/";
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function notFound(){document.title="Not found | SafeBuy NG";app.innerHTML='<h1>Page not found</h1><p><a href="'+base+'">← Back to SafeBuy NG</a></p>';}
+  if(!m){notFound();return;}
+  await new Promise(function(res){var s=document.createElement("script");s.src=base+"supabase-config.js";s.onload=res;s.onerror=res;document.head.appendChild(s);});
+  var c=window.SAFEbuySupabaseConfig;
+  if(!c){notFound();return;}
+  var h={apikey:c.publishableKey,Authorization:"Bearer "+c.publishableKey};
+  var slug=m[2];
+  var p;
+  try{
+    var r=await fetch(c.url+"/rest/v1/seller_products_public?select=*&slug=eq."+encodeURIComponent(slug),{headers:h});
+    var d=await r.json(); p=Array.isArray(d)?d[0]:null;
+  }catch(e){}
+  if(!p){notFound();return;}
+  var price="₦"+(Number(p.price_kobo)/100).toLocaleString("en-NG");
+  var urls=[];
+  if(/^https:\/\//.test(p.image_url||"")) urls.push(p.image_url);
+  try{
+    var r2=await fetch(c.url+"/rest/v1/product_images?select=image_url,position&product_id=eq."+encodeURIComponent(p.id)+"&order=position.asc",{headers:h});
+    var d2=await r2.json();
+    if(Array.isArray(d2)) d2.forEach(function(x){if(x.image_url&&/^https:\/\//.test(x.image_url)&&urls.indexOf(x.image_url)<0) urls.push(x.image_url);});
+  }catch(e){}
+  document.title=p.name+" | SafeBuy NG";
+  var out=p.in_stock===false;
+  app.innerHTML='<a href="'+base+'">← SafeBuy NG</a>'+
+    (urls.length?'<div class="hero" id="hero"><img src="'+esc(urls[0])+'" alt="'+esc(p.name)+'">'+(urls.length>1?'<span class="more">+'+(urls.length-1)+' photos</span>':'')+'</div>':'')+
+    '<h1>'+esc(p.name)+'</h1><h2>'+price+'</h2>'+
+    '<p>'+esc(p.shop_name)+' · '+(p.verified?'✓ Verified':'Unverified')+' · '+esc(p.category)+' · '+(out?'Sold out':'In stock')+'</p>'+
+    '<p>'+esc(p.description)+'</p>'+
+    '<button class="btn" id="chat" type="button"'+(out?' disabled':'')+'>'+(out?'Sold out':'Chat seller on WhatsApp')+'</button>'+
+    '<p class="note">SafeBuy NG does not handle payments or delivery yet. Meet in a public place and inspect the item before you pay.</p>';
+  var gal=document.getElementById("gal"),strip=document.getElementById("strip"),cnt=document.getElementById("gcount");
+  if(urls.length){
+    strip.innerHTML=urls.map(function(u){return '<img src="'+esc(u)+'" alt="">';}).join("");
+    strip.addEventListener("scroll",function(){cnt.textContent=(Math.round(strip.scrollLeft/strip.clientWidth)+1)+" / "+urls.length;});
+    document.getElementById("hero").addEventListener("click",function(){gal.classList.add("open");strip.scrollLeft=0;cnt.textContent="1 / "+urls.length;});
+    document.getElementById("gclose").addEventListener("click",function(){gal.classList.remove("open");});
+  }
+  function wa(phone){var x=String(phone||"").replace(/\D/g,"");if(x.indexOf("234")===0)return x;if(x.charAt(0)==="0")return "234"+x.slice(1);if(x.length===10)return "234"+x;return x;}
+  var chat=document.getElementById("chat");
+  chat.addEventListener("click",async function(){
+    chat.disabled=true;
+    try{
+      var rr=await fetch(c.url+"/rest/v1/rpc/seller_contact",{method:"POST",headers:Object.assign({"Content-Type":"application/json"},h),body:JSON.stringify({p_product:p.id})});
+      var num=wa(await rr.json());
+      if(!rr.ok||!num) throw new Error();
+      var t='Hello, I\'m interested in "'+p.name+'" ('+price+') on SafeBuy NG. Is it still available?';
+      location.href="https://wa.me/"+num+"?text="+encodeURIComponent(t);
+    }catch(e){alert("This seller's contact is not available right now.");}
+    chat.disabled=false;
+  });
+})();
+</script></body></html>
