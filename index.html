@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
+<!-- seo:start -->
+<link rel="canonical" href="https://samvimltd-tech.github.io/safebuy.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SafeBuy NG">
+<meta property="og:title" content="SafeBuy NG | Shop with Confidence">
+<meta property="og:description" content="Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.">
+<meta property="og:url" content="https://samvimltd-tech.github.io/safebuy.com/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"SafeBuy NG","url":"https://samvimltd-tech.github.io/safebuy.com/","description":"Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly."}</script>
+<!-- seo:end -->
 <title>SafeBuy NG | Shop with Confidence</title>
 <style>
 :root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px}
@@ -75,6 +85,9 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .product-actions{display:grid;grid-template-columns:1fr auto;gap:7px}
 .product-actions .button{padding:10px 9px;font-size:12px}
 .icon-button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--green);font-size:17px}
+a.icon-button{display:inline-grid;place-items:center;text-decoration:none}
+.product-info h3 a{color:inherit}
+.product-info h3 a:hover{color:var(--green)}
 .empty-state{grid-column:1/-1;padding:40px 18px;border:1px dashed #cbd9ce;border-radius:18px;text-align:center;background:#fff}
 .empty-state p{color:var(--muted)}
 .trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
@@ -462,7 +475,9 @@ function normalizeProduct(p, i) {
     tag: p.tag || "",
     description: p.description || "",
     verified: !!p.verified,
-    inStock: p.inStock !== false
+    inStock: p.inStock !== false,
+    slug: /^[a-z0-9][a-z0-9-]{0,99}$/.test(p.slug || "") ? p.slug : "",
+    condition: p.condition || "new"
   };
 }
 
@@ -519,7 +534,7 @@ function renderProducts() {
         </div>
         <div class="product-info">
           <div class="product-category">${esc(p.category)}</div>
-          <h3>${esc(p.name)}</h3>
+          <h3>${p.slug ? `<a href="p/${esc(p.slug)}/">${esc(p.name)}</a>` : esc(p.name)}</h3>
           <p class="seller-name">Sold by ${esc(p.seller)}${productSource === "supabase" ? (p.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
           <div class="product-bottom">
             <span class="price">${money(p.price)}</span>
@@ -529,7 +544,9 @@ function renderProducts() {
             ${productSource === "supabase"
               ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(p.id)}"${p.inStock ? "" : " disabled"}>${p.inStock ? "Chat seller" : "Sold out"}</button>`
               : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>`}
-            <button class="icon-button" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}">↗</button>
+            ${p.slug
+              ? `<a class="icon-button" href="p/${esc(p.slug)}/" aria-label="View ${esc(p.name)}">↗</a>`
+              : `<button class="icon-button" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}">↗</button>`}
           </div>
         </div>
       </article>`;
@@ -742,7 +759,9 @@ updateCartCount();
             image: r.image_url,
             description: r.description,
             verified: r.verified,
-            inStock: r.in_stock
+            inStock: r.in_stock,
+            slug: r.slug,
+            condition: r.condition
           }, i);
         }), "supabase");
       })
@@ -999,6 +1018,7 @@ updateCartCount();
       '<form id="product-form">' +
       '<label for="pf-name">Product name</label><input id="pf-name" type="text" required maxlength="120">' +
       '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions("") + "</select>" +
+      '<label for="pf-cond">Condition</label><select id="pf-cond"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option></select>' +
       '<label for="pf-price">Price (₦)</label><input id="pf-price" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="e.g. 18500">' +
       '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000" placeholder="Condition, size, delivery areas…"></textarea>' +
       '<label for="pf-photo" id="pf-photo-label">Photo (JPG, PNG or WebP, up to 5 MB)</label>' +
@@ -1037,6 +1057,7 @@ updateCartCount();
     document.getElementById("pf-heading").textContent = "Edit product";
     document.getElementById("pf-name").value = p.name || "";
     document.getElementById("pf-cat").value = p.category || CATEGORIES[0];
+    document.getElementById("pf-cond").value = p.condition || "new";
     document.getElementById("pf-price").value = (Number(p.price_kobo) / 100).toString();
     document.getElementById("pf-desc").value = p.description || "";
     document.getElementById("pf-stock").checked = p.in_stock !== false;
@@ -1083,6 +1104,7 @@ updateCartCount();
       name: document.getElementById("pf-name").value.trim(),
       description: document.getElementById("pf-desc").value.trim(),
       category: document.getElementById("pf-cat").value,
+      condition: document.getElementById("pf-cond").value,
       price_kobo: priceKobo,
       in_stock: document.getElementById("pf-stock").checked
     };
@@ -1124,7 +1146,7 @@ updateCartCount();
     var box = document.getElementById("my-products");
     if (!box || !currentApp) return;
     var r = await client.from("seller_products")
-      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock")
+      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock,condition")
       .eq("seller_application_id", currentApp.id)
       .order("created_at", { ascending: false });
     if (r.error) { box.textContent = r.error.message; return; }
@@ -1230,4 +1252,4 @@ updateCartCount();
 })();
 </script>
 </body>
-      </html>
+  </html>
