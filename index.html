@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-  <link rel="preconnect" href="https://YOUR-PROJECT.supabase.co" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://vntxonelajiogqhvbctu.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#ffffff">
 <meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
@@ -28,6 +28,8 @@ button,input{font:inherit}
 button,a{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
+a,button,.product-art{touch-action:manipulation}
+.product-art{cursor:pointer}
 .announcement{padding:9px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
 .container{width:min(1160px,100% - 36px);margin:auto}
 header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
@@ -295,7 +297,7 @@ html{scroll-behavior:auto}
       </div>
 
       <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
-  <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
+      <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
       <div class="product-grid" id="product-grid"></div>
     </div>
   </section>
@@ -772,6 +774,7 @@ updateCartCount();
       });
   }
 
+  window.loadProducts = loadProducts;
   loadProducts();
 
   /* ---------- Account ---------- */
@@ -1207,7 +1210,7 @@ updateCartCount();
       }
     }
     loadMyProducts();
-    window.loadProducts = loadProducts; loadProducts();
+    loadProducts();
   });
 
   /* Buyer: "Chat seller" opens WhatsApp. The number is fetched only when tapped. */
@@ -1253,11 +1256,9 @@ updateCartCount();
   setMode("signin");
 })();
 </script>
-  <script src="./shop-extras.js"></script>.
-  <style>
-.product-art{cursor:pointer}
-</style>
+<script src="./shop-extras.js"></script>
 <script>
+/* Product image opens the product page, same as the title */
 document.addEventListener("click", function (e) {
   var art = e.target.closest(".product-art");
   if (!art) return;
@@ -1266,15 +1267,18 @@ document.addEventListener("click", function (e) {
   if (link) window.location.href = link.getAttribute("href");
 });
 </script>
-  a,button,.product-art{touch-action:manipulation}
-  <script>
+<script>
+/* Instant load from saved copy, then live refresh and re-sync */
 (function(){
-  var K="sb_products_v1", orig=window.setProducts;
-  var cached=null;
+  var K="sb_products_v1", orig=window.setProducts, cached=null;
   try{cached=JSON.parse(localStorage.getItem(K)||"null");}catch(e){}
   window.setProducts=function(list,source,msg){
     if(source==="supabase"){try{localStorage.setItem(K,JSON.stringify(list));}catch(e){}}
-    if(source==="sample"&&cached&&cached.length){return orig(cached,"supabase");}
+    if(source==="sample"&&cached&&cached.length){
+      orig(cached,"supabase");
+      document.getElementById("source-banner").textContent="⚠ Showing a saved copy. Could not reach Supabase: "+msg;
+      return;
+    }
     return orig(list,source,msg);
   };
   if(cached&&cached.length) orig(cached,"supabase");
@@ -1284,6 +1288,6 @@ document.addEventListener("click", function (e) {
   window.addEventListener("online",refresh);
   setInterval(refresh,30000);
 })();
-                          </script>
+</script>
 </body>
-  </html>
+</html>
