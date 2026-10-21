@@ -73,7 +73,7 @@
       document.getElementById("om-go").onclick = function () {
         var q = Math.max(1, Math.min(99, parseInt(document.getElementById("om-qty").value, 10) || 1));
         this.disabled = true;
-        c.from("orders").insert({ buyer_id: u.id, product_id: id, quantity: q }).then(function (r) {
+        c.from("marketplace_orders").insert({ buyer_id: u.id, product_id: id, quantity: q }).then(function (r) {
           if (r.error) { document.getElementById("om-msg").textContent = r.error.message; document.getElementById("om-go").disabled = false; return; }
           T("Order placed."); showMyOrders();
         });
@@ -84,7 +84,7 @@
   /* ---- buyer: My orders ---- */
   function showMyOrders() {
     open("My orders", "<p>Loading…</p>");
-    c.from("orders").select("*").order("created_at", { ascending: false }).then(function (r) {
+    c.from("marketplace_orders").select("*").order("created_at", { ascending: false }).then(function (r) {
       if (r.error) { body.innerHTML = "<p>" + E(r.error.message) + "</p>"; return; }
       u2();
       function u2() {
@@ -118,7 +118,7 @@
     }
   });
   function setStatus(id, status, done) {
-    c.rpc("update_order_status", { p_order: id, p_status: status }).then(function (r) {
+    c.rpc("mp_update_order_status", { p_order: id, p_status: status }).then(function (r) {
       if (r.error) T(r.error.message); else T("Order updated.");
       done();
     });
@@ -138,7 +138,7 @@
       if (!u) return;
       c.from("seller_applications").select("id").eq("user_id", u.id).maybeSingle().then(function (a) {
         if (!a.data) return;
-        c.from("orders").select("*").eq("seller_application_id", a.data.id).order("created_at", { ascending: false }).then(function (r) {
+        c.from("marketplace_orders").select("*").eq("seller_application_id", a.data.id).order("created_at", { ascending: false }).then(function (r) {
           var l = document.getElementById("so-list"); if (!l) return;
           if (r.error) { l.textContent = r.error.message; return; }
           if (!(r.data || []).length) { l.textContent = "No orders yet."; return; }
