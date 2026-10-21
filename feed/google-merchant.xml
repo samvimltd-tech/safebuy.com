@@ -5,6 +5,19 @@
     <link>https://samvimltd-tech.github.io/safebuy.com/</link>
     <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
     <item>
+      <g:id>c4c913c1-9bef-4be9-9c76-4a95ef4805c5</g:id>
+      <g:title>Fan</g:title>
+      <g:description>Good quality</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/fan-c4c913c1/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/f07543dc-35c6-4c43-9e62-428d8bab7576/e6915919-0497-4d46-b51a-225e5dcbd609.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>8000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Samvimcommunications Ltd</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>Electronics</g:google_product_category>
+    </item>
+    <item>
       <g:id>cc1491f6-402f-4ff4-9e4b-03f820485b73</g:id>
       <g:title>Bicycle</g:title>
       <g:description>Very good condition</g:description>
