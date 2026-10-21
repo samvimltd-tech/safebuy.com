@@ -107,7 +107,8 @@
     ".sbx-og{margin:0 0 4px;font-size:14px}.sbx-chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}" +
     ".sbx-chip{position:relative;display:inline-block}.sbx-chip input{position:absolute;opacity:0;pointer-events:none}" +
     ".sbx-chip span{display:inline-block;padding:8px 14px;border:1px solid #dce5de;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#172b24}" +
-    ".sbx-chip input:checked+span{background:#087f5b;border-color:#087f5b;color:#fff}.sbx-chip input:checked+span::before{content:'\\2713 '}";
+    ".sbx-chip input:checked+span{background:#087f5b;border-color:#087f5b;color:#fff}.sbx-chip input:checked+span::before{content:'\\2713 '}" +
+    ".modal .sbx-chip{display:inline-block;margin:0;font-weight:400}.sbx-other{margin-top:6px}";
   document.head.appendChild(st);
 
   /* ---------- product extras: gallery, reviews, report ---------- */
@@ -337,8 +338,8 @@
         '<label for="cx-phone">Your phone number</label><input id="cx-phone" type="tel" placeholder="08012345678" value="' + esc(d.phone || "") + '">' +
         '<label for="cx-note">Note for sellers (optional)</label><textarea id="cx-note" maxlength="300" placeholder="Delivery area, size, colour…">' + esc(d.note || "") + "</textarea>" +
         "<label>Payment</label>" +
-        '<label class="check"><input type="radio" name="cx-pay" value="direct"' + (d.pay === "pay_on_delivery" ? "" : " checked") + "> Pay the seller directly (cash or transfer at pickup)</label>" +
-        '<label class="check"><input type="radio" name="cx-pay" value="pay_on_delivery"' + (d.pay === "pay_on_delivery" ? " checked" : "") + "> Request pay on delivery (the seller must confirm)</label>" +
+        '<label class="check"><input type="radio" name="cx-pay" value="direct"' + (d.pay === "pay_on_delivery" ? "" : " checked") + "> <span><strong>Pay at pickup address</strong> (cash/transfer)</span></label>" +
+        '<label class="check"><input type="radio" name="cx-pay" value="pay_on_delivery"' + (d.pay === "pay_on_delivery" ? " checked" : "") + "> <span><strong>Pay on delivery</strong>: pay when it arrives (the seller must confirm).<br>Delivery fee applies.</span></label>" +
         '<div id="cx-addr-wrap"' + (d.pay === "pay_on_delivery" ? "" : " hidden") + '><label for="cx-addr">Delivery address</label><input id="cx-addr" type="text" maxlength="300" placeholder="Street, area, city" value="' + esc(d.addr || "") + '"></div>' +
         '<p class="modal-note"><strong>How it works:</strong> we save your order, then open WhatsApp with a ready message for each seller. Prices are confirmed by SafeBuy NG when you place the order. Pay the seller directly; online payment is coming soon.</p>' +
         '<button class="button button-primary" type="button" data-c="place">Place order &amp; message sellers</button>' +
@@ -390,8 +391,8 @@
         var text = "Hello " + g.shop_name + ", I would like to order on SafeBuy NG (order " + o.order_code + "):\n" + lines +
           "\nSubtotal: " + naira(g.subtotal_kobo / 100) + "\nName: " + name + ", phone: " + phone +
           (draft && draft.pay === "pay_on_delivery"
-            ? "\nPayment: I would like to PAY ON DELIVERY. Delivery address: " + (draft.addr || "") + "\nPlease confirm if you offer pay on delivery."
-            : "\nPayment: directly to you at pickup.") +
+            ? "\nPayment: I would like to PAY ON DELIVERY. Delivery address: " + (draft.addr || "") + "\nPlease confirm if you offer pay on delivery and the delivery fee."
+            : "\nPayment: at your pickup address (cash/transfer).") +
           (note ? "\nNote: " + note : "") + "\nPlease confirm availability and delivery.";
         html += '<a class="button button-primary" target="_blank" rel="noopener" href="' + esc(waLink(g.phone, text)) + '">Send to ' + esc(g.shop_name) + " on WhatsApp</a>";
       });
@@ -618,11 +619,34 @@
       }, true);
     }
 
+    var condSel = sb.querySelector("#pf-cond");
+    if (condSel && !sb.querySelector("#sbx-oe")) {
+      editTarget = null;
+      condSel.insertAdjacentHTML("afterend", optionsEditorHtml());
+      var oe = sb.querySelector("#sbx-oe");
+      oe.addEventListener("change", function (e) {
+        if (e.target.value !== "__other") return;
+        var inp = oe.querySelector('input.sbx-other[data-g="' + e.target.dataset.g + '"]');
+        if (inp) { inp.hidden = !e.target.checked; if (e.target.checked) inp.focus(); }
+      });
+      sb.querySelector("#product-form").addEventListener("submit", function () {
+        pending = null;
+        var heading = document.getElementById("pf-heading");
+        var editing = !!(heading && heading.textContent === "Edit product" && editTarget);
+        var v = readEditor(oe);
+        if (editing || v.colors.length || v.sizes.length) {
+          pending = { id: editing ? editTarget : null, colors: v.colors, sizes: v.sizes };
+        }
+      }, true);
+    }
+
     if (!sb.dataset.catBound) {
       sb.dataset.catBound = "1";
       sb.addEventListener("click", async function (e) {
         var b = e.target.closest('[data-act="edit"]');
         if (!b) return;
+        editTarget = b.dataset.id;
+        loadEditor(b.dataset.id);
         var sel = document.getElementById("pf-cat"), oth = document.getElementById("pf-cat-other");
         if (!sel || !oth) return;
         if (sel.selectedIndex >= 0) { oth.hidden = true; return; }
@@ -652,22 +676,89 @@
     }
   }
 
-  function cleanCat(t) { return String(t || "").replace(/\s+/g, " ").trim(); }
+  /* ---------- seller colour / size picker ---------- */
+  var COLOR_PRESETS = ["Red", "Black", "Blue", "White", "Green", "Yellow", "Brown", "Grey", "Pink", "Purple", "Orange"];
+  var SIZE_PRESETS = ["S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"];
+  var pending = null, editTarget = null;
 
-  async function editOptions(id) {
-    var c = client();
-    if (!c) return;
-    var r = await c.from("seller_products").select("colors,sizes").eq("id", id).maybeSingle();
-    var cur = r.data || {};
-    var col = window.prompt("Colours buyers can choose, separated by commas. Leave empty for none.", (cur.colors || []).join(", "));
-    if (col === null) return;
-    var sz = window.prompt("Sizes buyers can choose, separated by commas, e.g. S, M, L, XL. Leave empty for none.", (cur.sizes || []).join(", "));
-    if (sz === null) return;
-    function list(t) { return t.split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
-    var res = await c.rpc("set_product_options", { p_product: id, p_colors: list(col), p_sizes: list(sz) });
-    toast(res.error ? res.error.message : "Colours and sizes saved.");
-    if (!res.error) delete optMap[String(id)];
+  function editorGroup(g, label, presets, otherLabel) {
+    return "<label>" + label + '</label><div class="sbx-chips">' +
+      presets.map(function (v) {
+        return '<label class="sbx-chip"><input type="checkbox" data-g="' + g + '" value="' + esc(v) + '"><span>' + esc(v) + "</span></label>";
+      }).join("") +
+      '<label class="sbx-chip"><input type="checkbox" data-g="' + g + '" value="__other"><span>' + otherLabel + "</span></label></div>" +
+      '<input class="sbx-other" data-g="' + g + '" type="text" maxlength="80" placeholder="' + otherLabel + ', separated by commas" hidden>';
   }
+  function optionsEditorHtml() {
+    return '<div id="sbx-oe">' +
+      editorGroup("colors", "Available colours (tick all that apply)", COLOR_PRESETS, "Other colour") +
+      editorGroup("sizes", "Available sizes (tick all that apply)", SIZE_PRESETS, "Other size") +
+      '<p class="muted">Leave everything unticked if buyers do not need to choose a colour or size.</p></div>';
+  }
+  function readEditor(root) {
+    function grp(g) {
+      var out = [];
+      [].forEach.call(root.querySelectorAll('input[type="checkbox"][data-g="' + g + '"]:checked'), function (cb) {
+        if (cb.value !== "__other") out.push(cb.value);
+      });
+      var oc = root.querySelector('input[type="checkbox"][data-g="' + g + '"][value="__other"]');
+      var ot = root.querySelector('input.sbx-other[data-g="' + g + '"]');
+      if (oc && oc.checked && ot) {
+        ot.value.split(",").forEach(function (x) {
+          x = x.trim();
+          var dup = out.some(function (y) { return y.toLowerCase() === x.toLowerCase(); });
+          if (x && !dup) out.push(x);
+        });
+      }
+      return out;
+    }
+    return { colors: grp("colors"), sizes: grp("sizes") };
+  }
+  function setEditor(root, colors, sizes) {
+    function fill(g, list) {
+      var boxes = [].slice.call(root.querySelectorAll('input[type="checkbox"][data-g="' + g + '"]'));
+      var others = [];
+      boxes.forEach(function (cb) { cb.checked = false; });
+      list.forEach(function (v) {
+        var hit = boxes.filter(function (cb) { return cb.value !== "__other" && cb.value.toLowerCase() === String(v).toLowerCase(); })[0];
+        if (hit) hit.checked = true; else others.push(v);
+      });
+      var oc = root.querySelector('input[type="checkbox"][data-g="' + g + '"][value="__other"]');
+      var ot = root.querySelector('input.sbx-other[data-g="' + g + '"]');
+      oc.checked = others.length > 0;
+      ot.hidden = !others.length;
+      ot.value = others.join(", ");
+    }
+    fill("colors", colors || []);
+    fill("sizes", sizes || []);
+  }
+  async function loadEditor(id) {
+    var c = client(), root = document.getElementById("sbx-oe");
+    if (!c || !root) return;
+    var r = await c.from("seller_products").select("colors,sizes").eq("id", id).maybeSingle();
+    if (r.data) setEditor(root, r.data.colors, r.data.sizes);
+  }
+  async function applyPending() {
+    var pd = pending;
+    pending = null;
+    if (!pd) return;
+    var c = client(), u = await getUser();
+    if (!c || !u) return;
+    var id = pd.id;
+    if (!id) {
+      var a = await c.from("seller_applications").select("id").eq("user_id", u.id).maybeSingle();
+      if (!a.data) return;
+      var r = await c.from("seller_products").select("id").eq("seller_application_id", a.data.id)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      id = r.data && r.data.id;
+    }
+    if (!id) return;
+    var res = await c.rpc("set_product_options", { p_product: id, p_colors: pd.colors, p_sizes: pd.sizes });
+    if (res.error) toast("Could not save colours and sizes: " + res.error.message);
+    delete optMap[String(id)];
+  }
+
+  function cleanCat(t) { return String(t || "").replace(/\s+/g, " ").trim(); }
 
   /* remove a stray "." text node left after the script tag in index.html */
   [].slice.call(document.body.childNodes).forEach(function (n) {
@@ -678,6 +769,13 @@
   function initSellerPhotos() {
     var sellerBody = document.getElementById("seller-body");
     if (!sellerBody) return;
+
+    var tEl = document.getElementById("toast");
+    if (tEl) {
+      new MutationObserver(function () {
+        if (pending && /Product published|Changes saved/.test(tEl.textContent)) applyPending();
+      }).observe(tEl, { childList: true, characterData: true, subtree: true });
+    }
 
     new MutationObserver(function () {
       enhanceSeller();
@@ -701,7 +799,11 @@
       var idEl = b.parentNode.querySelector("[data-id]");
       if (!idEl) return;
       targetId = idEl.dataset.id;
-      if (b.dataset.xp === "opts") { editOptions(targetId); return; }
+      if (b.dataset.xp === "opts") {
+        var eb = b.parentNode.querySelector('[data-act="edit"]');
+        if (eb) { eb.click(); toast("Tick the colours and sizes, then tap Save changes."); }
+        return;
+      }
       if (b.dataset.xp === "add") { picker.value = ""; picker.click(); return; }
       var c = client();
       if (!c || !window.confirm("Remove all extra photos from this listing? The main photo stays.")) return;
