@@ -100,22 +100,52 @@
     s.innerHTML = urls.map(function (u, i) {
       return '<img src="' + esc(u) + '" alt="Photo ' + (i + 1) + '" data-i="' + i + '"' + (i === 0 ? ' class="on"' : "") + ">";
     }).join("");
-    var cur = 0;
-    function show(i) {
+    s.style.position = "relative";
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var cur = 0, paused = false, resumeT = null;
+
+    function show(i, d) {
       cur = (i + urls.length) % urls.length;
       main.src = urls[cur];
+      if (main.animate && !reduce) {
+        main.animate(
+          [{ opacity: 0.25, transform: "translateX(" + (d < 0 ? -40 : 40) + "px)" }, { opacity: 1, transform: "none" }],
+          { duration: 350, easing: "ease-out" }
+        );
+      }
       [].forEach.call(s.children, function (el, k) { el.classList.toggle("on", k === cur); });
-      s.children[cur].scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      var el = s.children[cur];
+      s.scrollTo({ left: el.offsetLeft - (s.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
     }
-    s.onclick = function (e) { var t = e.target.closest("img"); if (t) show(Number(t.dataset.i)); };
+    function pause() {
+      paused = true;
+      clearTimeout(resumeT);
+      resumeT = setTimeout(function () { paused = false; }, 8000);
+    }
+
+    s.onclick = function (e) {
+      var t = e.target.closest("img");
+      if (t) { pause(); show(Number(t.dataset.i), 1); }
+    };
+    s.ontouchstart = pause;
     var x0 = null;
-    holder.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
-    holder.addEventListener("touchend", function (e) {
+    holder.ontouchstart = function (e) { x0 = e.touches[0].clientX; pause(); };
+    holder.ontouchend = function (e) {
       if (x0 === null) return;
       var dx = e.changedTouches[0].clientX - x0;
       x0 = null;
-      if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1));
-    }, { passive: true });
+      if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+    };
+    holder.onmouseenter = function () { paused = true; };
+    holder.onmouseleave = function () { paused = false; };
+
+    /* auto-slide every 3.5 s; pauses while the visitor touches or hovers */
+    clearInterval(window.__sbxTimer);
+    if (!reduce) {
+      window.__sbxTimer = setInterval(function () {
+        if (!paused && !document.hidden) show(cur + 1, 1);
+      }, 3500);
+    }
     wrap.appendChild(s);
   }
 
