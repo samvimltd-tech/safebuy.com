@@ -379,12 +379,76 @@
     initSellerPhotos();
   }
 
+  /* ---------- seller pickup address (injected into the existing seller modal) ---------- */
+  var pendingAddr = "";
+
+  async function loadAddress() {
+    var c = client(), u = await getUser();
+    var input = document.getElementById("pa-input");
+    if (!c || !u || !input) return;
+    var r = await c.from("seller_applications").select("pickup_address").eq("user_id", u.id).maybeSingle();
+    var cur = r.data && r.data.pickup_address ? r.data.pickup_address : "";
+    if (!cur && pendingAddr) {
+      cur = pendingAddr;
+      pendingAddr = "";
+      await c.rpc("set_pickup_address", { p_address: cur });
+    }
+    input.value = cur;
+  }
+
+  function enhanceSeller() {
+    var sb = document.getElementById("seller-body");
+    if (!sb) return;
+
+    var setup = sb.querySelector("#setup-form");
+    if (setup && !sb.querySelector("#su-addr")) {
+      var stateEl = sb.querySelector("#su-state");
+      if (stateEl) {
+        stateEl.insertAdjacentHTML("afterend",
+          '<label for="su-addr">Pickup address (shown publicly on your product pages)</label>' +
+          '<input id="su-addr" type="text" maxlength="300" placeholder="e.g. 6 Sampson Street, Upper Meniru, Enugu">');
+      }
+      setup.addEventListener("submit", function () {
+        var a = sb.querySelector("#su-addr");
+        pendingAddr = a ? a.value.trim() : "";
+      }, true);
+    }
+
+    var heading = sb.querySelector("#pf-heading");
+    if (heading && !sb.querySelector("#pa-input")) {
+      heading.insertAdjacentHTML("beforebegin",
+        '<h3>Pickup address</h3><p class="muted">Shown publicly on your product pages so buyers know where to collect.</p>' +
+        '<input id="pa-input" type="text" maxlength="300" placeholder="e.g. 6 Sampson Street, Upper Meniru, Enugu">' +
+        '<button class="button button-outline" type="button" id="pa-save">Save address</button>' +
+        '<p class="form-message" id="pa-msg" role="status" aria-live="polite"></p>');
+      loadAddress();
+    }
+
+    if (!sb.dataset.paBound) {
+      sb.dataset.paBound = "1";
+      sb.addEventListener("click", async function (e) {
+        if (!e.target.closest("#pa-save")) return;
+        var c = client(), input = document.getElementById("pa-input"), msg = document.getElementById("pa-msg");
+        if (!c || !input) return;
+        var r = await c.rpc("set_pickup_address", { p_address: input.value.trim() });
+        msg.textContent = r.error ? r.error.message : "Pickup address saved.";
+        msg.style.color = r.error ? "#8a1f1f" : "";
+      });
+    }
+  }
+
+  /* remove a stray "." text node left after the script tag in index.html */
+  [].slice.call(document.body.childNodes).forEach(function (n) {
+    if (n.nodeType === 3 && n.textContent.trim() === ".") n.remove();
+  });
+
   /* ---------- seller dashboard: extra photos per listing ---------- */
   function initSellerPhotos() {
     var sellerBody = document.getElementById("seller-body");
     if (!sellerBody) return;
 
     new MutationObserver(function () {
+      enhanceSeller();
       sellerBody.querySelectorAll(".seller-actions").forEach(function (a) {
         if (a.querySelector("[data-xp]")) return;
         a.insertAdjacentHTML("beforeend",
