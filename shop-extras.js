@@ -50,11 +50,41 @@
     if (el) el.textContent = cart.reduce(function (t, i) { return t + i.qty; }, 0);
   }
   function addItem(p) {
-    var e = cart.filter(function (i) { return i.id === String(p.id); })[0];
+    var key = [String(p.id), p.color || "", p.size || ""].join("|");
+    var e = cart.filter(function (i) { return (i.key || i.id) === key; })[0];
     if (e) e.qty = Math.min(50, e.qty + 1);
-    else cart.push({ id: String(p.id), name: p.name, price: Number(p.price), category: p.category || "", qty: 1 });
+    else cart.push({ key: key, id: String(p.id), name: p.name, price: Number(p.price), category: p.category || "", color: p.color || "", size: p.size || "", qty: 1 });
     saveCart();
     refreshCount();
+  }
+
+  /* ---------- colour / size options ---------- */
+  var optMap = {};
+  async function getOpts(id) {
+    id = String(id);
+    if (optMap[id]) return optMap[id];
+    var c = client();
+    var empty = { colors: [], sizes: [] };
+    if (!c) return empty;
+    var r = await c.from("seller_products_public").select("id,colors,sizes").eq("id", id).maybeSingle();
+    optMap[id] = r.data ? { colors: r.data.colors || [], sizes: r.data.sizes || [] } : empty;
+    return optMap[id];
+  }
+  function optsHtml(o) {
+    function group(name, label, list) {
+      if (!list.length) return "";
+      return '<div class="sbx-og"><strong>' + label + '</strong><div class="sbx-chips">' + list.map(function (v) {
+        return '<label class="sbx-chip"><input type="radio" name="sbx-' + name + '" value="' + esc(v) + '"><span>' + esc(v) + "</span></label>";
+      }).join("") + "</div></div>";
+    }
+    return group("color", "Colour", o.colors) + group("size", "Size", o.sizes);
+  }
+  function readOpts(root, o) {
+    var col = root.querySelector('input[name="sbx-color"]:checked');
+    var sz = root.querySelector('input[name="sbx-size"]:checked');
+    if (o.colors.length && !col) return { error: "Please choose a colour." };
+    if (o.sizes.length && !sz) return { error: "Please choose a size." };
+    return { color: col ? col.value : "", size: sz ? sz.value : "" };
   }
   function rid() {
     return window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -73,7 +103,11 @@
     ".sbx-report{margin-top:6px;padding:10px;border:1px solid #f1d69a;border-radius:12px;background:#fff8e8}" +
     ".sbx-strip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}" +
     ".sbx-strip img{position:static!important;inset:auto!important;width:64px!important;height:64px!important;flex:0 0 64px;border-radius:10px;border:2px solid transparent;object-fit:cover;cursor:pointer;background:#edf6ef;scroll-snap-align:start}" +
-    ".sbx-strip img.on{border-color:#087f5b}";
+    ".sbx-strip img.on{border-color:#087f5b}" +
+    ".sbx-og{margin:0 0 4px;font-size:14px}.sbx-chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}" +
+    ".sbx-chip{position:relative;display:inline-block}.sbx-chip input{position:absolute;opacity:0;pointer-events:none}" +
+    ".sbx-chip span{display:inline-block;padding:8px 14px;border:1px solid #dce5de;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#172b24}" +
+    ".sbx-chip input:checked+span{background:#087f5b;border-color:#087f5b;color:#fff}.sbx-chip input:checked+span::before{content:'\\2713 '}";
   document.head.appendChild(st);
 
   /* ---------- product extras: gallery, reviews, report ---------- */
@@ -227,8 +261,14 @@
   /* ---------- product page (static): add to cart + extras ---------- */
   var addBtn = document.getElementById("sbx-add");
   if (addBtn) {
-    addBtn.addEventListener("click", function () {
-      addItem({ id: addBtn.dataset.id, name: addBtn.dataset.name, price: addBtn.dataset.price, category: addBtn.dataset.category });
+    var optBox = document.createElement("div");
+    addBtn.parentNode.insertBefore(optBox, document.getElementById("chat") || addBtn);
+    getOpts(addBtn.dataset.id).then(function (o) { optBox.innerHTML = optsHtml(o); });
+    addBtn.addEventListener("click", async function () {
+      var o = await getOpts(addBtn.dataset.id);
+      var sel = readOpts(optBox, o);
+      if (sel.error) { alert(sel.error); return; }
+      addItem({ id: addBtn.dataset.id, name: addBtn.dataset.name, price: addBtn.dataset.price, category: addBtn.dataset.category, color: sel.color, size: sel.size });
       addBtn.textContent = "Added ✓";
       if (!document.getElementById("sbx-view")) {
         addBtn.insertAdjacentHTML("afterend",
@@ -261,7 +301,11 @@
     function close() { back.classList.remove("open"); }
     function keepDraft() {
       var n = body.querySelector("#cx-name");
-      if (n) draft = { name: n.value, phone: body.querySelector("#cx-phone").value, note: body.querySelector("#cx-note").value };
+      if (n) {
+        var pr = body.querySelector('input[name="cx-pay"]:checked'), ad = body.querySelector("#cx-addr");
+        draft = { name: n.value, phone: body.querySelector("#cx-phone").value, note: body.querySelector("#cx-note").value,
+                  pay: pr ? pr.value : "direct", addr: ad ? ad.value : "" };
+      }
     }
     function msg(t, bad) {
       var m = body.querySelector("#cx-msg");
@@ -278,11 +322,13 @@
       var total = 0;
       var rows = cart.map(function (i) {
         total += i.price * i.qty;
-        return '<div class="seller-row"><div><strong>' + esc(i.name) + '</strong><br><span class="muted">' + esc(naira(i.price)) + " each</span></div>" +
-          '<div class="seller-actions"><button class="button button-outline" type="button" data-c="dec" data-id="' + esc(i.id) + '">−</button>' +
+        var k = i.key || i.id, variant = [i.color, i.size].filter(Boolean).join(" · ");
+        return '<div class="seller-row"><div><strong>' + esc(i.name) + "</strong>" + (variant ? "<br><span class=\"muted\">" + esc(variant) + "</span>" : "") +
+          '<br><span class="muted">' + esc(naira(i.price)) + " each</span></div>" +
+          '<div class="seller-actions"><button class="button button-outline" type="button" data-c="dec" data-id="' + esc(k) + '">−</button>' +
           "<strong>" + i.qty + "</strong>" +
-          '<button class="button button-outline" type="button" data-c="inc" data-id="' + esc(i.id) + '">+</button>' +
-          '<button class="button button-outline" type="button" data-c="rm" data-id="' + esc(i.id) + '" aria-label="Remove">✕</button></div></div>';
+          '<button class="button button-outline" type="button" data-c="inc" data-id="' + esc(k) + '">+</button>' +
+          '<button class="button button-outline" type="button" data-c="rm" data-id="' + esc(k) + '" aria-label="Remove">✕</button></div></div>';
       }).join("");
       var d = draft || {};
       body.innerHTML = rows +
@@ -290,6 +336,10 @@
         '<label for="cx-name">Your name</label><input id="cx-name" type="text" maxlength="80" value="' + esc(d.name || "") + '">' +
         '<label for="cx-phone">Your phone number</label><input id="cx-phone" type="tel" placeholder="08012345678" value="' + esc(d.phone || "") + '">' +
         '<label for="cx-note">Note for sellers (optional)</label><textarea id="cx-note" maxlength="300" placeholder="Delivery area, size, colour…">' + esc(d.note || "") + "</textarea>" +
+        "<label>Payment</label>" +
+        '<label class="check"><input type="radio" name="cx-pay" value="direct"' + (d.pay === "pay_on_delivery" ? "" : " checked") + "> Pay the seller directly (cash or transfer at pickup)</label>" +
+        '<label class="check"><input type="radio" name="cx-pay" value="pay_on_delivery"' + (d.pay === "pay_on_delivery" ? " checked" : "") + "> Request pay on delivery (the seller must confirm)</label>" +
+        '<div id="cx-addr-wrap"' + (d.pay === "pay_on_delivery" ? "" : " hidden") + '><label for="cx-addr">Delivery address</label><input id="cx-addr" type="text" maxlength="300" placeholder="Street, area, city" value="' + esc(d.addr || "") + '"></div>' +
         '<p class="modal-note"><strong>How it works:</strong> we save your order, then open WhatsApp with a ready message for each seller. Prices are confirmed by SafeBuy NG when you place the order. Pay the seller directly; online payment is coming soon.</p>' +
         '<button class="button button-primary" type="button" data-c="place">Place order &amp; message sellers</button>' +
         '<button class="button button-outline" type="button" disabled>Pay online (coming soon)</button>' +
@@ -312,12 +362,15 @@
       keepDraft();
       var name = (draft.name || "").trim(), phone = (draft.phone || "").trim();
       if (!name || !phone) { msg("Enter your name and phone number.", true); return; }
+      if (draft.pay === "pay_on_delivery" && !(draft.addr || "").trim()) { msg("Enter your delivery address.", true); return; }
       var btn = body.querySelector('[data-c="place"]');
       btn.disabled = true;
       msg("Placing your order…");
       var r = await c.rpc("place_order", {
         p_name: name, p_phone: phone, p_note: (draft.note || "").trim(),
-        p_items: cart.map(function (i) { return { id: i.id, qty: i.qty }; })
+        p_items: cart.map(function (i) { return { id: i.id, qty: i.qty, color: i.color || null, size: i.size || null }; }),
+        p_pay_method: draft.pay === "pay_on_delivery" ? "pay_on_delivery" : "direct",
+        p_address: (draft.addr || "").trim() || null
       });
       if (r.error) { msg(r.error.message, true); btn.disabled = false; return; }
       try { localStorage.setItem(BUYER_KEY, JSON.stringify({ name: name, phone: phone, note: "" })); } catch (e) {}
@@ -333,9 +386,12 @@
       var html = '<p class="status-pill ok">Order ' + esc(o.order_code) + " saved</p>" +
         "<p>Total " + esc(naira(o.total_kobo / 100)) + ". Tap each seller below to send your order on WhatsApp.</p>";
       (o.groups || []).forEach(function (g) {
-        var lines = (g.items || []).map(function (i) { return "- " + i.qty + " x " + i.name + " (" + naira(i.price_kobo / 100) + ")"; }).join("\n");
+        var lines = (g.items || []).map(function (i) { var v = [i.color, i.size].filter(Boolean).join(", "); return "- " + i.qty + " x " + i.name + (v ? " [" + v + "]" : "") + " (" + naira(i.price_kobo / 100) + ")"; }).join("\n");
         var text = "Hello " + g.shop_name + ", I would like to order on SafeBuy NG (order " + o.order_code + "):\n" + lines +
           "\nSubtotal: " + naira(g.subtotal_kobo / 100) + "\nName: " + name + ", phone: " + phone +
+          (draft && draft.pay === "pay_on_delivery"
+            ? "\nPayment: I would like to PAY ON DELIVERY. Delivery address: " + (draft.addr || "") + "\nPlease confirm if you offer pay on delivery."
+            : "\nPayment: directly to you at pickup.") +
           (note ? "\nNote: " + note : "") + "\nPlease confirm availability and delivery.";
         html += '<a class="button button-primary" target="_blank" rel="noopener" href="' + esc(waLink(g.phone, text)) + '">Send to ' + esc(g.shop_name) + " on WhatsApp</a>";
       });
@@ -370,25 +426,39 @@
     body.addEventListener("click", function (e) {
       var b = e.target.closest("[data-c]");
       if (!b) return;
-      var act = b.dataset.c, item = cart.filter(function (i) { return i.id === b.dataset.id; })[0];
+      var act = b.dataset.c, item = cart.filter(function (i) { return (i.key || i.id) === b.dataset.id; })[0];
       if (act === "inc" && item) item.qty = Math.min(50, item.qty + 1);
       if (act === "dec" && item) item.qty = Math.max(1, item.qty - 1);
-      if (act === "rm") cart = cart.filter(function (i) { return i.id !== b.dataset.id; });
+      if (act === "rm") cart = cart.filter(function (i) { return (i.key || i.id) !== b.dataset.id; });
       if (act === "place") { placeOrder(); return; }
       if (act === "orders") { showOrders(); return; }
       saveCart(); refreshCount(); render();
     });
     back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    body.addEventListener("change", function (e) {
+      if (e.target.name !== "cx-pay") return;
+      var w = body.querySelector("#cx-addr-wrap");
+      if (w) w.hidden = e.target.value !== "pay_on_delivery";
+    });
     document.getElementById("cart-close").addEventListener("click", close);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
 
     /* take over the cart hooks of the main script */
-    window.addToCart = function (id) {
+    window.addToCart = async function (id) {
       var p = findProduct(id);
       if (!p) return;
       if (productSource !== "supabase") { toast("Sample products can't be ordered."); return; }
       if (!p.inStock) { toast("That item is sold out."); return; }
-      addItem(p);
+      var o = await getOpts(id);
+      var root = document.getElementById("modal-content");
+      var inModal = document.getElementById("modal-backdrop").classList.contains("open") && root.querySelector(".sbx-opts");
+      var sel = { color: "", size: "" };
+      if (o.colors.length || o.sizes.length) {
+        if (!inModal) { window.openProduct(id); toast("Choose your options, then tap Add to cart."); return; }
+        sel = readOpts(root, o);
+        if (sel.error) { toast(sel.error); return; }
+      }
+      addItem({ id: p.id, name: p.name, price: p.price, category: p.category, color: sel.color, size: sel.size });
       toast(p.name + " added to your cart.");
     };
     window.showCart = open;
@@ -399,12 +469,20 @@
       if (productSource !== "supabase") return;
       document.querySelectorAll('.product-actions [data-action="whatsapp"]').forEach(function (b) {
         b.dataset.action = "add";
-        if (!b.disabled) b.textContent = "Add to cart";
+        var o = optMap[String(b.dataset.id)];
+        if (!b.disabled) b.textContent = o && (o.colors.length || o.sizes.length) ? "Choose options" : "Add to cart";
       });
     }
     var origRender = window.renderProducts;
     window.renderProducts = function () { origRender.apply(this, arguments); decorate(); };
     window.renderProducts();
+    var c0 = client();
+    if (c0) {
+      c0.from("seller_products_public").select("id,colors,sizes").then(function (r) {
+        (r.data || []).forEach(function (x) { optMap[String(x.id)] = { colors: x.colors || [], sizes: x.sizes || [] }; });
+        window.renderProducts();
+      });
+    }
 
     /* modal: cart button, gallery, reviews, report */
     var origOpen = window.openProduct;
@@ -417,6 +495,14 @@
       if (chat && !chat.disabled) {
         chat.insertAdjacentHTML("beforebegin", '<button class="button button-light" type="button" data-action="add" data-id="' + esc(p.id) + '">Add to cart</button>');
       }
+      getOpts(p.id).then(function (o) {
+        if (!o.colors.length && !o.sizes.length) return;
+        var holder = document.createElement("div");
+        holder.className = "sbx-opts";
+        holder.innerHTML = optsHtml(o);
+        var anchor = content.querySelector('[data-action="add"]') || content.querySelector('[data-action="whatsapp"]');
+        if (anchor) anchor.parentNode.insertBefore(holder, anchor);
+      });
       var box = document.createElement("div");
       content.appendChild(box);
       mountExtras(box, String(p.id));
@@ -491,6 +577,21 @@
     }
   }
 
+  async function editOptions(id) {
+    var c = client();
+    if (!c) return;
+    var r = await c.from("seller_products").select("colors,sizes").eq("id", id).maybeSingle();
+    var cur = r.data || {};
+    var col = window.prompt("Colours buyers can choose, separated by commas. Leave empty for none.", (cur.colors || []).join(", "));
+    if (col === null) return;
+    var sz = window.prompt("Sizes buyers can choose, separated by commas, e.g. S, M, L, XL. Leave empty for none.", (cur.sizes || []).join(", "));
+    if (sz === null) return;
+    function list(t) { return t.split(",").map(function (x) { return x.trim(); }).filter(Boolean); }
+    var res = await c.rpc("set_product_options", { p_product: id, p_colors: list(col), p_sizes: list(sz) });
+    toast(res.error ? res.error.message : "Colours and sizes saved.");
+    if (!res.error) delete optMap[String(id)];
+  }
+
   /* remove a stray "." text node left after the script tag in index.html */
   [].slice.call(document.body.childNodes).forEach(function (n) {
     if (n.nodeType === 3 && n.textContent.trim() === ".") n.remove();
@@ -506,6 +607,7 @@
       sellerBody.querySelectorAll(".seller-actions").forEach(function (a) {
         if (a.querySelector("[data-xp]")) return;
         a.insertAdjacentHTML("beforeend",
+          '<button class="button button-outline" type="button" data-xp="opts">Colours &amp; sizes</button>' +
           '<button class="button button-outline" type="button" data-xp="add">+ Photos</button>' +
           '<button class="button button-outline" type="button" data-xp="clear">Clear extra photos</button>');
       });
@@ -522,6 +624,7 @@
       var idEl = b.parentNode.querySelector("[data-id]");
       if (!idEl) return;
       targetId = idEl.dataset.id;
+      if (b.dataset.xp === "opts") { editOptions(targetId); return; }
       if (b.dataset.xp === "add") { picker.value = ""; picker.click(); return; }
       var c = client();
       if (!c || !window.confirm("Remove all extra photos from this listing? The main photo stays.")) return;
