@@ -594,6 +594,35 @@
       }, true);
     }
 
+    /* shop setup: force a deliberate category choice, with an "Other" option */
+    var suCat = sb.querySelector("#su-cat");
+    if (setup && suCat && !sb.querySelector("#su-cat-other")) {
+      suCat.required = true;
+      suCat.insertAdjacentHTML("afterbegin", '<option value="" selected disabled>Select a category</option>');
+      suCat.insertAdjacentHTML("beforeend", '<option value="__other">Other (type your own)</option>');
+      suCat.insertAdjacentHTML("afterend", '<input id="su-cat-other" type="text" maxlength="40" placeholder="Your category, e.g. Phones" hidden>');
+      suCat.value = "";
+      var sOpt = suCat.lastElementChild, sIn = sb.querySelector("#su-cat-other");
+      suCat.addEventListener("change", function () {
+        sIn.hidden = suCat.selectedOptions[0] !== sOpt;
+        if (!sIn.hidden) sIn.focus();
+      });
+      setup.addEventListener("submit", function (e) {
+        if (suCat.selectedOptions[0] !== sOpt) return;
+        var v = normCat(sIn.value);
+        if (!/^[A-Za-z0-9][A-Za-z0-9 &\/-]{1,39}$/.test(v)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var fm = document.getElementById("form-message");
+          if (fm) { fm.textContent = "Type your category name (2 to 40 letters or numbers)."; fm.style.color = "#8a1f1f"; }
+          sIn.hidden = false;
+          sIn.focus();
+          return;
+        }
+        sOpt.value = v;
+      }, true);
+    }
+
     var heading = sb.querySelector("#pf-heading");
     if (heading && !sb.querySelector("#pa-input")) {
       heading.insertAdjacentHTML("beforebegin",
@@ -610,7 +639,7 @@
       catSel.insertAdjacentHTML("afterend",
         '<input id="pf-cat-other" type="text" maxlength="40" placeholder="Type your category, e.g. Phones &amp; accessories" hidden>');
       var otherOpt = catSel.lastElementChild, otherIn = sb.querySelector("#pf-cat-other");
-      var syncOther = function () { otherOpt.value = cleanCat(otherIn.value) || "__other"; };
+      var syncOther = function () { otherOpt.value = normCat(otherIn.value) || "__other"; };
       catSel.addEventListener("change", function () {
         otherIn.hidden = catSel.selectedOptions[0] !== otherOpt;
         if (!otherIn.hidden) otherIn.focus();
@@ -788,6 +817,17 @@
 
   function cleanCat(t) { return String(t || "").replace(/\s+/g, " ").trim(); }
 
+  /* Tidy a typed category: "phones" -> "Phones"; "fashion" -> built-in "Fashion" (no duplicates) */
+  function normCat(t) {
+    t = cleanCat(t).toLowerCase().replace(/(^|[\s&\/-])([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+    var builtin = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
+    for (var i = 0; i < builtin.length; i++) {
+      if (builtin[i].toLowerCase() === t.toLowerCase()) return builtin[i];
+    }
+    if (t.toLowerCase() === "home & living") return "Home";
+    return t;
+  }
+
   /* remove a stray "." text node left after the script tag in index.html */
   [].slice.call(document.body.childNodes).forEach(function (n) {
     if (n.nodeType === 3 && n.textContent.trim() === ".") n.remove();
@@ -867,7 +907,8 @@
       if (done) toast(done + " photo" + (done === 1 ? "" : "s") + " added.");
     });
   }
-     /* remove the static "Pickup address" line; the green box stays */
+
+  /* remove the static "Pickup address" line; the green box stays */
   [].forEach.call(document.querySelectorAll("p,div,span,li"), function (n) {
     if (n.closest(".sbx-pickup")) return;
     if (n.querySelector("p,div")) return;
