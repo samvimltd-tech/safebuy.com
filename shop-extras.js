@@ -71,8 +71,9 @@
     ".sbx button.sbx-b{border:0;border-radius:10px;padding:10px 14px;background:#087f5b;color:#fff;font:inherit;font-weight:700;cursor:pointer;width:auto;margin:6px 0 0}" +
     ".sbx button.sbx-link{border:0;background:none;color:#8a1f1f;font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:10px 0 0}" +
     ".sbx-report{margin-top:6px;padding:10px;border:1px solid #f1d69a;border-radius:12px;background:#fff8e8}" +
-    ".sbx-strip{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px;overflow-x:auto;z-index:2}" +
-    ".sbx-strip img{position:static!important;inset:auto!important;width:46px!important;height:46px!important;flex-shrink:0;border-radius:8px;border:2px solid #fff;object-fit:cover;cursor:pointer;background:#fff}";
+    ".sbx-strip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}" +
+    ".sbx-strip img{position:static!important;inset:auto!important;width:64px!important;height:64px!important;flex:0 0 64px;border-radius:10px;border:2px solid transparent;object-fit:cover;cursor:pointer;background:#edf6ef;scroll-snap-align:start}" +
+    ".sbx-strip img.on{border-color:#087f5b}";
   document.head.appendChild(st);
 
   /* ---------- product extras: gallery, reviews, report ---------- */
@@ -82,17 +83,40 @@
     var main = document.querySelector(".photo img, .modal-art img");
     if (!main || !imgs.length) return;
     var holder = main.parentNode;
-    var old = holder.querySelector(".sbx-strip");
+    var wrap = holder.parentNode;
+    if (!wrap.classList.contains("sbx-wrap")) {
+      wrap = document.createElement("div");
+      wrap.className = "sbx-wrap";
+      holder.parentNode.insertBefore(wrap, holder);
+      wrap.appendChild(holder);
+    }
+    var old = wrap.querySelector(".sbx-strip");
     if (old) old.remove();
-    holder.style.position = "relative";
     if (!main.dataset.sbx0) main.dataset.sbx0 = main.src;
     var urls = [main.dataset.sbx0].concat(imgs.map(function (i) { return i.image_url; })
       .filter(function (u) { return /^https:\/\//.test(u); }));
     var s = document.createElement("div");
     s.className = "sbx-strip";
-    s.innerHTML = urls.map(function (u, i) { return '<img src="' + esc(u) + '" alt="Photo ' + (i + 1) + '">'; }).join("");
-    s.onclick = function (e) { var t = e.target.closest("img"); if (t) main.src = t.src; };
-    holder.appendChild(s);
+    s.innerHTML = urls.map(function (u, i) {
+      return '<img src="' + esc(u) + '" alt="Photo ' + (i + 1) + '" data-i="' + i + '"' + (i === 0 ? ' class="on"' : "") + ">";
+    }).join("");
+    var cur = 0;
+    function show(i) {
+      cur = (i + urls.length) % urls.length;
+      main.src = urls[cur];
+      [].forEach.call(s.children, function (el, k) { el.classList.toggle("on", k === cur); });
+      s.children[cur].scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    }
+    s.onclick = function (e) { var t = e.target.closest("img"); if (t) show(Number(t.dataset.i)); };
+    var x0 = null;
+    holder.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    holder.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      x0 = null;
+      if (Math.abs(dx) > 40) show(cur + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    wrap.appendChild(s);
   }
 
   async function mountExtras(box, pid) {
