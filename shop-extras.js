@@ -384,7 +384,7 @@
 
     function renderDone(o, snapshot, name, phone, note) {
       var html = '<p class="status-pill ok">Order ' + esc(o.order_code) + " saved</p>" +
-        "<p>Total " + esc(naira(o.total_kobo / 100)) + ". Tap each seller below to send your order on WhatsApp.</p>";
+        "<p>Total " + esc(naira(o.total_kobo / 100)) + ". Sellers with a similar product are listed below. Tap each seller to send your order on WhatsApp.</p>";
       (o.groups || []).forEach(function (g) {
         var lines = (g.items || []).map(function (i) { var v = [i.color, i.size].filter(Boolean).join(", "); return "- " + i.qty + " x " + i.name + (v ? " [" + v + "]" : "") + " (" + naira(i.price_kobo / 100) + ")"; }).join("\n");
         var text = "Hello " + g.shop_name + ", I would like to order on SafeBuy NG (order " + o.order_code + "):\n" + lines +
@@ -397,7 +397,7 @@
       });
       var also = o.also_notify || [];
       if (also.length) {
-        html += "<h3>Ask similar sellers too</h3><p class=\"muted\">These shops sell the same type of product and may also have it.</p>";
+        html += "<h3>Other sellers with similar products</h3><p class=\"muted\">Tap a seller to ask if they have this item too.</p>";
         also.forEach(function (s) {
           var names = snapshot.filter(function (i) { return i.category === s.category; }).map(function (i) { return i.name; });
           var text = "Hello " + s.shop_name + ", I am a SafeBuy NG buyer looking for: " + (names.join(", ") || s.category) +
