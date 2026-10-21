@@ -5,6 +5,18 @@
     <link>https://samvimltd-tech.github.io/safebuy.com/</link>
     <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
     <item>
+      <g:id>f7ccb887-2600-447b-ae11-1c00ae28a48f</g:id>
+      <g:title>Cement</g:title>
+      <g:description>Quality and Strong cement</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/cement-f7ccb887/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/b32d737b-7895-4c0d-8c20-a41a6280965f.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>14000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
       <g:id>c4c913c1-9bef-4be9-9c76-4a95ef4805c5</g:id>
       <g:title>Fan</g:title>
       <g:description>Good quality</g:description>
