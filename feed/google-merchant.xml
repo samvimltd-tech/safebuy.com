@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>SafeBuy NG</title>
+    <link>https://samvimltd-tech.github.io/safebuy.com/</link>
+    <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
+    <item>
+      <g:id>2f74b58b-804d-4488-a791-301160860f1e</g:id>
+      <g:title>Chair</g:title>
+      <g:description>Very good</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/chair-2f74b58b/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/0d99189f-0783-4091-8deb-a8dd8343a339/b29f9d04-5307-4e6d-bbbf-77e4a705d987.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>10000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Cso petroleum resources Ltd</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>Home &amp; Garden</g:google_product_category>
+    </item>
+    <item>
+      <g:id>b0aec4b3-6f26-46b7-b6f5-218a217f136e</g:id>
+      <g:title>Phone charger</g:title>
+      <g:description>In good working condition</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/phone-charger-b0aec4b3/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/f07543dc-35c6-4c43-9e62-428d8bab7576/ae04239e-a416-4bd5-9e25-dbb9ec916368.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>6000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Samvimcommunications Ltd</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>Electronics</g:google_product_category>
+    </item>
+    <item>
+      <g:id>12c809d6-f29e-4709-a04e-7631ad77e833</g:id>
+      <g:title>Gas cylinder</g:title>
+      <g:description>3kg cylinder</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/gas-cylinder-12c809d6/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/0d99189f-0783-4091-8deb-a8dd8343a339/a3205ad6-23a9-45c2-a829-c24adc129d1e.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>15000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Cso petroleum resources Ltd</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>Home &amp; Garden</g:google_product_category>
+    </item>
+    <item>
+      <g:id>a31ee9cb-1d6f-4768-ac90-206278ee09bb</g:id>
+      <g:title>Pot</g:title>
+      <g:description>Very good cooking pot</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/pot-a31ee9cb/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/097ffbd0-b594-4bc7-840c-388d317285fa.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>25000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+      <g:google_product_category>Home &amp; Garden</g:google_product_category>
+    </item>
+  </channel>
+</rss>

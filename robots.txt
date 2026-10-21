@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://samvimltd-tech.github.io/safebuy.com/sitemap.xml
