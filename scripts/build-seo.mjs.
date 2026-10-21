@@ -1,16 +1,5 @@
 #!/usr/bin/env node
 // SafeBuy NG SEO generator.
-// Reads published products from Supabase (public view only, anon key) and writes:
-//   p/<slug>/index.html   one crawlable page per product (SEO tags + structured data)
-//   sitemap.xml           eligible products
-//   robots.txt
-//   feed/google-merchant.xml   Google Merchant Center product feed
-// Removed, hidden or suspended products disappear from all of the above.
-//
-// Usage:
-//   SUPABASE_URL=... SUPABASE_ANON_KEY=... node scripts/build-seo.mjs
-//   node scripts/build-seo.mjs --mock scripts/sample-products.json --out ./_test   (offline test)
-
 import { readFile, writeFile, mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,25 +30,20 @@ const GOOGLE_CATEGORY = {
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,99}$/;
 const money = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 
-/* ---------- helpers ---------- */
 function esc(value) {
   return String(value == null ? "" : value).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
   );
 }
-
 function xml(value) {
   return esc(String(value == null ? "" : value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""));
 }
-
 function jsonLd(obj) {
   return JSON.stringify(obj).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
-
 function squash(text) {
   return String(text == null ? "" : text).replace(/\s+/g, " ").trim();
 }
-
 function trunc(text, max) {
   const t = squash(text);
   if (t.length <= max) return t;
@@ -67,24 +51,16 @@ function trunc(text, max) {
   const space = cut.lastIndexOf(" ");
   return (space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.-]+$/, "") + "…";
 }
-
 function plainPrice(kobo) {
   const n = Math.round(Number(kobo));
   return Math.floor(n / 100) + "." + String(n % 100).padStart(2, "0");
 }
-
 function httpsUrl(value) {
   return typeof value === "string" && /^https:\/\//i.test(value) ? value : "";
 }
-
 async function readIfExists(file) {
-  try {
-    return await readFile(file, "utf8");
-  } catch {
-    return null;
-  }
+  try { return await readFile(file, "utf8"); } catch { return null; }
 }
-
 async function writeIfChanged(file, content) {
   const existing = await readIfExists(file);
   if (existing === content) return false;
@@ -93,7 +69,6 @@ async function writeIfChanged(file, content) {
   return true;
 }
 
-/* ---------- data ---------- */
 async function fetchProducts() {
   const mock = arg("--mock");
   if (mock) return JSON.parse(await readFile(path.resolve(mock), "utf8"));
@@ -123,7 +98,7 @@ function cleanProducts(rows) {
   const seen = new Set();
   const good = [];
   for (const r of rows) {
-    const price = Number(r.price_kobo);
+    const price = Number(r && r.price_kobo);
     if (!r || !r.id || !SLUG_RE.test(String(r.slug || "")) || !squash(r.name) || !(price > 0)) {
       console.warn("Skipping invalid product row:", r && (r.id || r.name));
       continue;
@@ -138,7 +113,6 @@ function cleanProducts(rows) {
   return good;
 }
 
-/* ---------- product page ---------- */
 const CHAT_JS = String.raw`
 (function () {
   var btn = document.getElementById('chat');
@@ -211,6 +185,11 @@ function pageHtml(p, site, cfg) {
   const image = httpsUrl(p.image_url);
   const shop = squash(p.shop_name) || "Seller";
   const category = squash(p.category) || "Products";
+  const pickup = squash(p.pickup_address);
+  const state = squash(p.state);
+  const pickupLine = pickup
+    ? pickup + (state && pickup.toLowerCase().indexOf(state.toLowerCase()) < 0 ? ", " + state : "")
+    : "";
 
   const title = trunc(`${p.name} - ${priceLabel} | ${cfg.siteName}`, 60);
   const metaDesc = trunc(
@@ -238,6 +217,14 @@ function pageHtml(p, site, cfg) {
     }
   };
   if (image) product.image = [image];
+  if (pickup) {
+    product.offers.seller.address = {
+      "@type": "PostalAddress",
+      streetAddress: pickup,
+      addressRegion: state || undefined,
+      addressCountry: "NG"
+    };
+  }
 
   const crumbs = {
     "@context": "https://schema.org",
@@ -293,22 +280,25 @@ ${image ? `<meta property="og:image" content="${esc(image)}">\n` : ""}<meta prop
         <li class="${p.verified ? "" : "warn"}">${p.verified ? "✓ Verified seller" : "Unverified seller"}</li>
       </ul>
       <p class="seller">Sold by ${esc(shop)} · ${esc(category)}</p>
+      ${pickupLine ? `<p class="seller"><strong>Pickup address:</strong> ${esc(pickupLine)}</p>` : ""}
       <p class="desc">${descHtml}</p>
       <button class="button" type="button" id="chat" data-id="${esc(p.id)}" data-name="${esc(p.name)}" data-price="${esc(priceLabel)}"${inStock ? "" : " disabled"}>${inStock ? "Chat seller on WhatsApp" : "Sold out"}</button>
+      <button class="button" type="button" id="sbx-add" style="margin-top:10px;background:#e7f7ef;color:#066548" data-id="${esc(p.id)}" data-name="${esc(p.name)}" data-price="${esc(p.price_kobo / 100)}" data-category="${esc(category)}"${inStock ? "" : " disabled"}>Add to cart</button>
       <p class="note"><strong>Stay safe:</strong> ${esc(cfg.siteName)} does not handle payments or delivery yet. Agree details with the seller, meet in a public place, and inspect the item before you pay.</p>
     </div>
   </article>
+  <div id="sb-extras" data-id="${esc(p.id)}"></div>
 </main>
 <footer>&copy; ${new Date().getUTCFullYear()} ${esc(cfg.siteName)}. A Nigerian marketplace prototype in development.</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
 <script src="${esc(site)}/supabase-config.js" defer></script>
+<script src="${esc(site)}/shop-extras.js" defer></script>
 <script>window.addEventListener('DOMContentLoaded',function(){${CHAT_JS}});</script>
 </body>
 </html>
 `;
 }
 
-/* ---------- sitemap, robots, feed ---------- */
 function sitemapXml(products, site) {
   const items = products
     .map((p) => {
@@ -377,7 +367,6 @@ ${items}
   };
 }
 
-/* ---------- homepage tags (between markers in index.html) ---------- */
 function homeSeoBlock(site, cfg) {
   const site_ld = {
     "@context": "https://schema.org",
@@ -401,7 +390,6 @@ function homeSeoBlock(site, cfg) {
 <!-- seo:end -->`;
 }
 
-/* ---------- main ---------- */
 async function main() {
   const cfg = JSON.parse(await readFile(path.join(repoRoot, "site.config.json"), "utf8"));
   const site = String(process.env.SITE_URL || cfg.siteUrl || "").replace(/\/+$/, "");
@@ -418,7 +406,6 @@ async function main() {
     if (await writeIfChanged(path.join(outRoot, "p", p.slug, "index.html"), pageHtml(p, site, cfg))) changed++;
   }
 
-  // Removal handling: delete pages for products that are no longer eligible
   let removed = 0;
   let existing = [];
   try {
