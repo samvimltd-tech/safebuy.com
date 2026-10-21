@@ -30,15 +30,8 @@
   actions.insertBefore(ordersBtn, actions.firstChild);
   ordersBtn.onclick = showMyOrders;
 
-  function refreshHeader() {
-    user().then(function (u) {
-      var b = document.querySelector('.header-actions [data-action="account"]');
-      var name = u ? ((u.user_metadata && u.user_metadata.full_name) || (u.email || "").split("@")[0]) : "";
-      if (b) b.textContent = u ? "👤 " + (name.split(" ")[0] || "Account") : "Sign in";
-      ordersBtn.hidden = !u;
-      var lo = document.getElementById("account-logout"); if (lo) lo.hidden = !u;
-    });
-  }
+  ordersBtn.id = "mp-orders-btn";
+  function refreshHeader() { user().then(function (u) { ordersBtn.hidden = !u; }); }
   c.auth.onAuthStateChange(function () { setTimeout(refreshHeader, 0); });
   refreshHeader();
 
@@ -97,7 +90,7 @@
             if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) btns += '<button class="button button-primary" data-chat="' + E(o.product_id) + '">Chat seller on WhatsApp</button>';
             if (o.status === "shipped") btns += '<button class="button button-light" data-ob="delivered" data-id="' + E(o.id) + '">I received it</button>';
             return '<div class="review-card"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity +
-              "<br>" + N(o.total_kobo) + ' <span class="status-pill' + (o.status === "delivered" ? " ok" : o.status === "cancelled" ? " bad" : "") + '">' + E(STEPS[o.status] || o.status) + "</span>" +
+              (o.color || o.size ? '<br><span class="muted">' + E([o.color, o.size].filter(Boolean).join(" · ")) + "</span>" : "") + "<br>" + N(o.total_kobo) + ' <span class="status-pill' + (o.status === "delivered" ? " ok" : o.status === "cancelled" ? " bad" : "") + '">' + E(STEPS[o.status] || o.status) + "</span>" +
               '<br><span class="muted">' + new Date(o.created_at).toLocaleDateString("en-NG") + " · #" + E(String(o.id).slice(0, 8)) + "</span>" + btns + "</div>";
           }).join("");
         });
@@ -147,7 +140,9 @@
             if (o.status === "placed") b += '<button class="button button-primary" data-so="paid" data-id="' + E(o.id) + '">Mark paid</button><button class="button button-outline" data-so="cancelled" data-id="' + E(o.id) + '">Cancel</button>';
             if (o.status === "paid") b += '<button class="button button-primary" data-so="shipped" data-id="' + E(o.id) + '">Mark shipped</button>';
             return '<div class="seller-item"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity + " · " + N(o.total_kobo) +
-              '<br><span class="muted">' + E(STEPS[o.status] || o.status) + " · #" + E(String(o.id).slice(0, 8)) + '</span><div class="seller-actions">' + b + "</div></div>";
+              '<br><span class="muted">Buyer: ' + E(o.buyer_name || "-") + ([o.color, o.size].filter(Boolean).length ? " · " + E([o.color, o.size].filter(Boolean).join(", ")) : "") +
+              (o.pay_method === "pay_on_delivery" ? "<br>Pay on delivery to: " + E(o.address || "-") : "") + (o.note ? "<br>Note: " + E(o.note) : "") +
+              '</span><br><span class="muted">' + E(STEPS[o.status] || o.status) + " · #" + E(String(o.id).slice(0, 8)) + '</span><div class="seller-actions">' + b + "</div></div>";
           }).join("");
         });
       });
@@ -160,4 +155,50 @@
     setStatus(s.dataset.id, s.dataset.so, loadSellerOrders);
   });
   new MutationObserver(sellerOrders).observe(sb, { childList: true, subtree: true });
+
+  /* ---- old cart: place_order now creates marketplace orders (no WhatsApp numbers shown) ---- */
+  function cartBody() { return document.getElementById("cart-body"); }
+  function cartMsg(t, bad) { var m = document.getElementById("cx-msg"); if (m) { m.textContent = t; m.style.color = bad ? "#8a1f1f" : ""; } }
+  function placeCart() {
+    user().then(function (u) {
+      if (!u) {
+        document.getElementById("cart-backdrop").classList.remove("open");
+        T("Sign in to place your order. Your cart is saved.");
+        var a = document.querySelector('[data-action="account"]'); if (a) a.click();
+        return;
+      }
+      var items = [];
+      try { items = JSON.parse(localStorage.getItem("safebuy_cart_v1") || "[]"); } catch (e) {}
+      items = items.filter(function (i) { return i && i.id && i.qty > 0; });
+      var name = (document.getElementById("cx-name").value || "").trim();
+      var pr = document.querySelector('input[name="cx-pay"]:checked');
+      var pay = pr && pr.value === "pay_on_delivery" ? "pay_on_delivery" : "direct";
+      var addr = (document.getElementById("cx-addr").value || "").trim();
+      var note = (document.getElementById("cx-note").value || "").trim();
+      if (!items.length) { cartMsg("Your cart is empty.", true); return; }
+      if (!name) { cartMsg("Enter your name.", true); return; }
+      if (pay === "pay_on_delivery" && !addr) { cartMsg("Enter your delivery address.", true); return; }
+      var btn = document.querySelector('#cart-body [data-c="place"]'); if (btn) btn.disabled = true;
+      cartMsg("Placing your order…");
+      var rows = items.map(function (i) {
+        return { buyer_id: u.id, product_id: i.id, quantity: Math.min(99, i.qty), color: i.color || null, size: i.size || null,
+                 buyer_name: name, note: note || null, pay_method: pay, address: addr || null };
+      });
+      c.from("marketplace_orders").insert(rows).then(function (r) {
+        if (r.error) { cartMsg(r.error.message, true); if (btn) btn.disabled = false; return; }
+        var rm; while ((rm = cartBody().querySelector('[data-c="rm"]'))) rm.click();
+        cartBody().innerHTML = '<p class="status-pill ok">' + rows.length + " order" + (rows.length === 1 ? "" : "s") + ' placed</p>' +
+          "<p>Each seller will confirm. Seller contact unlocks once a seller marks your order Paid.</p>" +
+          '<button class="button button-primary" type="button" id="mp-view">View my orders</button>';
+        document.getElementById("mp-view").onclick = function () { document.getElementById("cart-backdrop").classList.remove("open"); showMyOrders(); };
+      });
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest('#cart-body [data-c="place"], #cart-body [data-c="orders"]');
+    if (!b) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    if (b.dataset.c === "orders") { document.getElementById("cart-backdrop").classList.remove("open"); showMyOrders(); return; }
+    placeCart();
+  }, true);
 })();
