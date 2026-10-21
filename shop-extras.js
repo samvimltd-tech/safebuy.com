@@ -60,14 +60,22 @@
 
   /* ---------- colour / size options ---------- */
   var optMap = {};
+  function toOpts(x) {
+    return { colors: x.colors || [], sizes: x.sizes || [], weight: Number(x.weight_kg) > 0 ? Number(x.weight_kg) : 0, pickup: x.pickup_address || "" };
+  }
+  function infoHtml(o) {
+    return (o.weight ? '<p class="sbx-info">Weight: <strong>' + esc(o.weight) + " kg</strong></p>" : "") +
+      (o.pickup ? '<div class="sbx-pickup"><strong>Pickup address:</strong> ' + esc(o.pickup) + "</div>" : "");
+  }
   async function getOpts(id) {
     id = String(id);
     if (optMap[id]) return optMap[id];
     var c = client();
-    var empty = { colors: [], sizes: [] };
+    var empty = { colors: [], sizes: [], weight: 0, pickup: "" };
     if (!c) return empty;
-    var r = await c.from("seller_products_public").select("id,colors,sizes").eq("id", id).maybeSingle();
-    optMap[id] = r.data ? { colors: r.data.colors || [], sizes: r.data.sizes || [] } : empty;
+    var r = await c.from("seller_products_public").select("id,colors,sizes,weight_kg,pickup_address").eq("id", id).maybeSingle();
+    if (r.error) r = await c.from("seller_products_public").select("id,colors,sizes").eq("id", id).maybeSingle();
+    optMap[id] = r.data ? toOpts(r.data) : empty;
     return optMap[id];
   }
   function optsHtml(o) {
@@ -108,7 +116,8 @@
     ".sbx-chip{position:relative;display:inline-block}.sbx-chip input{position:absolute;opacity:0;pointer-events:none}" +
     ".sbx-chip span{display:inline-block;padding:8px 14px;border:1px solid #dce5de;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#172b24}" +
     ".sbx-chip input:checked+span{background:#087f5b;border-color:#087f5b;color:#fff}.sbx-chip input:checked+span::before{content:'\\2713 '}" +
-    ".modal .sbx-chip{display:inline-block;margin:0;font-weight:400}.sbx-other{margin-top:6px}";
+    ".modal .sbx-chip{display:inline-block;margin:0;font-weight:400}.sbx-other{margin-top:6px}" +
+    ".sbx-info{margin:8px 0;font-size:14px}.sbx-pickup{margin:10px 0;padding:11px 14px;border-radius:12px;background:#e7f7ef;color:#066548;font-size:14px}";
   document.head.appendChild(st);
 
   /* ---------- product extras: gallery, reviews, report ---------- */
@@ -264,7 +273,7 @@
   if (addBtn) {
     var optBox = document.createElement("div");
     addBtn.parentNode.insertBefore(optBox, document.getElementById("chat") || addBtn);
-    getOpts(addBtn.dataset.id).then(function (o) { optBox.innerHTML = optsHtml(o); });
+    getOpts(addBtn.dataset.id).then(function (o) { optBox.innerHTML = infoHtml(o) + optsHtml(o); });
     addBtn.addEventListener("click", async function () {
       var o = await getOpts(addBtn.dataset.id);
       var sel = readOpts(optBox, o);
@@ -506,8 +515,11 @@
     window.renderProducts();
     var c0 = client();
     if (c0) {
-      c0.from("seller_products_public").select("id,colors,sizes").then(function (r) {
-        (r.data || []).forEach(function (x) { optMap[String(x.id)] = { colors: x.colors || [], sizes: x.sizes || [] }; });
+      c0.from("seller_products_public").select("id,colors,sizes,weight_kg,pickup_address").then(function (r) {
+        if (r.error) return c0.from("seller_products_public").select("id,colors,sizes");
+        return r;
+      }).then(function (r) {
+        (r.data || []).forEach(function (x) { optMap[String(x.id)] = toOpts(x); });
         window.renderProducts();
       });
     }
@@ -524,10 +536,10 @@
         chat.insertAdjacentHTML("beforebegin", '<button class="button button-light" type="button" data-action="add" data-id="' + esc(p.id) + '">Add to cart</button>');
       }
       getOpts(p.id).then(function (o) {
-        if (!o.colors.length && !o.sizes.length) return;
+        if (!o.colors.length && !o.sizes.length && !o.weight && !o.pickup) return;
         var holder = document.createElement("div");
         holder.className = "sbx-opts";
-        holder.innerHTML = optsHtml(o);
+        holder.innerHTML = infoHtml(o) + optsHtml(o);
         var anchor = content.querySelector('[data-action="add"]') || content.querySelector('[data-action="whatsapp"]');
         if (anchor) anchor.parentNode.insertBefore(holder, anchor);
       });
@@ -619,6 +631,13 @@
       }, true);
     }
 
+    var priceEl = sb.querySelector("#pf-price");
+    if (priceEl && !sb.querySelector("#pf-weight")) {
+      priceEl.insertAdjacentHTML("afterend",
+        '<label for="pf-weight">Product weight in kg (optional)</label>' +
+        '<input id="pf-weight" type="number" min="0.01" max="1000" step="0.01" inputmode="decimal" placeholder="e.g. 2.5">');
+    }
+
     var condSel = sb.querySelector("#pf-cond");
     if (condSel && !sb.querySelector("#sbx-oe")) {
       editTarget = null;
@@ -634,8 +653,10 @@
         var heading = document.getElementById("pf-heading");
         var editing = !!(heading && heading.textContent === "Edit product" && editTarget);
         var v = readEditor(oe);
-        if (editing || v.colors.length || v.sizes.length) {
-          pending = { id: editing ? editTarget : null, colors: v.colors, sizes: v.sizes };
+        var wEl = sb.querySelector("#pf-weight");
+        var wv = wEl ? wEl.value.trim() : "";
+        if (editing || v.colors.length || v.sizes.length || wv) {
+          pending = { id: editing ? editTarget : null, colors: v.colors, sizes: v.sizes, weight: wv === "" ? null : Number(wv) };
         }
       }, true);
     }
@@ -678,7 +699,7 @@
 
   /* ---------- seller colour / size picker ---------- */
   var COLOR_PRESETS = ["Red", "Black", "Blue", "White", "Green", "Yellow", "Brown", "Grey", "Pink", "Purple", "Orange"];
-  var SIZE_PRESETS = ["S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"];
+  var SIZE_PRESETS = ["S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "1kg", "2kg", "5kg", "10kg", "25kg", "50kg"];
   var pending = null, editTarget = null;
 
   function editorGroup(g, label, presets, otherLabel) {
@@ -735,8 +756,13 @@
   async function loadEditor(id) {
     var c = client(), root = document.getElementById("sbx-oe");
     if (!c || !root) return;
-    var r = await c.from("seller_products").select("colors,sizes").eq("id", id).maybeSingle();
-    if (r.data) setEditor(root, r.data.colors, r.data.sizes);
+    var r = await c.from("seller_products").select("colors,sizes,weight_kg").eq("id", id).maybeSingle();
+    if (r.error) r = await c.from("seller_products").select("colors,sizes").eq("id", id).maybeSingle();
+    if (r.data) {
+      setEditor(root, r.data.colors, r.data.sizes);
+      var wEl = document.getElementById("pf-weight");
+      if (wEl) wEl.value = r.data.weight_kg ? String(r.data.weight_kg) : "";
+    }
   }
   async function applyPending() {
     var pd = pending;
@@ -755,6 +781,8 @@
     if (!id) return;
     var res = await c.rpc("set_product_options", { p_product: id, p_colors: pd.colors, p_sizes: pd.sizes });
     if (res.error) toast("Could not save colours and sizes: " + res.error.message);
+    var wres = await c.rpc("set_product_weight", { p_product: id, p_weight: pd.weight == null || !isFinite(pd.weight) ? null : pd.weight });
+    if (wres.error) toast("Could not save the weight: " + wres.error.message);
     delete optMap[String(id)];
   }
 
