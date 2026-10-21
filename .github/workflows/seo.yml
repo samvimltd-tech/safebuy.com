@@ -36,4 +36,4 @@ jobs:
         run: node scripts/build-seo.mjs
 
       - name: Commit changes
-        run: | git config user.name "safebuy-seo-bot" git config user.email "safebuy-seo-bot@users.noreply.github.com" git add -A p sitemap.xml robots.txt feed index.html if git diff --cached --quiet; then echo "No changes to publish." else git commit -m "Update SEO pages, sitemap and feed" git pull --rebase origin "${GITHUB_REF_NAME}" git push fi
+        run: 'git config user.name "safebuy-seo-bot" && git config user.email "safebuy-seo-bot@users.noreply.github.com" && git add -A && (git diff --cached --quiet && echo "No changes to publish." || (git commit -m "Update SEO pages, sitemap and feed" && git pull --rebase origin "$GITHUB_REF_NAME" && git push))'
