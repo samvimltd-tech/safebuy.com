@@ -81,7 +81,7 @@ input:focus,select:focus{border-color:var(--green)}
     <button class="tab" type="button" data-filter="all">All</button>
   </div>
 
-  <p class="muted">Suspending a shop hides all of its listings from shoppers. Verifying adds the green Verified badge.</p>
+  <p class="muted">Suspending a shop hides all of its listings from shoppers. Verifying adds the green Verified badge. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”).</p>
   <p class="msg" id="dash-msg" role="status" aria-live="polite"></p>
   <div id="list"></div>
 </main>
@@ -102,6 +102,7 @@ input:focus,select:focus{border-color:var(--green)}
   var tab = "applications";
   var filter = "pending";
   var STATUS_LABEL = { pending: "Unverified", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
+  var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
 
   function esc(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
@@ -109,6 +110,17 @@ input:focus,select:focus{border-color:var(--green)}
     });
   }
   function money(kobo) { return "₦" + (Number(kobo || 0) / 100).toLocaleString("en-NG"); }
+
+  /* Tidy a category name: "phones" -> "Phones"; "fashion" -> built-in "Fashion" */
+  function normCat(t) {
+    t = String(t || "").replace(/\s+/g, " ").trim().toLowerCase()
+      .replace(/(^|[\s&\/-])([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+    for (var i = 0; i < BUILTIN_CATS.length; i++) {
+      if (BUILTIN_CATS[i].toLowerCase() === t.toLowerCase()) return BUILTIN_CATS[i];
+    }
+    if (t.toLowerCase() === "home & living") return "Home";
+    return t;
+  }
 
   function showLogin(message) {
     dashView.hidden = true;
@@ -217,12 +229,13 @@ input:focus,select:focus{border-color:var(--green)}
         "<strong>" + esc(a.shop_name) + "</strong> <span class=\"muted\">(" + esc(a.slug) + ")</span><br>" +
         "Phone: " + esc(a.phone) + " · State: " + esc(a.state || "-") + "<br>" +
         "Category: " + esc(a.main_category || "-") + " · Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
-        "Address: " + esc(a.business_address || "-") + "<br>" +
+        "Address: " + esc(a.business_address || a.pickup_address || "-") + "<br>" +
         '<span class="muted">Applied ' + esc(new Date(a.created_at).toLocaleString("en-NG")) + "</span>" +
         '<div class="actions">' +
         (s !== "approved" ? '<button class="button" type="button" data-review="approved" data-id="' + esc(a.id) + '">Verify shop</button>' : "") +
         (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Suspend shop</button>' : "") +
         (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">' + (s === "rejected" ? "Reinstate (unverified)" : "Remove verification") + "</button>" : "") +
+        '<button class="button outline" type="button" data-acat="1" data-id="' + esc(a.id) + '" data-cat="' + esc(a.main_category || "") + '">Edit category</button>' +
         "</div></div>";
     }).join("");
   }
@@ -247,6 +260,7 @@ input:focus,select:focus{border-color:var(--green)}
         '<span class="muted">Shop: ' + esc(shops[p.seller_application_id] || "unknown") + "</span>" +
         '<div class="actions">' +
         '<button class="button ' + (live ? "outline" : "") + '" type="button" data-pstatus="' + (live ? "hidden" : "published") + '" data-id="' + esc(p.id) + '">' + (live ? "Unpublish" : "Publish") + "</button>" +
+        '<button class="button outline" type="button" data-pcat="1" data-id="' + esc(p.id) + '" data-cat="' + esc(p.category || "") + '">Edit category</button>' +
         '<button class="button danger" type="button" data-pdel="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
         "</div></div></div></div>";
     }).join("");
@@ -258,6 +272,34 @@ input:focus,select:focus{border-color:var(--green)}
     if (!b) return;
     b.disabled = true;
     note("");
+
+    if (b.dataset.acat || b.dataset.pcat) {
+      var isShop = !!b.dataset.acat;
+      var entered = window.prompt(
+        "New category (2 to 40 letters or numbers). Built-in: " + BUILTIN_CATS.join(", "),
+        b.dataset.cat || ""
+      );
+      if (entered === null) { b.disabled = false; return; }
+      var cat = normCat(entered);
+      if (!/^[A-Za-z0-9][A-Za-z0-9 &\/-]{1,39}$/.test(cat)) {
+        note("Invalid category. Use 2 to 40 letters or numbers (spaces, &, / and - are allowed).", true);
+        b.disabled = false;
+        return;
+      }
+      var cu = isShop
+        ? await client.from("seller_applications").update({ main_category: cat, updated_at: new Date().toISOString() }).eq("id", b.dataset.id).select("id")
+        : await client.from("seller_products").update({ category: cat, updated_at: new Date().toISOString() }).eq("id", b.dataset.id).select("id");
+      if (cu.error || !cu.data || !cu.data.length) {
+        note(cu.error ? cu.error.message : "The change was not saved. Run admin_patch.sql first.", true);
+        b.disabled = false;
+        return;
+      }
+      note("Category changed to “" + cat + "”.");
+      var keep = dashMsg.textContent;
+      await (tab === "applications" ? loadApplications() : loadProducts());
+      note(keep);
+      return;
+    }
 
     if (b.dataset.review) {
       var u = await client.from("seller_applications")
