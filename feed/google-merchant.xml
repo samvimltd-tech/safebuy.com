@@ -5,6 +5,18 @@
     <link>https://samvimltd-tech.github.io/safebuy.com/</link>
     <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
     <item>
+      <g:id>344c977d-3346-45d7-ba61-a7f60ca02661</g:id>
+      <g:title>Story Books</g:title>
+      <g:description>Story books</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/story-books-344c977d/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/a4024075-2578-4731-9b83-fb3f5686e9ff.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>5000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
       <g:id>2f74b58b-804d-4488-a791-301160860f1e</g:id>
       <g:title>Chair</g:title>
       <g:description>Very good</g:description>
