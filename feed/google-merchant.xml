@@ -5,6 +5,18 @@
     <link>https://samvimltd-tech.github.io/safebuy.com/</link>
     <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
     <item>
+      <g:id>cc1491f6-402f-4ff4-9e4b-03f820485b73</g:id>
+      <g:title>Bicycle</g:title>
+      <g:description>Very good condition</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/bicycle-cc1491f6/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/f07543dc-35c6-4c43-9e62-428d8bab7576/6f89bc33-ca8f-43c6-b4b2-9f3f6361475f.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>85000.00 NGN</g:price>
+      <g:condition>used</g:condition>
+      <g:brand>Samvimcommunications Ltd</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
       <g:id>344c977d-3346-45d7-ba61-a7f60ca02661</g:id>
       <g:title>Story Books</g:title>
       <g:description>Story books</g:description>
