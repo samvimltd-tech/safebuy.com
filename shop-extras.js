@@ -867,4 +867,10 @@
       if (done) toast(done + " photo" + (done === 1 ? "" : "s") + " added.");
     });
   }
+     /* remove the static "Pickup address" line; the green box stays */
+  [].forEach.call(document.querySelectorAll("p,div,span,li"), function (n) {
+    if (n.closest(".sbx-pickup")) return;
+    if (n.querySelector("p,div")) return;
+    if (/^\s*Pickup address:/i.test(n.textContent)) n.remove();
+  });
 })();
