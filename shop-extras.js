@@ -465,8 +465,35 @@
     window.updateCartCount = refreshCount;
 
     /* cards: swap "Chat seller" for "Add to cart" (chat stays on the product page and modal) */
+    var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries", "Other"];
+    function ensureCategoryButtons() {
+      var box = document.getElementById("categories");
+      if (!box) return;
+      var used = {};
+      products.forEach(function (p) { if (p.category) used[p.category] = 1; });
+      [].forEach.call(box.querySelectorAll("[data-custom]"), function (b) {
+        if (!used[b.dataset.category]) {
+          if (selectedCategory === b.dataset.category) chooseCategory("All");
+          b.remove();
+        }
+      });
+      var have = {};
+      [].forEach.call(box.querySelectorAll("[data-category]"), function (b) { have[b.dataset.category] = 1; });
+      Object.keys(used).sort().forEach(function (cat) {
+        if (have[cat] || BUILTIN_CATS.indexOf(cat) >= 0) return;
+        var b = document.createElement("button");
+        b.className = "category-button";
+        b.type = "button";
+        b.dataset.category = cat;
+        b.dataset.custom = "1";
+        b.textContent = cat;
+        box.appendChild(b);
+      });
+    }
+
     function decorate() {
       if (productSource !== "supabase") return;
+      ensureCategoryButtons();
       document.querySelectorAll('.product-actions [data-action="whatsapp"]').forEach(function (b) {
         b.dataset.action = "add";
         var o = optMap[String(b.dataset.id)];
@@ -564,6 +591,54 @@
       loadAddress();
     }
 
+    var catSel = sb.querySelector("#pf-cat");
+    if (catSel && !sb.querySelector("#pf-cat-other")) {
+      catSel.insertAdjacentHTML("beforeend", '<option value="__other">Other (type your own)</option>');
+      catSel.insertAdjacentHTML("afterend",
+        '<input id="pf-cat-other" type="text" maxlength="40" placeholder="Type your category, e.g. Phones &amp; accessories" hidden>');
+      var otherOpt = catSel.lastElementChild, otherIn = sb.querySelector("#pf-cat-other");
+      var syncOther = function () { otherOpt.value = cleanCat(otherIn.value) || "__other"; };
+      catSel.addEventListener("change", function () {
+        otherIn.hidden = catSel.selectedOptions[0] !== otherOpt;
+        if (!otherIn.hidden) otherIn.focus();
+      });
+      otherIn.addEventListener("input", syncOther);
+      sb.querySelector("#product-form").addEventListener("submit", function (e) {
+        if (catSel.selectedIndex >= 0 && catSel.selectedOptions[0] !== otherOpt) return;
+        syncOther();
+        if (otherOpt.value === "__other" || !/^[A-Za-z0-9][A-Za-z0-9 &\/-]{1,39}$/.test(otherOpt.value)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var m = document.getElementById("form-message");
+          if (m) { m.textContent = "Type your category name (2 to 40 letters or numbers)."; m.style.color = "#8a1f1f"; }
+          otherOpt.selected = true;
+          otherIn.hidden = false;
+          otherIn.focus();
+        }
+      }, true);
+    }
+
+    if (!sb.dataset.catBound) {
+      sb.dataset.catBound = "1";
+      sb.addEventListener("click", async function (e) {
+        var b = e.target.closest('[data-act="edit"]');
+        if (!b) return;
+        var sel = document.getElementById("pf-cat"), oth = document.getElementById("pf-cat-other");
+        if (!sel || !oth) return;
+        if (sel.selectedIndex >= 0) { oth.hidden = true; return; }
+        var c = client();
+        if (!c) return;
+        var r = await c.from("seller_products").select("category").eq("id", b.dataset.id).maybeSingle();
+        var cat = r.data && r.data.category;
+        if (!cat) return;
+        var opt = sel.lastElementChild;
+        opt.value = cat;
+        sel.value = cat;
+        oth.value = cat;
+        oth.hidden = false;
+      });
+    }
+
     if (!sb.dataset.paBound) {
       sb.dataset.paBound = "1";
       sb.addEventListener("click", async function (e) {
@@ -576,6 +651,8 @@
       });
     }
   }
+
+  function cleanCat(t) { return String(t || "").replace(/\s+/g, " ").trim(); }
 
   async function editOptions(id) {
     var c = client();
