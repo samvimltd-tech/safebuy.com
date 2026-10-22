@@ -1283,10 +1283,59 @@ updateCartCount();
 <script src="./account-settings.js"></script>
 <style>
 .product-art{cursor:pointer}
+.product-art img,.modal-art img,.seller-item img.thumb{cursor:zoom-in}
+.lightbox{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.92)}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.lightbox-close{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font-size:22px}
 </style>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Close photo">✕</button>
+  <img id="lightbox-img" alt="">
+</div>
+
 <script>
-document.addEventListener("click", function (e) {
-  var art = e.target.closest(".product-art");
+(function () {
+  var box = document.getElementById("lightbox");
+  var big = document.getElementById("lightbox-img");
+
+  function openPhoto(src, alt) {
+    big.src = src;
+    big.alt = alt || "Product photo";
+    box.classList.add("open");
+  }
+  function closePhoto() {
+    box.classList.remove("open");
+    big.removeAttribute("src");
+  }
+
+  box.addEventListener("click", closePhoto);
+  document.getElementById("lightbox-close").addEventListener("click", closePhoto);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closePhoto();
+  });
+
+  document.addEventListener("click", function (e) {
+    // 1. Tap a real photo: open full screen
+    var img = e.target.closest(".product-art img, .modal-art img, .seller-item img.thumb");
+    if (img && img.getAttribute("src")) {
+      e.preventDefault();
+      var card = img.closest(".product-card");
+      var title = card && card.querySelector("h3");
+      openPhoto(img.getAttribute("src"), title ? title.textContent : img.alt);
+      return;
+    }
+
+    // 2. Tap a card with no photo (emoji only): open the product page, as before
+    var art = e.target.closest(".product-art");
+    if (!art) return;
+    var cardEl = art.closest(".product-card");
+    var link = cardEl && cardEl.querySelector("h3 a[href], a.icon-button[href]");
+    if (link) window.location.href = link.getAttribute("href");
+  });
+})();
+</script>
   if (!art) return;
   var card = art.closest(".product-card");
   var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
