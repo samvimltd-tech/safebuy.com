@@ -1,3 +1,43 @@
+/* ---------- Products: load straight from Supabase's REST API (no sign-in lock) ---------- */
+(function () {
+  "use strict";
+  var cfg = window.SAFEbuySupabaseConfig;
+  if (!cfg || !cfg.url || !cfg.publishableKey || typeof window.setProducts !== "function") return;
+  var live = false, orig = window.setProducts;
+
+  /* never let the page's slow built-in loader replace live data with sample products */
+  window.setProducts = function (list, source, message) {
+    if (live && source === "sample") return;
+    return orig.call(this, list, source, message);
+  };
+
+  function load(attempt) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+    fetch(cfg.url + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+      headers: { apikey: cfg.publishableKey },
+      signal: ctl ? ctl.signal : undefined
+    }).then(function (res) {
+      return res.json().then(function (rows) { return { ok: res.ok, rows: rows }; });
+    }).then(function (r) {
+      clearTimeout(timer);
+      if (!r.ok || !Array.isArray(r.rows)) throw new Error("bad response");
+      live = true;
+      window.setProducts(r.rows.map(function (x, i) {
+        return window.normalizeProduct({
+          id: x.id, name: x.name, category: x.category, price: Number(x.price_kobo) / 100,
+          seller: x.shop_name, image: x.image_url, description: x.description,
+          verified: x.verified, inStock: x.in_stock, slug: x.slug, condition: x.condition
+        }, i);
+      }), "supabase");
+    }).catch(function () {
+      clearTimeout(timer);
+      if (attempt < 2) setTimeout(function () { load(attempt + 1); }, 1500);
+    });
+  }
+  load(0);
+})();
+
 /* SafeBuy NG: Account settings (name, email, password, shop contact). Load after orders.js */
 (function () {
   "use strict";
@@ -118,7 +158,7 @@
   var st = document.createElement("style");
   st.textContent =
     "body.sb-seller .cart-button,body.sb-seller #mp-orders-btn,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}" +
-    "body.sb-buyer #mp-shop-btn,body.sb-buyer #sb-myshop{display:none!important}";
+    "body.sb-buyer #mp-shop-btn{display:none!important}#sb-myshop{display:none!important}body.sb-seller #sb-myshop{display:inline-flex!important}";
   document.head.appendChild(st);
 
   var actions = document.querySelector(".header-actions");
