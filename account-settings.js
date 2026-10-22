@@ -44,6 +44,9 @@
   function render(u, app) {
     var name = (u.user_metadata && u.user_metadata.full_name) || "";
     body.innerHTML =
+      "<h3>Account mode</h3>" +
+      '<p class="muted">You are in <strong>' + (mode() === "seller" ? "Seller" : "Buyer") + '</strong> mode. One login works for both.</p>' +
+      '<button class="button button-light" type="button" id="as-mode">' + modeLabel() + "</button>" +
       "<h3>Profile</h3>" +
       '<form id="as-profile"><label for="as-name">Full name</label><input id="as-name" type="text" maxlength="80" value="' + E(name) + '">' +
       '<label for="as-email">Email</label><input id="as-email" type="email" required value="' + E(u.email) + '">' +
@@ -63,6 +66,7 @@
           '<p class="form-message" id="as-m3" role="status" aria-live="polite"></p>'
         : "");
 
+    document.getElementById("as-mode").onclick = function () { switchMode(); close(); };
     document.getElementById("as-profile").onsubmit = function (e) {
       e.preventDefault();
       var email = document.getElementById("as-email").value.trim();
@@ -105,4 +109,50 @@
       });
     };
   }
+
+  /* ---------- Buyer / Seller mode ---------- */
+  var MKEY = "sb_mode";
+  function mode() { try { return localStorage.getItem(MKEY) === "seller" ? "seller" : "buyer"; } catch (e) { return "buyer"; } }
+  function modeLabel() { return mode() === "seller" ? "🔄 Switch to Buyer mode" : "🔄 Switch to Seller mode"; }
+
+  var st = document.createElement("style");
+  st.textContent =
+    "body.sb-seller .cart-button,body.sb-seller #mp-orders-btn,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}" +
+    "body.sb-buyer #mp-shop-btn,body.sb-buyer #sb-myshop{display:none!important}";
+  document.head.appendChild(st);
+
+  var actions = document.querySelector(".header-actions");
+  var myShop = document.createElement("button");
+  myShop.type = "button"; myShop.id = "sb-myshop"; myShop.className = "button button-primary"; myShop.textContent = "🏪 My shop";
+  myShop.onclick = function () { var b = document.querySelector('[data-action="sell"]'); if (b) b.click(); };
+  if (actions) actions.insertBefore(myShop, actions.firstChild);
+
+  var modeBtn = document.createElement("button");
+  modeBtn.type = "button"; modeBtn.id = "account-mode-btn"; modeBtn.className = "button button-light"; modeBtn.hidden = true;
+  btn.parentNode.insertBefore(modeBtn, btn);
+
+  function applyMode() {
+    c.auth.getSession().then(function (r) {
+      var on = !!(r.data && r.data.session);
+      document.body.classList.remove("sb-seller", "sb-buyer");
+      if (on) document.body.classList.add(mode() === "seller" ? "sb-seller" : "sb-buyer");
+      modeBtn.hidden = !on;
+      modeBtn.textContent = modeLabel();
+    });
+  }
+  function switchMode() {
+    var next = mode() === "seller" ? "buyer" : "seller";
+    try { localStorage.setItem(MKEY, next); } catch (e) {}
+    applyMode();
+    var x = document.getElementById("account-close"); if (x) x.click();
+    if (next === "buyer") {
+      var sc = document.getElementById("seller-close"); if (sc) sc.click();
+      if (window.showToast) window.showToast("Buyer mode: browse and order.");
+    } else {
+      var sell = document.querySelector('[data-action="sell"]'); if (sell) sell.click();
+    }
+  }
+  modeBtn.onclick = switchMode;
+  c.auth.onAuthStateChange(function () { setTimeout(applyMode, 0); });
+  applyMode();
 })();
