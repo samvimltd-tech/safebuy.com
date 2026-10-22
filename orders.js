@@ -31,7 +31,26 @@
   ordersBtn.onclick = showMyOrders;
 
   ordersBtn.id = "mp-orders-btn";
-  function refreshHeader() { user().then(function (u) { ordersBtn.hidden = !u; }); }
+  var shopBtn = document.createElement("button");
+  shopBtn.className = "button button-primary"; shopBtn.type = "button"; shopBtn.hidden = true;
+  actions.insertBefore(shopBtn, ordersBtn.nextSibling);
+  shopBtn.onclick = function () { var b = document.querySelector('[data-action="sell"]'); if (b) b.click(); };
+  function refreshShop() {
+    user().then(function (u) {
+      if (!u) { shopBtn.hidden = true; return; }
+      c.from("seller_applications").select("id").eq("user_id", u.id).maybeSingle().then(function (a) {
+        if (!a.data) { shopBtn.hidden = true; return; }
+        c.from("marketplace_orders").select("id", { count: "exact", head: true })
+          .eq("seller_application_id", a.data.id).eq("status", "placed").then(function (r) {
+            var n = r.count || 0;
+            shopBtn.hidden = n < 1;
+            shopBtn.textContent = "🔔 New orders (" + n + ")";
+          });
+      });
+    });
+  }
+  setInterval(refreshShop, 60000);
+  function refreshHeader() { user().then(function (u) { ordersBtn.hidden = !u; }); refreshShop(); }
   c.auth.onAuthStateChange(function () { setTimeout(refreshHeader, 0); });
   refreshHeader();
 
@@ -90,6 +109,7 @@
             if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) btns += '<button class="button button-primary" data-chat="' + E(o.product_id) + '">Chat seller on WhatsApp</button>';
             if (o.status === "shipped") btns += '<button class="button button-light" data-ob="delivered" data-id="' + E(o.id) + '">I received it</button>';
             return '<div class="review-card"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity +
+              (o.shop_name ? '<br><span class="muted">Seller: ' + E(o.shop_name) + "</span>" : "") +
               (o.color || o.size ? '<br><span class="muted">' + E([o.color, o.size].filter(Boolean).join(" · ")) + "</span>" : "") + "<br>" + N(o.total_kobo) + ' <span class="status-pill' + (o.status === "delivered" ? " ok" : o.status === "cancelled" ? " bad" : "") + '">' + E(STEPS[o.status] || o.status) + "</span>" +
               '<br><span class="muted">' + new Date(o.created_at).toLocaleDateString("en-NG") + " · #" + E(String(o.id).slice(0, 8)) + "</span>" + btns + "</div>";
           }).join("");
@@ -113,6 +133,7 @@
   function setStatus(id, status, done) {
     c.rpc("mp_update_order_status", { p_order: id, p_status: status }).then(function (r) {
       if (r.error) T(r.error.message); else T("Order updated.");
+      refreshShop();
       done();
     });
   }
