@@ -32,7 +32,7 @@
 
   ordersBtn.id = "mp-orders-btn";
   var shopBtn = document.createElement("button");
-  shopBtn.className = "button button-primary"; shopBtn.type = "button"; shopBtn.hidden = true;
+  shopBtn.className = "button button-primary"; shopBtn.type = "button"; shopBtn.hidden = true; shopBtn.id = "mp-shop-btn";
   actions.insertBefore(shopBtn, ordersBtn.nextSibling);
   shopBtn.onclick = function () { var b = document.querySelector('[data-action="sell"]'); if (b) b.click(); };
   function refreshShop() {
