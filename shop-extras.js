@@ -119,6 +119,9 @@
     ".modal .sbx-chip{display:inline-block;margin:0;font-weight:400}.sbx-other{margin-top:6px}" +
     ".sbx-info{margin:8px 0;font-size:14px}.sbx-pickup{margin:10px 0;padding:11px 14px;border-radius:12px;background:#e7f7ef;color:#066548;font-size:14px}";
   document.head.appendChild(st);
+     var hideWA = document.createElement("style");
+  hideWA.textContent = '[data-action="whatsapp"],#chat{display:none!important}';
+  document.head.appendChild(hideWA);
 
   /* ---------- product extras: gallery, reviews, report ---------- */
   function stars(n) { return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
