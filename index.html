@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
 <!-- seo:start -->
 <link rel="canonical" href="https://samvimltd-tech.github.io/safebuy.com/">
@@ -1318,5 +1321,7 @@ document.addEventListener("click", function (e) {
   if (link) window.location.href = link.getAttribute("href");
 });
 </script>
+  <script src="./pwa.js"></script>
+<script src="./protect-core.js"></script>
 </body>
 </html>
