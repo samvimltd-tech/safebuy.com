@@ -1,4 +1,5 @@
-/* SafeBuy NG theme: loads theme.css and adds a live "Marketplace pulse" (donut + stats) built from the real product list. */
+/* SafeBuy NG theme: loads theme.css, then tidies the home page:
+   one-row stats card, "Marketplace pulse" dropdown (live donut), and "How it works" dropdowns for buyers and sellers. */
 (function () {
   "use strict";
   var l = document.createElement("link"); l.rel = "stylesheet"; l.href = "./theme.css"; document.head.appendChild(l);
@@ -13,20 +14,21 @@
     (function step(t) { var k = Math.min(1, (t - t0) / 700); el.textContent = fmt(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); })(t0);
   }
 
+  /* ---- stats card + pulse dropdown ---- */
   function build() {
     var shop = document.getElementById("shop");
     if (!shop) return null;
     var s = document.createElement("section");
     s.className = "section"; s.id = "pulse"; s.hidden = true;
-    s.innerHTML = '<div class="container"><div class="pulse-grid">' +
-      '<article class="pulse-card"><div class="pulse-head"><span class="tile">📊</span>Marketplace pulse<span class="live-pill" id="pl-pill">Live</span></div>' +
-      '<div class="ring-wrap"><div class="ring" id="pl-ring"></div><div class="ring-c"><div><span id="pl-total">0</span><small>products</small></div></div></div>' +
-      '<ul class="legend" id="pl-legend"></ul></article>' +
-      '<div class="pulse-stats">' +
-      '<article class="pulse-card stat"><span class="tile">🏪</span><div><b id="pl-sellers">0</b><small>Active sellers</small></div></article>' +
-      '<article class="pulse-card stat"><span class="tile o">💰</span><div><b id="pl-avg">₦0</b><small>Average price</small></div></article>' +
-      '<article class="pulse-card stat"><span class="tile o">⚡</span><div><b id="pl-cats">0</b><small>Categories stocked</small></div></article>' +
-      "</div></div></div>";
+    s.innerHTML = '<div class="container">' +
+      '<article class="pulse-card stats-row">' +
+      '<div class="s"><span class="tile">🏪</span><b id="pl-sellers">0</b><small>Active sellers</small></div>' +
+      '<div class="s"><span class="tile o">💰</span><b id="pl-avg">₦0</b><small>Average price</small></div>' +
+      '<div class="s"><span class="tile o">⚡</span><b id="pl-cats">0</b><small>Categories stocked</small></div></article>' +
+      '<details class="dd" id="pl-dd"><summary><span class="tile">📊</span><span class="dd-t">Marketplace pulse<small>See what is on sale, by category</small></span>' +
+      '<span class="live-pill" id="pl-pill">Live</span><span class="chev">⌄</span></summary>' +
+      '<div class="dd-body"><div class="ring-wrap"><div class="ring" id="pl-ring"></div><div class="ring-c"><div><span id="pl-total">0</span><small>products</small></div></div></div>' +
+      '<ul class="legend" id="pl-legend"></ul></div></details></div>';
     shop.parentNode.insertBefore(s, shop);
     return s;
   }
@@ -40,7 +42,6 @@
     if (!sec) sec = build();
     if (!sec) return;
 
-    // category chip counts
     var by = {};
     list.forEach(function (p) { by[p.category] = (by[p.category] || 0) + 1; });
     document.querySelectorAll("[data-category]").forEach(function (b) {
@@ -72,8 +73,34 @@
     count(document.getElementById("pl-cats"), cats.length, function (v) { return Math.round(v); });
   }
 
+  /* ---- "How it works" as dropdowns: buyers, sellers, trust & safety ---- */
+  function guide() {
+    var sec = document.getElementById("how-it-works");
+    var grid = sec && sec.querySelector(".trust-grid");
+    if (!grid || sec.querySelector(".guide")) return;
+    var sub = sec.querySelector(".section-heading p");
+    if (sub) sub.textContent = "New here? Tap a card to see how SafeBuy NG works for you.";
+    function item(icon, title, small, body) {
+      return '<details class="dd" name="sb-guide"><summary><span class="tile' + (icon === "🏪" ? " o" : "") + '">' + icon + '</span><span class="dd-t">' + title + "<small>" + small + '</small></span><span class="chev">⌄</span></summary><div class="dd-body">' + body + "</div></details>";
+    }
+    var g = document.createElement("div"); g.className = "guide";
+    g.innerHTML =
+      item("🛍️", "For buyers", "Find it, order it, track it",
+        '<ol class="steps"><li><span>Browse or search products, then tap <b>Place order</b>.</span></li>' +
+        "<li><span>Choose to pay at the seller's shop or on delivery. Add <b>SafeBuy Protection</b> if you want an inspection.</span></li>" +
+        "<li><span>Follow your order under <b>Orders</b>. Seller contact unlocks once they mark it paid.</span></li></ol>") +
+      item("🏪", "For sellers", "Open a shop and sell in minutes",
+        '<ol class="steps"><li><span>Tap <b>Start selling</b> and create your shop in one step.</span></li>' +
+        "<li><span>List products with photos. They go live right away.</span></li>" +
+        "<li><span>Manage orders under <b>New orders</b>: mark paid, then shipped.</span></li></ol>") +
+      item("🛡️", "Trust &amp; safety", "Verified labels and clear records", "");
+    g.querySelector("details:last-child .dd-body").appendChild(grid);   // the original three trust cards live here now
+    sec.querySelector(".container").appendChild(g);
+  }
+
   var rl = document.getElementById("results-line");
   if (rl) new MutationObserver(update).observe(rl, { childList: true, characterData: true, subtree: true });
-  setInterval(update, 2000);                                     // also catches changes made after sellers publish
+  setInterval(update, 2000);
   update();
+  guide();
 })();
