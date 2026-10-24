@@ -93,8 +93,11 @@
     var t = e.target.closest ? e.target.closest("#cx-pay-ui [data-opt], #cx-pay-ui [data-addon]") : null;
     if (!t) return;
     var r = radios();
-    var wantPod = t.hasAttribute("data-addon") || t.dataset.opt === "pod";
-    if (t.hasAttribute("data-addon")) protect = !(protect && r.pod && r.pod.checked);   // tick / untick (ticking also selects Pay on Delivery)
+    var isAddon = t.hasAttribute("data-addon");
+    var wantPod = isAddon || t.dataset.opt === "pod";
+    var wasPod = !!(r.pod && r.pod.checked);
+    if (isAddon) protect = !(protect && wasPod);                    // tick / untick (ticking also selects Pay on Delivery)
+    else if (wantPod && !wasPod) protect = true;                    // choosing Pay on Delivery ticks SafeBuy Protection; the buyer can untick it
     var target = wantPod ? r.pod : r.pickup;
     if (target && !target.checked) target.click();                  // runs the original handlers (e.g. delivery address field)
     inject();
