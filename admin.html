@@ -113,6 +113,7 @@ td .button{padding:6px 11px;font-size:12px}
     <button class="tab active" type="button" data-tab="applications">Sellers <span class="count" id="c-sellers">0</span></button>
     <button class="tab" type="button" data-tab="products">Products <span class="count" id="c-products">0</span></button>
     <button class="tab" type="button" data-tab="leads">Lead generation <span class="count" id="c-leads">0</span></button>
+    <button class="tab" type="button" data-tab="verify">Verification <span class="count" id="c-verify">0</span></button>
   </div>
 
   <div class="tabs" id="filter-tabs"></div>
@@ -151,15 +152,15 @@ td .button{padding:6px 11px;font-size:12px}
   var liveText = document.getElementById("live-text");
   var client = null;
 
-  var apps = [], prods = [], leadRows = [], leadsErr = "";
+  var apps = [], prods = [], leadRows = [], leadsErr = "", vrRows = [], vrErr = "";
   var known = null;           // ids already seen, to highlight new arrivals
   var channel = null, pollTimer = null, refreshTimer = null;
   var lastUpdated = null, realtimeOk = false;
 
   var saved = {};
   try { saved = JSON.parse(sessionStorage.getItem("safebuy-admin-view") || "{}"); } catch (e) {}
-  var tab = saved.tab === "products" || saved.tab === "leads" ? saved.tab : "applications";
-  var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all" };
+  var tab = saved.tab === "products" || saved.tab === "leads" || saved.tab === "verify" ? saved.tab : "applications";
+  var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open" };
 
   var STATUS_LABEL = { pending: "Unverified", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
   var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
@@ -173,6 +174,9 @@ td .button{padding:6px 11px;font-size:12px}
     ],
     leads: [
       ["all", "All"], ["email", "With email"], ["phone", "With phone"]
+    ],
+    verify: [
+      ["open", "Needs review"], ["approved", "Approved"], ["rejected", "Rejected"], ["expired", "Expired"], ["all", "All"]
     ]
   };
 
@@ -237,7 +241,7 @@ td .button{padding:6px 11px;font-size:12px}
     showDash();
     syncTabs();
     startLive();
-    fetchAll();
+    client.rpc("expire_verifications").then(function () { fetchAll(); }, function () { fetchAll(); });
   }
 
   document.getElementById("login-form").addEventListener("submit", async function (event) {
@@ -285,6 +289,7 @@ td .button{padding:6px 11px;font-size:12px}
         .on("postgres_changes", { event: "*", schema: "public", table: "seller_applications" }, scheduleRefresh)
         .on("postgres_changes", { event: "*", schema: "public", table: "seller_products" }, scheduleRefresh)
         .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, scheduleRefresh)
+        .on("postgres_changes", { event: "*", schema: "public", table: "verification_requests" }, scheduleRefresh)
         .subscribe(function (status) {
           realtimeOk = status === "SUBSCRIBED";
           if (realtimeOk) setLive("on", "Live");
@@ -316,9 +321,10 @@ td .button{padding:6px 11px;font-size:12px}
     var results = await Promise.all([
       client.from("seller_applications").select("*").order("created_at", { ascending: false }),
       client.from("seller_products").select("*").order("created_at", { ascending: false }),
-      client.from("leads").select("*").order("created_at", { ascending: false })
+      client.from("leads").select("*").order("created_at", { ascending: false }),
+      client.from("verification_requests").select("*").order("created_at", { ascending: false })
     ]);
-    var ar = results[0], pr = results[1], lr = results[2];
+    var ar = results[0], pr = results[1], lr = results[2], vr = results[3];
     if (ar.error || pr.error) {
       note((ar.error || pr.error).message, true);
       setLive("off", "Update failed");
@@ -331,6 +337,7 @@ td .button{padding:6px 11px;font-size:12px}
     ar.data.forEach(function (a) { now["a" + a.id] = 1; });
     pr.data.forEach(function (p) { now["p" + p.id] = 1; });
     (lr.error ? [] : lr.data).forEach(function (l) { now["l" + l.id] = 1; });
+    (vr.error ? [] : vr.data).forEach(function (v) { now["v" + v.id] = 1; });
     if (known) { Object.keys(now).forEach(function (k) { if (!known[k]) fresh[k] = 1; }); }
     known = now;
 
@@ -338,6 +345,8 @@ td .button{padding:6px 11px;font-size:12px}
     prods = pr.data;
     leadRows = lr.error ? [] : lr.data;
     leadsErr = lr.error ? lr.error.message : "";
+    vrRows = vr.error ? [] : vr.data;
+    vrErr = vr.error ? vr.error.message : "";
     lastUpdated = new Date();
     if (realtimeOk) setLive("on", "Live · " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
     else setLive("off", "Updated " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
@@ -380,7 +389,8 @@ td .button{padding:6px 11px;font-size:12px}
       { label: "Need verifying", value: a.pending, go: ["applications", "pending"], alert: a.pending > 0 },
       { label: "Live products", value: p.published, go: ["products", "published"] },
       { label: "Sold out", value: p.soldout, go: ["products", "soldout"] },
-      { label: "Leads", value: leadRows.length, go: ["leads", "all"] }
+      { label: "Leads", value: leadRows.length, go: ["leads", "all"] },
+      { label: "Verification requests", value: vCounts().open, go: ["verify", "open"], alert: vCounts().open > 0 }
     ];
     statsBox.innerHTML = cards.map(function (c) {
       return '<button type="button" class="stat' + (c.alert ? " alert" : "") + '" data-go="' + c.go.join("|") + '">' +
@@ -395,8 +405,11 @@ td .button{padding:6px 11px;font-size:12px}
     cs.className = "count" + (a.pending > 0 ? " hot" : "");
     document.getElementById("c-products").textContent = p.all;
     document.getElementById("c-leads").textContent = leadRows.length;
+    var cv = document.getElementById("c-verify");
+    cv.textContent = vCounts().open;
+    cv.className = "count" + (vCounts().open > 0 ? " hot" : "");
 
-    var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : p;
+    var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : tab === "verify" ? vCounts() : p;
     filterTabs.innerHTML = FILTERS[tab].map(function (f) {
       var on = filters[tab] === f[0];
       var hot = tab === "applications" && f[0] === "pending" && counts.pending > 0 && !on;
@@ -410,7 +423,8 @@ td .button{padding:6px 11px;font-size:12px}
       x.classList.toggle("active", x.dataset.tab === tab);
     });
     searchBox.placeholder = tab === "applications" ? "Search shops by name, phone, state…"
-      : tab === "leads" ? "Search leads by email or phone…" : "Search products by name, category, shop…";
+      : tab === "leads" ? "Search leads by email or phone…"
+      : tab === "verify" ? "Search by shop, RC/TIN, payment reference or badge…" : "Search products by name, category, shop…";
   }
 
   function sortRows(rows, nameKey) {
@@ -427,6 +441,7 @@ td .button{padding:6px 11px;font-size:12px}
     renderTabs();
     if (tab === "applications") renderApplications(fresh || {});
     else if (tab === "leads") renderLeads(fresh || {});
+    else if (tab === "verify") renderVerify(fresh || {});
     else renderProducts(fresh || {});
   }
 
@@ -563,6 +578,60 @@ td .button{padding:6px 11px;font-size:12px}
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
 
+  /* ---------- Verification requests ---------- */
+  var V_LABEL = { submitted: "Awaiting payment check", paid: "Paid · ready to review", approved: "Approved", rejected: "Rejected", expired: "Expired" };
+  var V_PILL = { submitted: "", paid: "", approved: "approved", rejected: "rejected", expired: "hidden" };
+
+  function vCounts() {
+    var c = { open: 0, approved: 0, rejected: 0, expired: 0, all: vrRows.length };
+    vrRows.forEach(function (v) {
+      if (v.status === "submitted" || v.status === "paid") c.open++;
+      else if (c[v.status] != null) c[v.status]++;
+    });
+    return c;
+  }
+
+  function renderVerify(fresh) {
+    if (vrErr) {
+      list.innerHTML = '<div class="empty">Could not load verification requests: ' + esc(vrErr) + "<br>Run verification.sql in Supabase first.</div>";
+      return;
+    }
+    var term = searchBox.value.trim().toLowerCase();
+    var f = filters.verify;
+    var shops = shopMap();
+    var rows = vrRows.filter(function (v) {
+      if (f === "open" && v.status !== "submitted" && v.status !== "paid") return false;
+      if (f !== "open" && f !== "all" && v.status !== f) return false;
+      if (!term) return true;
+      return [shops[v.seller_application_id], v.id_number, v.payment_reference, v.badge_number]
+        .join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "id_number");
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">' + (term ? "No requests match your search." : "No requests in this view.") + "</div>";
+      return;
+    }
+
+    list.innerHTML = rows.map(function (v) {
+      var open = v.status === "submitted" || v.status === "paid";
+      return '<div class="item' + (fresh["v" + v.id] ? " fresh" : "") + '">' +
+        '<span class="pill ' + V_PILL[v.status] + '">' + esc(V_LABEL[v.status] || v.status) + "</span> " +
+        "<strong>" + esc(shops[v.seller_application_id] || "Unknown shop") + "</strong><br>" +
+        esc(v.id_type) + " number: <strong>" + esc(v.id_number) + "</strong><br>" +
+        "Payment: " + money(v.amount_kobo) + " · Reference: " + esc(v.payment_reference) + "<br>" +
+        (v.badge_number ? "Badge number: <strong>" + esc(v.badge_number) + "</strong>" +
+          (v.expires_at ? " · Valid until " + esc(new Date(v.expires_at).toLocaleDateString("en-NG")) : "") + "<br>" : "") +
+        (v.admin_note ? "Note: " + esc(v.admin_note) + "<br>" : "") +
+        '<span class="muted">Submitted ' + esc(new Date(v.created_at).toLocaleString("en-NG")) + "</span>" +
+        (open ? '<div class="actions">' +
+          (v.status === "submitted" ? '<button class="button" type="button" data-vpay="' + esc(v.id) + '">Confirm payment received</button>' : "") +
+          (v.status === "paid" ? '<button class="button" type="button" data-vapprove="' + esc(v.id) + '">Approve and issue badge</button>' : "") +
+          '<button class="button danger" type="button" data-vreject="' + esc(v.id) + '">Reject</button></div>' : "") +
+        "</div>";
+    }).join("");
+  }
+
   /* ---------- Navigation: tabs, filters, search, sort, stat cards ---------- */
   function switchTab(next, filter) {
     tab = next;
@@ -602,6 +671,43 @@ td .button{padding:6px 11px;font-size:12px}
     note("");
 
     if (b.dataset.export) { exportLeads(); b.disabled = false; return; }
+
+    if (b.dataset.vpay) {
+      var vp = await client.from("verification_requests")
+        .update({ status: "paid", paid_at: new Date().toISOString() })
+        .eq("id", b.dataset.vpay).eq("status", "submitted").select("id");
+      if (vp.error || !vp.data || !vp.data.length) {
+        note(vp.error ? vp.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (b.dataset.vapprove) {
+      if (!window.confirm("Check the number on the official register first. Approve and issue the badge?")) { b.disabled = false; return; }
+      var ap = await client.rpc("admin_approve_verification", { p_request: b.dataset.vapprove });
+      if (ap.error) { note(ap.error.message, true); b.disabled = false; return; }
+      await fetchAll();
+      note("Verified. Badge number " + ap.data + " issued.");
+      return;
+    }
+
+    if (b.dataset.vreject) {
+      var why = window.prompt("Reason for rejecting (the seller will see this):", "");
+      if (why === null) { b.disabled = false; return; }
+      var rj = await client.from("verification_requests")
+        .update({ status: "rejected", admin_note: why.trim() || null, reviewed_at: new Date().toISOString() })
+        .eq("id", b.dataset.vreject).in("status", ["submitted", "paid"]).select("id");
+      if (rj.error || !rj.data || !rj.data.length) {
+        note(rj.error ? rj.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
 
     if (b.dataset.ldel) {
       if (!window.confirm("Delete this lead permanently?")) { b.disabled = false; return; }
