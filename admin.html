@@ -127,7 +127,7 @@ td .button{padding:6px 11px;font-size:12px}
     </select>
   </div>
 
-  <p class="muted">Suspending a shop hides all of its listings from shoppers. Verifying adds the green Verified badge. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”).</p>
+  <p class="muted">Suspending a shop hides all of its listings from shoppers. The Verified badge and badge number are only issued from the Verification tab, after the ₦5,000 payment. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”).</p>
   <p class="msg" id="dash-msg" role="status" aria-live="polite"></p>
   <div id="list"></div>
 </main>
@@ -162,12 +162,12 @@ td .button{padding:6px 11px;font-size:12px}
   var tab = saved.tab === "products" || saved.tab === "leads" || saved.tab === "verify" ? saved.tab : "applications";
   var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open" };
 
-  var STATUS_LABEL = { pending: "Unverified", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
+  var STATUS_LABEL = { pending: "No badge", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
   var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
 
   var FILTERS = {
     applications: [
-      ["pending", "Unverified"], ["approved", "Verified"], ["rejected", "Suspended"], ["all", "All"]
+      ["pending", "Without badge"], ["approved", "With badge"], ["rejected", "Suspended"], ["all", "All"]
     ],
     products: [
       ["all", "All"], ["published", "Live"], ["hidden", "Hidden"], ["soldout", "Sold out"]
@@ -386,7 +386,7 @@ td .button{padding:6px 11px;font-size:12px}
     var a = appCounts(), p = prodCounts();
     var cards = [
       { label: "Shops", value: a.all, go: ["applications", "all"] },
-      { label: "Need verifying", value: a.pending, go: ["applications", "pending"], alert: a.pending > 0 },
+      { label: "Verified shops", value: a.approved, go: ["applications", "approved"] },
       { label: "Live products", value: p.published, go: ["products", "published"] },
       { label: "Sold out", value: p.soldout, go: ["products", "soldout"] },
       { label: "Leads", value: leadRows.length, go: ["leads", "all"] },
@@ -402,7 +402,7 @@ td .button{padding:6px 11px;font-size:12px}
     var a = appCounts(), p = prodCounts();
     var cs = document.getElementById("c-sellers");
     cs.textContent = a.all;
-    cs.className = "count" + (a.pending > 0 ? " hot" : "");
+    cs.className = "count";
     document.getElementById("c-products").textContent = p.all;
     document.getElementById("c-leads").textContent = leadRows.length;
     var cv = document.getElementById("c-verify");
@@ -412,7 +412,7 @@ td .button{padding:6px 11px;font-size:12px}
     var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : tab === "verify" ? vCounts() : p;
     filterTabs.innerHTML = FILTERS[tab].map(function (f) {
       var on = filters[tab] === f[0];
-      var hot = tab === "applications" && f[0] === "pending" && counts.pending > 0 && !on;
+      var hot = false;
       return '<button class="tab' + (on ? " active" : "") + '" type="button" data-filter="' + f[0] + '">' +
         esc(f[1]) + ' <span class="count' + (hot ? " hot" : "") + '">' + (counts[f[0]] || 0) + "</span></button>";
     }).join("");
@@ -478,9 +478,10 @@ td .button{padding:6px 11px;font-size:12px}
         "Category: " + esc(a.main_category || "-") + " · Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
         "Address: " + esc(a.business_address || a.pickup_address || "-") + "<br>" +
         "Products: " + n.total + " (" + n.live + " live)<br>" +
+        (a.badge_number ? "Badge number: <strong>" + esc(a.badge_number) + "</strong>" + (a.verified_until ? " · Valid until " + esc(new Date(a.verified_until).toLocaleDateString("en-NG")) : "") + "<br>" : "") +
         '<span class="muted">Applied ' + esc(new Date(a.created_at).toLocaleString("en-NG")) + "</span>" +
         '<div class="actions">' +
-        (s !== "approved" ? '<button class="button" type="button" data-review="approved" data-id="' + esc(a.id) + '">Verify shop</button>' : "") +
+        
         (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Suspend shop</button>' : "") +
         (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">' + (s === "rejected" ? "Reinstate (unverified)" : "Remove verification") + "</button>" : "") +
         '<button class="button outline" type="button" data-acat="1" data-id="' + esc(a.id) + '" data-cat="' + esc(a.main_category || "") + '">Edit category</button>' +
