@@ -1287,7 +1287,6 @@ updateCartCount();
   <script src="./lead-capture.js"></script>
 <script src="./buyer-account.js"></script>
 <script src="./orders.js"></script>
-  <script src="./seller-bell.js"></script>
 <script src="./account-settings.js"></script>
   <script>
 (function () {
@@ -1329,6 +1328,27 @@ document.addEventListener("click", function (e) {
     <script src="./bottom-sheet.js"></script>
   <script src="./pwa.js"></script>
   <script src="./protect-core.js"></script>
+  <script>
+(function () {
+  var c = window.safeBuySupabase;
+  if (!c) return;
+  var box = document.getElementById("account-backdrop");
+  function goHome() {
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+    var chat = document.getElementById("sbm");
+    if (chat) chat.classList.remove("open");
+    document.body.style.overflow = "";
+    history.replaceState(null, "", location.pathname + location.search + "#home");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  c.auth.onAuthStateChange(function (event) {
+    if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+    if (!box || !box.classList.contains("open")) return;
+    goHome();
+    setTimeout(goHome, 250);
+  });
+})();
+  </script>
 </body>
 </body>
 </html>
