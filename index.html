@@ -288,9 +288,83 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 .mobile-nav .cart-count{position:absolute;top:0;right:22%;margin:0;min-width:18px;height:18px;font-size:10px}
 .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
 }
+
+/* ---------- How delivery works (workflow section) ---------- */
+.dw-cover{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 14px;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:14px;font-size:13px}
+.dw-cover .dw-cover-text{flex:1 1 220px;min-width:0}
+.dw-cover strong{font-size:14px}
+.dw-cover .button{padding:9px 14px;font-size:13px}
+.dw-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;margin:0 0 8px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.dw-tabs::-webkit-scrollbar{display:none}
+.dw-tab{flex-shrink:0;scroll-snap-align:start;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 16px;font-size:13px;font-weight:700;color:#52645a}
+.dw-tab:hover{border-color:var(--green);color:var(--green-dark)}
+.dw-tab[aria-selected=true]{background:var(--green);border-color:var(--green);color:#fff}
+.dw-panel{animation:dwIn .22s ease}
+@keyframes dwIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.dw-lead{margin:0 0 14px;max-width:680px;color:var(--muted);font-size:14px;line-height:1.75}
+.dw-sub{margin:26px 0 10px;font-size:18px;letter-spacing:-.3px}
+.dw-sub:first-child{margin-top:0}
+.dw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dw-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dw-card{min-width:0;padding:18px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.dw-card h3{margin:0 0 6px;font-size:16px}
+.dw-card h4{margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.dw-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.dw-card .trust-icon{margin-bottom:10px}
+.dw-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px;font-size:13px}
+.dw-list li{position:relative;padding-left:24px;line-height:1.55}
+.dw-list li::before{position:absolute;left:0;top:0;font-weight:800}
+.dw-list.yes li::before{content:"✓";color:var(--green)}
+.dw-list.no li::before{content:"✕";color:#a33}
+.dw-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.dw-chips::-webkit-scrollbar{display:none}
+.dw-steps{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:dws}
+.dw-steps li{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;background:#fff;border:1px solid var(--line);border-radius:14px;counter-increment:dws}
+.dw-steps li::before{content:counter(dws);flex-shrink:0;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:800}
+.dw-steps b{display:block;font-size:14px}
+.dw-steps span{display:block;margin-top:2px;color:var(--muted);font-size:13px;line-height:1.6}
+.dw-steps.cols{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dw-rows{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.dw-row{display:grid;grid-template-columns:minmax(150px,.8fr) 2fr;gap:6px 16px;padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px}
+.dw-row:last-child{border-bottom:0}
+.dw-row b{font-size:14px}
+.dw-row span{color:var(--muted);font-size:13px;line-height:1.6}
+.dw-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.dw-stage{display:flex;flex-direction:column;gap:3px;padding:12px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;color:var(--ink)}
+.dw-stage .dw-n{display:grid;place-items:center;width:26px;height:26px;margin-bottom:4px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:800}
+.dw-stage b{font-size:14px}
+.dw-stage small{color:var(--muted);font-size:12px}
+.dw-stage:hover{border-color:var(--green)}
+.dw-stage.on{border-color:var(--green);background:var(--green-light)}
+.dw-stage.on .dw-n{background:var(--green);color:#fff}
+.dw-detail{margin-bottom:12px}
+.dw-detail p{color:var(--ink)}
+.dw-alert{padding:13px 15px;border-radius:14px;background:#fdeaea;border:1px solid #f1c3c3;color:#7a1f1f;font-size:13px;line-height:1.65}
+.dw-seg{display:inline-flex;padding:4px;margin-bottom:14px;background:#fff;border:1px solid var(--line);border-radius:30px}
+.dw-seg button{border:0;background:transparent;border-radius:30px;padding:9px 16px;font-size:13px;font-weight:700;color:#52645a}
+.dw-seg button[aria-pressed=true]{background:var(--green);color:#fff}
+.dw-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+@media (max-width:900px){
+.dw-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dw-flow{grid-template-columns:repeat(3,minmax(0,1fr))}
+.dw-steps.cols{grid-template-columns:1fr}
+}
+@media (max-width:650px){
+.dw-grid,.dw-grid.two{grid-template-columns:1fr}
+.dw-sub{font-size:17px;margin-top:22px}
+.dw-card{padding:16px}
+.dw-row{grid-template-columns:1fr;gap:3px;padding:12px 14px}
+.dw-flow{grid-template-columns:1fr}
+.dw-stage{display:grid;grid-template-columns:28px 1fr;column-gap:12px;align-items:center}
+.dw-stage .dw-n{grid-row:1/3;margin:0}
+.dw-cover .button,.dw-cta .button{width:100%}
+.dw-seg{display:flex;width:100%}
+.dw-seg button{flex:1;padding:10px 8px}
+}
 @media (prefers-reduced-motion:reduce){
 html{scroll-behavior:auto}
 *,*::before,*::after{transition:none!important}
+.dw-panel{animation:none}
 }
 </style>
 <script src="./pwa-install.js"></script>
@@ -334,6 +408,7 @@ html{scroll-behavior:auto}
         <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="how-it-works">Help <span class="caret">▼</span></button>
         <div class="dd-menu" role="menu">
           <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
+          <a href="#delivery-how"><span class="ico">🧭</span>How delivery works</a>
           <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
           <button type="button" data-action="deliver"><span class="ico">🏍️</span>Deliver with us</button>
           <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
@@ -403,6 +478,7 @@ html{scroll-behavior:auto}
         <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
         <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
         <button type="button" data-action="delivery">📍 Delivery areas</button>
+        <a href="#delivery-how">🧭 How delivery works</a>
         <button type="button" data-action="deliver">🏍️ Deliver with us</button>
       </div>
     </details>
@@ -414,6 +490,7 @@ html{scroll-behavior:auto}
       <summary>❓ Help</summary>
       <div class="d-links">
         <a href="#how-it-works">How it works</a>
+        <a href="#delivery-how">How delivery works</a>
         <button type="button" data-action="safety">🛡️ Safety tips</button>
       </div>
     </details>
@@ -525,6 +602,25 @@ html{scroll-behavior:auto}
     </div>
   </section>
 
+  <!-- ============ How delivery works (rendered by the delivery workflow script) ============ -->
+  <section class="section" id="delivery-how">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>How delivery works</h2>
+          <p>Verified riders, a delivery code, and payment released only after you confirm.</p>
+        </div>
+      </div>
+      <div class="dw-cover" id="dw-cover" role="status" aria-live="polite"></div>
+      <div class="dw-tabs" id="dw-tabs" role="tablist" aria-label="Delivery workflow topics"></div>
+      <div id="dw-panels"></div>
+      <noscript><p class="dw-lead">Turn on JavaScript to explore how delivery works.</p></noscript>
+      <div class="prototype-notice" style="margin:18px 0 0">
+        <strong>Planned workflow:</strong> this describes how delivery is designed to work. Delivery and payments are not active in this prototype.
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="sell">
     <div class="container">
       <div class="sell-panel">
@@ -567,6 +663,7 @@ html{scroll-behavior:auto}
       <div class="footer-col footer-links">
         <h4>Help</h4>
         <a href="#how-it-works">How it works</a>
+        <a href="#delivery-how">How delivery works</a>
         <button type="button" data-action="delivery">Delivery areas</button>
         <button type="button" data-action="safety">Safety tips</button>
         <a href="#home">Back to top ↑</a>
@@ -1092,6 +1189,7 @@ updateCartCount();
     if (!b) return;
     store("safebuy_area", b.dataset.area);
     renderDeliveryBar(); renderAreas();
+    document.dispatchEvent(new Event("sb:area"));
     showToast(areaStatus(b.dataset.area) === "available"
       ? "Delivery is available in " + b.dataset.area + "."
       : "Delivery is not available in " + b.dataset.area + " yet.");
@@ -1167,13 +1265,14 @@ updateCartCount();
   setTimeout(queueSync, 1500);
 
   /* ---- Scroll spy (desktop + mobile nav) ---- */
-  var spyIds = ["home", "shop", "how-it-works", "sell"];
+  var spyIds = ["home", "shop", "how-it-works", "delivery-how", "sell"];
   function spy() {
     var y = window.scrollY + 120, cur = "home";
     spyIds.forEach(function (id) {
       var el = $(id);
       if (el && el.getBoundingClientRect().top + window.scrollY <= y) cur = id;
     });
+    if (cur === "delivery-how") cur = "how-it-works"; /* both live under the Help menu */
     document.querySelectorAll("[data-spy]").forEach(function (el) {
       var on = el.dataset.spy === cur;
       el.classList.toggle("active", on);
@@ -1196,8 +1295,315 @@ updateCartCount();
   if (cartMaster) new MutationObserver(mirrorCart).observe(cartMaster, { childList: true, characterData: true, subtree: true });
   mirrorCart();
 
-  /* expose for the account script */
-  window.__sbNav = { openDelivery: openDelivery };
+  /* expose for the account script and the delivery workflow section */
+  window.__sbNav = { openDelivery: openDelivery, areas: DELIVERY_AREAS };
+})();
+</script>
+
+<!-- ============ How delivery works: content + interactions ============ -->
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var root = $("delivery-how");
+  if (!root) return;
+
+  /* ---------- Content (edit here) ---------- */
+  var TABS = [
+    ["overview", "Overview"],
+    ["book", "Booking"],
+    ["match", "Matching"],
+    ["partners", "Partners"],
+    ["pay", "Pay & refunds"]
+  ];
+
+  var ROLES = [
+    { k: "Buyer", can: ["Request delivery and see the fee", "Pay the fee to SafeBuy NG", "Track the status", "Give the delivery code on arrival"], no: ["See rider documents or live location history"] },
+    { k: "Seller", can: ["Set a pickup location", "Mark the order paid", "Hand the order to a rider"], no: ["Choose the rider or change the fee"] },
+    { k: "Rider", can: ["Apply and upload documents", "Set service areas", "Go online, accept or decline offers", "Update job status"], no: ["Take jobs before approval", "See the buyer’s code"] },
+    { k: "Company", can: ["Apply with CAC details and get a company code", "Own its riders and earnings"], no: ["Skip SafeBuy’s check of each rider"] },
+    { k: "SafeBuy admin", can: ["Approve documents and partners", "Switch areas on or off", "Confirm fees and assign unassigned jobs", "Pay out partners"], no: ["Be bypassed by any other role"] }
+  ];
+
+  var FACTS = [
+    ["🛡️", "Verified partners only", "Every rider is approved by SafeBuy NG, documents and account, before taking any job."],
+    ["🔒", "Fee held until delivery", "You pay the delivery fee to SafeBuy NG. The partner is paid only after delivery is confirmed."],
+    ["🔢", "4-digit delivery code", "Delivery is complete when you have the item and give the rider your code."]
+  ];
+
+  var BOOK = [
+    ["Seller sets a pickup point", "Once per seller: save a pickup address and GPS pin. Without it, buyers can’t request delivery on that seller’s products."],
+    ["Request delivery", "Enter your state, city, full address and phone. We check coverage and show your quote before you pay anything."],
+    ["Pay the fee to SafeBuy NG", "Quote your order number. SafeBuy NG confirms receipt."],
+    ["Seller taps “Ready for rider pickup”", "After marking the order paid. This creates the delivery job."],
+    ["We match a rider", "The nearest available approved rider is offered the job."],
+    ["Pickup and delivery", "The rider collects the item and brings it to you. Check the item first."],
+    ["Give your code", "Read out your 4-digit code to confirm delivery. Then SafeBuy NG pays the partner."]
+  ];
+
+  var COVER = [
+    ["Closed", "Fewer than 3 approved riders cover the city. You see “Delivery not available” before paying anything."],
+    ["Open", "At least 3 approved riders cover it and at least 1 was online in the last 24 hours. You see a quote and can book."]
+  ];
+
+  var FLOW = [
+    ["Searching", "Finding a rider", "The system looks for the closest eligible rider to the pickup point."],
+    ["Offered", "Timed offer", "One rider at a time gets the offer with a countdown (60 seconds is the starting window). The buyer’s name and phone stay hidden until the rider accepts."],
+    ["Assigned", "Rider accepted", "The rider is on the way to the seller. Pickup and drop-off details unlock for them."],
+    ["Picked up", "Item collected", "The buyer sees “Rider has your item”. After pickup, only admin can reassign or cancel."],
+    ["Delivered", "Payout created", "The buyer checked the item and gave the correct code. The partner’s payout record is created."]
+  ];
+
+  var ELIGIBLE = [
+    "Partner and documents are approved, and the partner’s company (if any) is active",
+    "Online, with location consent given",
+    "Location updated recently (under 2 minutes), so closed apps drop out",
+    "Service areas include the pickup city",
+    "No other active job",
+    "Has not already declined or timed out on this job"
+  ];
+
+  var REASSIGN = [
+    ["Rider declines", "The offer closes and the next nearest eligible rider gets it at once."],
+    ["No answer", "The offer times out and moves on. Repeated timeouts lower that rider’s priority."],
+    ["Rider gives the job back", "Allowed before pickup. The job returns to Searching and that rider is skipped for this job."],
+    ["Five riders, none accept", "The search widens to nearby service areas for one more round."],
+    ["Still nobody", "The job becomes Unassigned, admin is alerted, and you see “No rider yet”."],
+    ["Rider goes quiet", "If an assigned rider doesn’t pick up for 15 minutes, admin is alerted and can reassign."]
+  ];
+
+  var REQ = [
+    ["Requested", "Quote shown, waiting for the buyer’s fee. Next: fee paid, or cancelled."],
+    ["Fee paid", "Admin confirmed the fee, waiting for the seller. Next: dispatched, or cancelled."],
+    ["Dispatched", "Job created and matching started. From here it follows the job’s journey."],
+    ["Cancelled", "Stopped by buyer, seller or admin. Refund rules apply. Admin can cancel from any status except Delivered."]
+  ];
+
+  var PARTNER = {
+    rider: {
+      label: "Individual rider",
+      steps: [
+        ["Sign in and choose “Deliver with us”", "Pick Individual rider."],
+        ["Enter your details", "Full name, Nigerian phone number, home state, vehicle type and service areas. A company code is optional."],
+        ["Confirm and agree to the ID check", "Tick that your details are true."],
+        ["Upload documents", "A government ID and a selfie. Vehicle papers are optional."],
+        ["SafeBuy NG reviews", "Admin approves or rejects each document with a reason, then approves the partner."],
+        ["Go online", "Turn on location consent to start receiving offers."]
+      ]
+    },
+    company: {
+      label: "Delivery company",
+      steps: [
+        ["Apply as a company", "Company name, CAC number, contact name and phone."],
+        ["Upload documents", "The CAC certificate and the owner’s ID."],
+        ["Get your company code", "Issued after SafeBuy NG approves the company."],
+        ["Riders join with the code", "Each rider still uploads documents and is approved by SafeBuy NG individually."],
+        ["Track your team", "See your riders, their status and your earnings."]
+      ]
+    }
+  };
+
+  var PSTATUS = [
+    ["Pending", "Applied, documents under review. Can’t take jobs yet."],
+    ["Approved", "Documents and account approved. Can take jobs."],
+    ["Rejected or suspended", "Refused or stopped by admin. Can’t take jobs."]
+  ];
+
+  var PAY = [
+    ["Fee confirmed", "You pay the fee to SafeBuy NG and it is confirmed."],
+    ["Delivery confirmed", "The job is delivered with the correct code."],
+    ["Payout created", "The fee minus SafeBuy NG’s share is recorded for the partner as pending."],
+    ["Partner paid", "SafeBuy NG pays by bank transfer and records the reference. Company riders are paid through their company."]
+  ];
+
+  var HANDOVER = [
+    ["Rider picks up", "Your status changes to “Rider has your item”."],
+    ["Check, then share the code", "Inspect the item first, then read out your 4-digit code."],
+    ["Rider marks delivered", "A wrong code is refused. After repeated wrong codes the job locks and goes to admin."],
+    ["Done", "Delivered shows for buyer and seller, and the payout record is created."]
+  ];
+
+  var OUTCOMES = [
+    ["Cancelled before a rider is assigned", "Full refund to the buyer."],
+    ["Cancelled after assignment, before pickup", "Refund minus any compensation to the rider, decided by admin."],
+    ["No rider found", "Full refund, or a free retry if you prefer."],
+    ["Delivered", "The partner’s payout is created."],
+    ["Disputed", "The payout is held until admin decides."]
+  ];
+
+  var PRIVACY = [
+    ["📍", "Location, with consent", "A rider’s location is shared only while they are online, about every 20 seconds. Going offline stops it."],
+    ["🙈", "Details stay private", "Riders see addresses and phone numbers only after accepting. Buyers don’t see rider documents or location history."]
+  ];
+
+  /* ---------- Small renderers ---------- */
+  function listHtml(items, cls) {
+    return '<ul class="dw-list ' + cls + '">' + items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>";
+  }
+  function stepsHtml(items, cols) {
+    return '<ol class="dw-steps' + (cols ? " cols" : "") + '">' + items.map(function (s) {
+      return "<li><div><b>" + esc(s[0]) + "</b><span>" + esc(s[1]) + "</span></div></li>";
+    }).join("") + "</ol>";
+  }
+  function rowsHtml(items) {
+    return '<div class="dw-rows">' + items.map(function (r) {
+      return '<div class="dw-row"><b>' + esc(r[0]) + "</b><span>" + esc(r[1]) + "</span></div>";
+    }).join("") + "</div>";
+  }
+  function cardsHtml(items, two) {
+    return '<div class="dw-grid' + (two ? " two" : "") + '">' + items.map(function (c) {
+      return '<article class="dw-card"><div class="trust-icon" aria-hidden="true">' + c[0] + "</div><h3>" + esc(c[1]) + "</h3><p>" + esc(c[2]) + "</p></article>";
+    }).join("") + "</div>";
+  }
+
+  /* ---------- Panels ---------- */
+  var PANELS = {
+    overview:
+      '<p class="dw-lead">SafeBuy NG is designed to deliver only through verified partners. Here is how a delivery moves from order to payout, and who does what.</p>' +
+      cardsHtml(FACTS) +
+      '<h3 class="dw-sub">Who does what</h3>' +
+      '<div class="dw-chips" id="dw-roles" role="group" aria-label="Choose a role">' +
+      ROLES.map(function (r, i) {
+        return '<button type="button" class="category-button' + (i === 0 ? " active" : "") + '" data-role="' + i + '" aria-pressed="' + (i === 0) + '">' + esc(r.k) + "</button>";
+      }).join("") + "</div>" +
+      '<div class="dw-grid two" id="dw-role-box" aria-live="polite"></div>' +
+      '<h3 class="dw-sub">Where delivery opens</h3>' +
+      '<p class="dw-lead">Delivery is designed for all of Nigeria, but each state and city is switched on only after it has verified partners.</p>' +
+      rowsHtml(COVER),
+    book:
+      '<p class="dw-lead">Delivery is searched for only after the fee is confirmed and the seller says the item is ready.</p>' +
+      stepsHtml(BOOK) +
+      '<h3 class="dw-sub">Order status, in plain words</h3>' +
+      rowsHtml(REQ) +
+      '<div class="dw-cta"><button class="button button-primary" type="button" data-action="delivery">📍 Check my area</button></div>',
+    match:
+      '<p class="dw-lead">The system offers each job to one eligible rider at a time, starting with the closest to the pickup point. Tap a stage to see what happens.</p>' +
+      '<div class="dw-flow" id="dw-flow" role="group" aria-label="Job stages">' +
+      FLOW.map(function (f, i) {
+        return '<button type="button" class="dw-stage' + (i === 0 ? " on" : "") + '" data-stage="' + i + '" aria-pressed="' + (i === 0) + '"><span class="dw-n">' + (i + 1) + "</span><b>" + esc(f[0]) + "</b><small>" + esc(f[1]) + "</small></button>";
+      }).join("") + "</div>" +
+      '<div class="dw-card dw-detail" id="dw-stage-detail" aria-live="polite"></div>' +
+      '<div class="dw-alert"><strong>Unassigned:</strong> if no rider accepts after all rounds, admin is alerted and steps in. Admin can assign a rider by hand or cancel, and a cancellation before pickup refunds the delivery fee in full.</div>' +
+      '<h3 class="dw-sub">Which riders get offers</h3>' +
+      '<div class="dw-card">' + listHtml(ELIGIBLE, "yes") +
+      '<p style="margin-top:12px">Closest straight-line distance to the pickup pin goes first. Ties go to the rider who has been idle longest. Only one rider can ever hold a job.</p></div>' +
+      '<h3 class="dw-sub">When nobody answers</h3>' +
+      rowsHtml(REASSIGN),
+    partners:
+      '<p class="dw-lead">No partner takes a job until SafeBuy NG has approved both their documents and their account.</p>' +
+      '<div class="dw-seg" role="group" aria-label="Partner type">' +
+      '<button type="button" data-ptype="rider" aria-pressed="true">Individual rider</button>' +
+      '<button type="button" data-ptype="company" aria-pressed="false">Delivery company</button></div>' +
+      '<div id="dw-partner-steps" aria-live="polite"></div>' +
+      '<h3 class="dw-sub">Partner status</h3>' +
+      rowsHtml(PSTATUS) +
+      '<div class="dw-cta"><button class="button button-primary" type="button" data-action="deliver">🏍️ Deliver with us</button></div>',
+    pay:
+      '<p class="dw-lead">SafeBuy NG holds the delivery fee and pays the partner only after delivery is confirmed with your code.</p>' +
+      '<h3 class="dw-sub">Handover</h3>' + stepsHtml(HANDOVER, true) +
+      '<h3 class="dw-sub">Payouts</h3>' + stepsHtml(PAY, true) +
+      '<h3 class="dw-sub">If something changes</h3>' + rowsHtml(OUTCOMES) +
+      '<p class="dw-lead" style="margin-top:12px">No payout is ever created for an undelivered job, and no job is dispatched before the fee is confirmed.</p>' +
+      '<h3 class="dw-sub">Privacy and tracking</h3>' + cardsHtml(PRIVACY, true)
+  };
+
+  /* ---------- Build tabs + panels ---------- */
+  var tabsEl = $("dw-tabs"), panelsEl = $("dw-panels");
+  tabsEl.innerHTML = TABS.map(function (t, i) {
+    return '<button type="button" class="dw-tab" role="tab" id="dw-t-' + t[0] + '" aria-controls="dw-p-' + t[0] + '" aria-selected="' + (i === 0) + '" tabindex="' + (i === 0 ? 0 : -1) + '" data-tab="' + t[0] + '">' + esc(t[1]) + "</button>";
+  }).join("");
+  panelsEl.innerHTML = TABS.map(function (t, i) {
+    return '<div class="dw-panel" role="tabpanel" id="dw-p-' + t[0] + '" aria-labelledby="dw-t-' + t[0] + '"' + (i === 0 ? "" : " hidden") + ">" + PANELS[t[0]] + "</div>";
+  }).join("");
+
+  function showTab(key, focus) {
+    TABS.forEach(function (t) {
+      var on = t[0] === key, tab = $("dw-t-" + t[0]), panel = $("dw-p-" + t[0]);
+      tab.setAttribute("aria-selected", on ? "true" : "false");
+      tab.tabIndex = on ? 0 : -1;
+      panel.hidden = !on;
+      if (on) {
+        if (focus) tab.focus();
+        if (tab.scrollIntoView) tab.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      }
+    });
+  }
+  tabsEl.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]");
+    if (b) showTab(b.dataset.tab);
+  });
+  tabsEl.addEventListener("keydown", function (e) {
+    var keys = TABS.map(function (t) { return t[0]; });
+    var cur = keys.indexOf(document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.tab : "");
+    if (cur < 0) return;
+    var next = null;
+    if (e.key === "ArrowRight") next = (cur + 1) % keys.length;
+    else if (e.key === "ArrowLeft") next = (cur - 1 + keys.length) % keys.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = keys.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    showTab(keys[next], true);
+  });
+
+  /* ---------- Interactions inside panels ---------- */
+  function renderRole(i) {
+    var r = ROLES[i];
+    $("dw-role-box").innerHTML =
+      '<div class="dw-card"><h4>' + esc(r.k) + " can</h4>" + listHtml(r.can, "yes") + "</div>" +
+      '<div class="dw-card"><h4>' + esc(r.k) + " cannot</h4>" + listHtml(r.no, "no") + "</div>";
+    document.querySelectorAll("#dw-roles [data-role]").forEach(function (b) {
+      var on = b.dataset.role === String(i);
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+  function renderStage(i) {
+    var f = FLOW[i];
+    $("dw-stage-detail").innerHTML = "<h3>" + (i + 1) + ". " + esc(f[0]) + "</h3><p>" + esc(f[2]) + "</p>";
+    document.querySelectorAll("#dw-flow [data-stage]").forEach(function (b) {
+      var on = b.dataset.stage === String(i);
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+  function renderPartner(k) {
+    $("dw-partner-steps").innerHTML = '<h3 class="dw-sub" style="margin-top:0">' + esc(PARTNER[k].label) + "</h3>" + stepsHtml(PARTNER[k].steps, true);
+    document.querySelectorAll("[data-ptype]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.ptype === k ? "true" : "false");
+    });
+  }
+  root.addEventListener("click", function (e) {
+    var r = e.target.closest("[data-role]"); if (r) return renderRole(+r.dataset.role);
+    var s = e.target.closest("[data-stage]"); if (s) return renderStage(+s.dataset.stage);
+    var p = e.target.closest("[data-ptype]"); if (p) return renderPartner(p.dataset.ptype);
+  });
+  renderRole(0); renderStage(0); renderPartner("rider");
+
+  /* ---------- Coverage strip (reads the live area list + the visitor's chosen area) ---------- */
+  function renderCover() {
+    var areas = (window.__sbNav && window.__sbNav.areas) || [];
+    var open = areas.filter(function (a) { return a.status === "available"; }).length;
+    var soon = areas.length - open, cur = null;
+    try { cur = localStorage.getItem("safebuy_area"); } catch (e) {}
+    var mine = cur ? areas.filter(function (a) { return a.name === cur; })[0] : null;
+    var text = "📍 <strong>" + open + " area" + (open === 1 ? "" : "s") + " open</strong> · " + soon + " coming soon";
+    if (mine) text += "<br>Your area: <strong>" + esc(mine.name) + "</strong> — " + (mine.status === "available" ? "delivery available" : "coming soon");
+    $("dw-cover").innerHTML = '<div class="dw-cover-text">' + text + '</div><button class="button button-light" type="button" data-action="delivery">' + (mine ? "Change area" : "Check my area") + "</button>";
+  }
+  renderCover();
+  document.addEventListener("sb:area", renderCover);
+
+  /* Deep link: #delivery-how opens at the section; #delivery-how=pay (etc.) also opens that tab */
+  function fromHash() {
+    var m = /^#delivery-how(?:=|-)(\w+)$/.exec(location.hash);
+    if (m && $("dw-p-" + m[1])) {
+      showTab(m[1]);
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
 })();
 </script>
 
@@ -1422,465 +1828,4 @@ updateCartCount();
         if (result.data.session) logout.hidden = false;
         say(result.data.session
           ? "Account created. You are signed in."
-          : "Account created. Check your email to confirm your address before signing in.");
-      } else {
-        var res = await client.auth.signInWithPassword({ email: email, password: password });
-        if (res.error) throw res.error;
-        say("Signed in successfully.");
-        logout.hidden = false;
-      }
-    } catch (error) {
-      say(error.message || "We couldn't complete that request.");
-    } finally {
-      submit.disabled = false;
-    }
-  });
-
-  reset.addEventListener("click", async function () {
-    if (!client) { say(unavailable); return; }
-    var email = emailInput.value.trim();
-    if (!email) { say("Enter your email address first."); return; }
-    try {
-      var result = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname
-      });
-      if (result.error) throw result.error;
-      say("If the address is registered, a password-reset email will be sent.");
-    } catch (error) {
-      say(error.message || "Unable to request a password reset.");
-    }
-  });
-
-  logout.addEventListener("click", async function () {
-    if (!client) return;
-    var result = await client.auth.signOut();
-    if (result.error) { say(result.error.message); return; }
-    logout.hidden = true;
-    say("You have signed out.");
-  });
-
-  /* ---------- Shop setup, instant listing and product management ---------- */
-  var sellerBackdrop = document.getElementById("seller-backdrop");
-  var sellerBody = document.getElementById("seller-body");
-  var sellerTitle = document.getElementById("seller-title");
-  var currentApp = null;
-  var myProducts = [];
-  var editingId = null;
-
-  var CATEGORIES = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
-  var CATEGORY_LABELS = { Home: "Home & living" };
-  var IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
-  var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-
-  function categoryOptions(selected) {
-    return CATEGORIES.map(function (c) {
-      return '<option value="' + esc(c) + '"' + (c === selected ? " selected" : "") + ">" +
-        esc(CATEGORY_LABELS[c] || c) + "</option>";
-    }).join("");
-  }
-
-  function slugify(text) {
-    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "shop";
-  }
-
-  function randomId() {
-    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-  }
-
-  function waNumber(phone) {
-    var d = String(phone || "").replace(/\D/g, "");
-    if (d.indexOf("234") === 0) return d;
-    if (d.charAt(0) === "0") return "234" + d.slice(1);
-    if (d.length === 10) return "234" + d;
-    return d;
-  }
-
-  function formMessage(text, isError) {
-    var el = document.getElementById("form-message");
-    if (!el) return;
-    el.textContent = text || "";
-    el.style.color = isError ? "#8a1f1f" : "";
-  }
-
-  async function currentUser() {
-    if (!client) return null;
-    var r = await client.auth.getUser();
-    return r.data && r.data.user ? r.data.user : null;
-  }
-
-  function openSeller() { sellerBackdrop.classList.add("open"); }
-  function closeSeller() { sellerBackdrop.classList.remove("open"); }
-
-  async function startSelling() {
-    if (!client) {
-      showToast("Selling is unavailable right now. Please try again later.");
-      return;
-    }
-    var user = await currentUser();
-    if (!user) {
-      setMode("signin");
-      openAccount();
-      say("Sign in or create an account to start selling.");
-      return;
-    }
-
-    sellerTitle.textContent = "Sell on SafeBuy NG";
-    sellerBody.innerHTML = "<p>Loading…</p>";
-    openSeller();
-
-    var res = await client.from("seller_applications").select("*").eq("user_id", user.id).maybeSingle();
-    if (res.error) {
-      sellerBody.innerHTML = "<p>" + esc(res.error.message) + "</p>";
-      return;
-    }
-    if (!res.data) { renderSetup(user); return; }
-
-    currentApp = res.data;
-    editingId = null;
-    if (res.data.verification_status === "rejected") renderSuspended();
-    else renderDashboard();
-  }
-
-  function renderSuspended() {
-    sellerTitle.textContent = currentApp.shop_name;
-    sellerBody.innerHTML =
-      '<p class="status-pill bad">Suspended</p>' +
-      "<p>This shop is suspended and its products are hidden. Contact SafeBuy NG if you think this is a mistake.</p>";
-  }
-
-  /* One-step shop setup, then straight to listing */
-  function renderSetup(user) {
-    sellerTitle.textContent = "Set up your shop";
-    sellerBody.innerHTML =
-      "<p>Create your shop in one step, then list your first product right away.</p>" +
-      '<form id="setup-form">' +
-      '<label for="su-shop">Shop name</label><input id="su-shop" type="text" required maxlength="80">' +
-      '<label for="su-phone">WhatsApp / phone number</label><input id="su-phone" type="tel" required placeholder="08012345678">' +
-      '<label for="su-state">State</label><input id="su-state" type="text" placeholder="e.g. Lagos">' +
-      '<label for="su-cat">Main category</label><select id="su-cat">' + categoryOptions("") + "</select>" +
-      '<label for="su-ig">Instagram handle (optional)</label><input id="su-ig" type="text" placeholder="@yourshop">' +
-      '<label class="check"><input id="su-consent" type="checkbox" required> ' +
-      "I agree that buyers can contact me on this number when they tap “Chat seller”.</label>" +
-      '<button class="button button-primary" type="submit" id="su-submit">Create shop</button>' +
-      "</form>" +
-      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>';
-
-    document.getElementById("setup-form").addEventListener("submit", async function (event) {
-      event.preventDefault();
-      var btn = document.getElementById("su-submit");
-      btn.disabled = true;
-      formMessage("Creating your shop…");
-
-      var shop = document.getElementById("su-shop").value.trim();
-      var row = {
-        user_id: user.id,
-        shop_name: shop,
-        slug: slugify(shop) + "-" + Math.random().toString(36).slice(2, 6),
-        phone: document.getElementById("su-phone").value.trim(),
-        state: document.getElementById("su-state").value.trim() || null,
-        main_category: document.getElementById("su-cat").value || null,
-        instagram_handle: document.getElementById("su-ig").value.trim() || null,
-        verification_status: "pending"
-      };
-
-      var result = await client.from("seller_applications").insert(row).select().single();
-      if (result.error) {
-        var msg = result.error.message || "We could not create your shop.";
-        if (result.error.code === "23505" && /user/i.test(msg)) msg = "You already have a shop. Close this and tap Sell again.";
-        else if (/phone_format/.test(msg)) msg = "Please check your phone number format, for example 08012345678.";
-        formMessage(msg, true);
-        btn.disabled = false;
-        return;
-      }
-      currentApp = result.data;
-      showToast("Shop created. Add your first product.");
-      renderDashboard();
-    });
-  }
-
-  function productFormHtml() {
-    return (
-      '<h3 id="pf-heading">Add a product</h3>' +
-      '<form id="product-form">' +
-      '<label for="pf-name">Product name</label><input id="pf-name" type="text" required maxlength="120">' +
-      '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions("") + "</select>" +
-      '<label for="pf-cond">Condition</label><select id="pf-cond"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option></select>' +
-      '<label for="pf-price">Price (₦)</label><input id="pf-price" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="e.g. 18500">' +
-      '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000" placeholder="Condition, size, delivery areas…"></textarea>' +
-      '<label for="pf-photo" id="pf-photo-label">Photo (JPG, PNG or WebP, up to 5 MB)</label>' +
-      '<input id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">' +
-      '<label class="check"><input id="pf-stock" type="checkbox" checked> In stock</label>' +
-      '<button class="button button-primary" type="submit" id="pf-submit">Publish product</button>' +
-      '<button class="button button-outline" type="button" id="pf-cancel" hidden>Cancel edit</button>' +
-      "</form>"
-    );
-  }
-
-  function renderDashboard() {
-    var verified = currentApp.verification_status === "approved";
-    sellerTitle.textContent = currentApp.shop_name;
-    sellerBody.innerHTML =
-      (verified
-        ? '<p class="status-pill ok">✓ Verified seller</p>'
-        : '<p class="status-pill">Unverified shop</p><p class="muted">You can list right now. Buyers see an “Unverified” label until SafeBuy NG verifies your shop.</p>') +
-      productFormHtml() +
-      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>' +
-      "<h3>Your listings</h3>" +
-      '<div id="my-products">Loading…</div>';
-
-    document.getElementById("product-form").addEventListener("submit", submitProduct);
-    document.getElementById("pf-cancel").addEventListener("click", function () {
-      editingId = null;
-      renderDashboard();
-    });
-    loadMyProducts();
-  }
-
-  function startEdit(id) {
-    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
-    if (!p) return;
-    editingId = p.id;
-    document.getElementById("pf-heading").textContent = "Edit product";
-    document.getElementById("pf-name").value = p.name || "";
-    document.getElementById("pf-cat").value = p.category || CATEGORIES[0];
-    document.getElementById("pf-cond").value = p.condition || "new";
-    document.getElementById("pf-price").value = (Number(p.price_kobo) / 100).toString();
-    document.getElementById("pf-desc").value = p.description || "";
-    document.getElementById("pf-stock").checked = p.in_stock !== false;
-    document.getElementById("pf-photo-label").textContent = "Replace photo (optional)";
-    document.getElementById("pf-submit").textContent = "Save changes";
-    document.getElementById("pf-cancel").hidden = false;
-    formMessage("");
-    document.getElementById("pf-heading").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  async function submitProduct(event) {
-    event.preventDefault();
-    var btn = document.getElementById("pf-submit");
-    var user = await currentUser();
-    if (!user || !currentApp) { formMessage("Please sign in again.", true); return; }
-
-    var naira = Number(document.getElementById("pf-price").value);
-    var priceKobo = Math.round(naira * 100);
-    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero.", true); return; }
-
-    var file = document.getElementById("pf-photo").files[0];
-    if (file) {
-      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP.", true); return; }
-      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB.", true); return; }
-    }
-
-    btn.disabled = true;
-    formMessage(editingId ? "Saving…" : "Publishing…");
-
-    var newPath = null;
-    var newUrl = null;
-    if (file) {
-      newPath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
-      var up = await client.storage.from("product-images").upload(newPath, file, { contentType: file.type, upsert: false });
-      if (up.error) {
-        formMessage("Photo upload failed: " + up.error.message, true);
-        btn.disabled = false;
-        return;
-      }
-      newUrl = client.storage.from("product-images").getPublicUrl(newPath).data.publicUrl;
-    }
-
-    var fields = {
-      name: document.getElementById("pf-name").value.trim(),
-      description: document.getElementById("pf-desc").value.trim(),
-      category: document.getElementById("pf-cat").value,
-      condition: document.getElementById("pf-cond").value,
-      price_kobo: priceKobo,
-      in_stock: document.getElementById("pf-stock").checked
-    };
-
-    var editing = editingId
-      ? myProducts.filter(function (x) { return String(x.id) === String(editingId); })[0]
-      : null;
-    var failure = null;
-
-    if (editing) {
-      if (newPath) { fields.image_path = newPath; fields.image_url = newUrl; }
-      fields.updated_at = new Date().toISOString();
-      var upd = await client.from("seller_products").update(fields).eq("id", editing.id).select("id");
-      if (upd.error || !upd.data || !upd.data.length) failure = upd.error ? upd.error.message : "The change was not saved.";
-      else if (newPath && editing.image_path) await client.storage.from("product-images").remove([editing.image_path]);
-    } else {
-      fields.seller_application_id = currentApp.id;
-      fields.status = "published";
-      fields.image_path = newPath;
-      fields.image_url = newUrl;
-      var ins = await client.from("seller_products").insert(fields);
-      if (ins.error) failure = ins.error.message;
-    }
-
-    if (failure) {
-      if (newPath) await client.storage.from("product-images").remove([newPath]);
-      formMessage("Could not save the product: " + failure, true);
-      btn.disabled = false;
-      return;
-    }
-
-    showToast(editing ? "Changes saved." : "Product published. It is live now.");
-    editingId = null;
-    renderDashboard();
-    loadProducts();
-  }
-
-  async function loadMyProducts() {
-    var box = document.getElementById("my-products");
-    if (!box || !currentApp) return;
-    var r = await client.from("seller_products")
-      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock,condition")
-      .eq("seller_application_id", currentApp.id)
-      .order("created_at", { ascending: false });
-    if (r.error) { box.textContent = r.error.message; return; }
-    myProducts = r.data || [];
-    if (!myProducts.length) { box.textContent = "No listings yet. Add your first product above."; return; }
-
-    box.innerHTML = myProducts.map(function (p) {
-      var live = p.status === "published";
-      var thumb = p.image_url && /^https:\/\//.test(p.image_url)
-        ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
-        : '<div class="thumb"></div>';
-      return '<div class="seller-item">' +
-        '<div class="seller-item-top">' + thumb + '<div class="grow"><strong>' + esc(p.name) + "</strong><br>" +
-        '<span class="muted">' + esc(money(Number(p.price_kobo) / 100)) + " · " +
-        (live ? "Live" : "Hidden") + (p.in_stock === false ? " · Sold out" : "") + "</span></div></div>" +
-        '<div class="seller-actions">' +
-        '<button class="button button-outline" type="button" data-act="edit" data-id="' + esc(p.id) + '">Edit</button>' +
-        '<button class="button button-outline" type="button" data-act="stock" data-id="' + esc(p.id) + '">' + (p.in_stock === false ? "Back in stock" : "Mark sold out") + "</button>" +
-        '<button class="button button-outline" type="button" data-act="visible" data-id="' + esc(p.id) + '">' + (live ? "Hide" : "Show") + "</button>" +
-        '<button class="button button-outline" type="button" data-act="delete" data-id="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
-        "</div></div>";
-    }).join("");
-  }
-
-  sellerBody.addEventListener("click", async function (event) {
-    var button = event.target.closest("[data-act]");
-    if (!button) return;
-    var id = button.dataset.id;
-    var act = button.dataset.act;
-    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
-    if (!p) return;
-
-    if (act === "edit") { startEdit(id); return; }
-    button.disabled = true;
-
-    if (act === "delete") {
-      if (!window.confirm("Delete this listing permanently?")) { button.disabled = false; return; }
-      var del = await client.from("seller_products").delete().eq("id", id).select("id");
-      if (del.error || !del.data || !del.data.length) {
-        showToast(del.error ? del.error.message : "Could not delete that listing.");
-        button.disabled = false;
-        return;
-      }
-      if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
-      showToast("Listing deleted.");
-    } else {
-      var change = act === "stock"
-        ? { in_stock: p.in_stock === false }
-        : { status: p.status === "published" ? "hidden" : "published" };
-      change.updated_at = new Date().toISOString();
-      var upd = await client.from("seller_products").update(change).eq("id", id).select("id");
-      if (upd.error || !upd.data || !upd.data.length) {
-        showToast(upd.error ? upd.error.message : "The change was not saved.");
-        button.disabled = false;
-        return;
-      }
-    }
-    loadMyProducts();
-    loadProducts();
-  });
-
-  /* Buyer: "Chat seller" opens WhatsApp. The number is fetched only when tapped. */
-  document.addEventListener("click", async function (event) {
-    var button = event.target.closest('[data-action="whatsapp"]');
-    if (!button || !client) return;
-    var product = findProduct(button.dataset.id);
-    if (!product) return;
-
-    var win = window.open("about:blank", "_blank");
-    button.disabled = true;
-    var r = await client.rpc("seller_contact", { p_product: product.id });
-    button.disabled = false;
-
-    var number = r.error ? "" : waNumber(r.data);
-    if (!number) {
-      if (win) win.close();
-      showToast("This seller's contact is not available right now.");
-      return;
-    }
-    var text = "Hello, I'm interested in \"" + product.name + "\" (" + money(product.price) + ") on SafeBuy NG. Is it still available?";
-    var url = "https://wa.me/" + number + "?text=" + encodeURIComponent(text);
-    if (win) win.location.href = url; else window.location.href = url;
-  });
-
-  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
-    button.addEventListener("click", startSelling);
-  });
-  document.getElementById("seller-close").addEventListener("click", closeSeller);
-  sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
-
-  /* ---------- Auth state: update menus, close dialogs, go home once ---------- */
-  function goHome() {
-    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
-    var chat = document.getElementById("sbm");
-    if (chat) chat.classList.remove("open");
-    document.body.classList.remove("locked");
-    history.replaceState(null, "", location.pathname + location.search + "#home");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  if (client) {
-    client.auth.onAuthStateChange(function (event, session) {
-      currentApp = null;
-      renderAccountMenus(session && session.user ? session.user : null);
-      logout.hidden = !session;
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
-      if (accountBackdrop.classList.contains("open")) {
-        goHome();
-        setTimeout(goHome, 250);
-      }
-    });
-
-    client.auth.getSession().then(function (result) {
-      var s = result.data && result.data.session;
-      if (s) { logout.hidden = false; renderAccountMenus(s.user); }
-    });
-  }
-
-  setMode("signin");
-})();
-</script>
-
-<script>
-/* Tap a product photo to open its page (restored from the original) */
-document.addEventListener("click", function (e) {
-  var art = e.target.closest(".product-art");
-  if (!art) return;
-  var card = art.closest(".product-card");
-  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
-  if (link) window.location.href = link.getAttribute("href");
-});
-</script>
-<!-- Feature scripts (unchanged) -->
-<script src="./shop-extras.js"></script>
-<script src="./messages.js"></script>
-<script src="./notify.js"></script>
-<script src="./verify.js"></script>
-<script src="./lead-capture.js"></script>
-<script src="./buyer-account.js"></script>
-<script src="./orders.js"></script>
-<script src="./account-settings.js"></script>
-<script src="./delivery.js"></script>
-<script src="./delivery-orders.js"></script>
-<script src="./bottom-sheet.js"></script>
-<script src="./pwa.js"></script>
-<script src="./protect-core.js"></script>
-<script src="./protected-option.js"></script>
-<script src="./theme.js"></script>
-</body>
-</html>
+          : "Account created. Check your email to confirm your address before signing in.")
