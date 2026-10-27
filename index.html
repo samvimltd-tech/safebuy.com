@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-  <link rel="manifest" href="./manifest.webmanifest">
+<link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
@@ -20,35 +20,82 @@
 <!-- seo:end -->
 <title>SafeBuy NG | Shop with Confidence</title>
 <style>
-:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px}
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px;--header-h:68px}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--background);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
-button,input{font:inherit}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--background);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5;overflow-x:hidden}
+body.locked{overflow:hidden}
+button,input,select,textarea{font:inherit}
 button,a{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
-.announcement{padding:9px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
+:focus-visible{outline:3px solid #78d3ad;outline-offset:2px}
+.announcement{padding:8px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
 .container{width:min(1160px,100% - 36px);margin:auto}
-header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
-.header-row{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+
+/* ---------- Header ---------- */
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.header-row{min-height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:14px}
 .brand{display:flex;align-items:center;gap:9px;flex-shrink:0}
-.brand-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;color:#fff;background:var(--green);font-size:23px;font-weight:800}
-.brand-name{font-size:23px;font-weight:800;letter-spacing:-.8px}
+.brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:#fff;background:var(--green);font-size:22px;font-weight:800}
+.brand-name{font-size:22px;font-weight:800;letter-spacing:-.8px}
 .brand-name span{color:var(--green)}
-.desktop-nav{display:flex;align-items:center;gap:25px;font-size:14px;font-weight:700}
-.desktop-nav a:hover{color:var(--green)}
-.header-actions{display:flex;align-items:center;gap:10px}
+.desktop-nav{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700}
+.nav-link,.dd>button.dd-toggle{display:inline-flex;align-items:center;gap:5px;padding:9px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);font-weight:700;font-size:14px;white-space:nowrap}
+.nav-link:hover,.dd>button.dd-toggle:hover,.dd.open>button.dd-toggle{background:var(--green-light);color:var(--green-dark)}
+.nav-link.active{color:var(--green)}
+.caret{font-size:10px;transition:transform .15s}
+.dd.open .caret{transform:rotate(180deg)}
+.dd{position:relative}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:230px;padding:8px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px #173b2822;display:none;z-index:50}
+.dd.right .dd-menu{left:auto;right:0}
+.dd.open .dd-menu{display:block}
+.dd-menu a,.dd-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);font-size:14px;font-weight:600;text-align:left}
+.dd-menu a:hover,.dd-menu button:hover{background:var(--green-light);color:var(--green-dark)}
+.dd-menu .ico{width:22px;text-align:center}
+.dd-menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+.dd-menu .dd-label{padding:6px 12px 4px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.dd-menu .dd-user{padding:8px 12px;font-size:13px;color:var(--muted);word-break:break-all}
+.header-actions{display:flex;align-items:center;gap:8px}
 .button{border:0;border-radius:12px;padding:12px 17px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .button-primary{background:var(--green);color:#fff}
 .button-primary:hover{background:var(--green-dark)}
 .button-light{background:var(--green-light);color:var(--green-dark)}
 .button-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
-.cart-button{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-weight:700;white-space:nowrap}
+.button[disabled]{opacity:.55;cursor:not-allowed}
+.header-actions .button{padding:10px 14px;font-size:14px}
+.cart-button{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:700;white-space:nowrap;font-size:14px}
 .cart-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;margin-left:4px;background:var(--green);color:#fff;border-radius:20px;font-size:12px}
-.hero{padding:38px 0 28px}
-.hero-panel{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:28px;min-height:335px;padding:clamp(25px,5vw,55px);border-radius:28px;overflow:hidden;background:radial-gradient(circle at 85% 20%,#d5f2df 0,transparent 32%),linear-gradient(120deg,#eaf8ef,#f6fbf6)}
+.menu-toggle{display:none;border:1px solid var(--line);background:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;line-height:1}
+
+/* ---------- Delivery bar ---------- */
+.delivery-bar{background:#fff8e8;border-bottom:1px solid #f1d69a;color:#79551b;font-size:13px}
+.delivery-bar.ok{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark)}
+.delivery-bar .container{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:8px 0;text-align:center}
+.delivery-bar button{border:0;background:transparent;color:inherit;font-weight:800;text-decoration:underline;padding:2px 4px;font-size:13px}
+
+/* ---------- Mobile drawer ---------- */
+.drawer-backdrop{position:fixed;inset:0;z-index:45;background:#10271d99;display:none}
+.drawer-backdrop.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:46;width:min(340px,88vw);background:#fff;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px #0002}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.drawer-body{flex:1;overflow-y:auto;padding:8px 10px 24px;-webkit-overflow-scrolling:touch}
+.drawer details{border-bottom:1px solid var(--line)}
+.drawer summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:14px 8px;font-weight:800;font-size:15px;cursor:pointer}
+.drawer summary::-webkit-details-marker{display:none}
+.drawer summary::after{content:"▾";font-size:12px;color:var(--muted);transition:transform .15s}
+.drawer details[open] summary::after{transform:rotate(180deg)}
+.drawer .d-links{padding:0 0 10px}
+.drawer .d-links a,.drawer .d-links button,.drawer .d-single{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px;border:0;background:transparent;border-radius:10px;font-size:15px;font-weight:600;color:var(--ink);text-align:left}
+.drawer .d-links a:active,.drawer .d-links button:active,.drawer .d-single:active{background:var(--green-light)}
+.drawer .d-single{font-weight:800;border-bottom:1px solid var(--line);border-radius:0;padding:14px 8px}
+.drawer .d-user{padding:10px 8px;color:var(--muted);font-size:13px;word-break:break-all}
+
+/* ---------- Hero ---------- */
+.hero{padding:30px 0 24px}
+.hero-panel{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:28px;min-height:320px;padding:clamp(25px,5vw,55px);border-radius:28px;overflow:hidden;background:radial-gradient(circle at 85% 20%,#d5f2df 0,transparent 32%),linear-gradient(120deg,#eaf8ef,#f6fbf6)}
 .eyebrow{display:inline-block;padding:7px 11px;border-radius:30px;background:#fff;color:var(--green-dark);font-size:12px;font-weight:800;letter-spacing:.4px}
 .hero h1{margin:17px 0 13px;max-width:620px;font-size:clamp(34px,5.5vw,56px);line-height:1.08;letter-spacing:-1.8px}
 .hero h1 span{color:var(--green)}
@@ -57,30 +104,40 @@ header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0
 .hero-art{min-height:220px;display:grid;place-items:center;position:relative}
 .art-circle{width:min(240px,100%);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#c7ecd4;font-size:clamp(80px,12vw,130px);box-shadow:0 20px 50px #087f5b18}
 .floating-note{position:absolute;bottom:5px;right:0;background:#fff;padding:12px 15px;border-radius:14px;box-shadow:0 8px 25px #173b2812;font-size:13px;font-weight:700}
-.prototype-notice{margin:0 auto 25px;padding:13px 16px;border:1px solid #f1d69a;background:#fff8e8;border-radius:13px;color:#79551b;font-size:13px}
+.quick-links{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+.quick-link{display:flex;align-items:center;gap:11px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;color:var(--ink);font-weight:700;font-size:14px}
+.quick-link:hover{border-color:var(--green);background:var(--green-light)}
+.quick-link .ql-ico{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:11px;background:var(--green-light);font-size:19px}
+.quick-link small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.prototype-notice{margin:0 auto 20px;padding:13px 16px;border:1px solid #f1d69a;background:#fff8e8;border-radius:13px;color:#79551b;font-size:13px}
 .prototype-notice strong{color:#66440c}
-.section{padding:24px 0;scroll-margin-top:100px}
-.section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:19px}
+
+/* ---------- Sections / shop ---------- */
+.section{padding:22px 0;scroll-margin-top:calc(var(--header-h) + 16px)}
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:18px}
 .section-heading h2{margin:0;font-size:clamp(24px,4vw,31px);letter-spacing:-.7px}
 .section-heading p{margin:5px 0 0;color:var(--muted);font-size:14px}
-.search-wrap{margin-bottom:18px}
+.search-wrap{margin-bottom:14px}
 .search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce5de;border-radius:15px;padding:5px 6px 5px 16px;box-shadow:0 5px 20px #173b2806}
 .search-icon{color:var(--green);font-size:22px}
-.search-box input{width:100%;min-width:0;border:0;outline:none;background:transparent;padding:12px 0;color:var(--ink)}
+.search-box input{width:100%;min-width:0;border:0;outline:none;background:transparent;padding:12px 0;color:var(--ink);font-size:16px}
 .search-box input::placeholder{color:#98a39c}
 .search-box button{flex-shrink:0}
-.categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px;margin-bottom:15px;scrollbar-width:thin}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px;margin-bottom:8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .category-button{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 17px;color:#52645a;font-size:13px;font-weight:700}
 .category-button.active,.category-button:hover{background:var(--green);color:#fff;border-color:var(--green)}
-.results-line{margin:0 0 14px;color:var(--muted);font-size:13px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.results-line{margin:0;color:var(--muted);font-size:13px}
+.sort-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
 .product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 .product-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s}
 .product-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #173b2810}
-.product-art{position:relative;min-height:175px;aspect-ratio:1.15/1;display:grid;place-items:center;font-size:75px;background:#edf6ef}
-.product-art .tag{position:absolute;top:11px;left:11px;padding:5px 8px;border-radius:8px;background:#fff;color:var(--green-dark);font-size:10px;font-weight:800}
+.product-art{position:relative;min-height:175px;aspect-ratio:1.15/1;display:grid;place-items:center;font-size:75px;background:#edf6ef;cursor:pointer}
+.product-art .tag{position:absolute;top:11px;left:11px;z-index:1;padding:5px 8px;border-radius:8px;background:#fff;color:var(--green-dark);font-size:10px;font-weight:800}
 .product-info{padding:14px}
 .product-category{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.product-info h3{margin:7px 0 8px;font-size:15px;line-height:1.4;min-height:42px}
+.product-info h3{margin:7px 0 8px;font-size:15px;line-height:1.4;min-height:42px;overflow-wrap:anywhere}
 .seller-name{margin:0 0 10px;color:var(--muted);font-size:12px}
 .product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
 .price{color:var(--ink);font-size:17px;font-weight:800}
@@ -102,24 +159,28 @@ a.icon-button{display:inline-grid;place-items:center;text-decoration:none}
 .sell-panel h2{margin:0 0 9px;font-size:clamp(24px,4vw,32px)}
 .sell-panel p{max-width:580px;margin:0;color:#d4e6dc;font-size:14px;line-height:1.8}
 .sell-panel .button{flex-shrink:0;background:#d8f5e3;color:#145338}
-footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid var(--line)}
-.footer-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.footer-row p{color:var(--muted);font-size:13px;max-width:500px}
-.footer-links{display:flex;gap:17px;flex-wrap:wrap;font-size:13px;font-weight:700}
-.footer-links a:hover{color:var(--green)}
+footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid var(--line)}
+.footer-row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-row p{color:var(--muted);font-size:13px;max-width:420px}
+.footer-cols{display:flex;gap:40px;flex-wrap:wrap}
+.footer-col h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.footer-col a,.footer-col button{display:block;padding:4px 0;border:0;background:transparent;font-size:14px;font-weight:600;color:var(--ink);text-align:left}
+.footer-col a:hover,.footer-col button:hover{color:var(--green)}
 .mobile-nav{display:none}
-.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:13px;background:#173b2c;color:#fff;font-size:14px;box-shadow:0 8px 30px #0002;z-index:60;display:none}
+.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:13px;background:#173b2c;color:#fff;font-size:14px;box-shadow:0 8px 30px #0002;z-index:80;display:none}
 .toast.show{display:block}
-.modal-backdrop{position:fixed;inset:0;z-index:40;padding:20px;background:#10271dcc;display:none;align-items:center;justify-content:center}
+
+/* ---------- Modals ---------- */
+.modal-backdrop{position:fixed;inset:0;z-index:60;padding:20px;background:#10271dcc;display:none;align-items:center;justify-content:center}
 .modal-backdrop.open{display:flex}
-.modal{width:min(450px,100%);max-height:85vh;overflow-y:auto;padding:24px;background:#fff;border-radius:22px}
+.modal{width:min(450px,100%);max-height:88vh;max-height:88dvh;overflow-y:auto;padding:24px;background:#fff;border-radius:22px;-webkit-overflow-scrolling:touch}
 .modal-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
 .modal h2{margin:0 0 12px}
 .modal-art{display:grid;place-items:center;min-height:180px;margin:14px 0;border-radius:16px;background:#edf6ef;font-size:90px}
 .modal p{color:var(--muted);line-height:1.7}
 .modal .button{width:100%;margin-top:12px}
 .modal label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}
-.modal input{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none}
+.modal input{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;font-size:16px}
 .modal input:focus{border-color:var(--green)}
 .source-banner{margin:0 0 14px;padding:11px 14px;border-radius:12px;font-size:13px;border:1px solid var(--line);background:#fff}
 .source-banner.supabase{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark);font-weight:700}
@@ -127,7 +188,7 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .source-banner.loading{color:var(--muted)}
 .product-art img,.modal-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .modal-art{position:relative;overflow:hidden}
-.modal textarea,.modal select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;font:inherit;color:var(--ink)}
+.modal textarea,.modal select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;font:inherit;font-size:16px;color:var(--ink)}
 .modal textarea{min-height:84px;resize:vertical}
 .modal textarea:focus,.modal select:focus{border-color:var(--green)}
 .modal h3{margin:20px 0 8px;font-size:16px}
@@ -145,8 +206,6 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .modal .button-outline{margin-top:10px}
 .badge{display:inline-block;margin-left:5px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#fff3e0;color:#7a4a05;vertical-align:1px}
 .badge.ok{background:var(--green-light);color:var(--green-dark)}
-.sort-row{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;color:var(--muted)}
-.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
 .seller-item{padding:12px 0;border-top:1px solid var(--line)}
 .seller-item-top{display:flex;gap:12px;align-items:center}
 .seller-item .thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;background:#edf6ef;flex-shrink:0}
@@ -154,29 +213,47 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .seller-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
 .seller-actions .button{width:auto;margin:0;padding:8px 11px;font-size:12px}
 .modal-note{padding:11px 13px;border-radius:12px;background:#fff8e8;border:1px solid #f1d69a;color:#79551b!important;font-size:13px;line-height:1.6}
+/* delivery areas */
+.area-list{margin:10px 0 0;padding:0;list-style:none;max-height:42vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.area-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line);font-size:14px}
+.area-list li:last-child{border-bottom:0}
+.area-list li button{width:auto;margin:0;padding:6px 11px;font-size:12px}
+.chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:800;background:#fff3e0;color:#7a4a05;white-space:nowrap}
+.chip.ok{background:var(--green-light);color:var(--green-dark)}
+.area-group{margin:16px 0 4px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+
+@media (max-width:1000px){
+.nav-link,.dd>button.dd-toggle{padding:9px 9px}
+.header-actions .sell-header{display:none}
+.quick-links{grid-template-columns:repeat(2,1fr)}
+}
 @media (max-width:900px){
-.desktop-nav{gap:13px}
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .hero-panel{grid-template-columns:1.15fr .85fr}
+.desktop-nav,.header-actions .dd-account,.header-actions .button-outline{display:none}
+.menu-toggle{display:inline-grid;place-items:center}
 }
 @media (max-width:650px){
+:root{--header-h:60px}
+body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 .container{width:calc(100% - 26px)}
 .announcement{font-size:11px}
-.header-row{min-height:65px;gap:8px}
+.header-row{gap:8px}
 .brand-mark{width:36px;height:36px;font-size:20px}
 .brand-name{font-size:19px}
-.desktop-nav{display:none}
-.header-actions .sell-header{display:none}
-.header-actions .button{padding:9px 11px;font-size:13px}
-.cart-button{padding:9px 10px;font-size:13px}
-.hero{padding-top:18px}
+.cart-button{display:none}
+.delivery-bar .container{justify-content:flex-start;text-align:left;font-size:12px;padding:7px 0}
+.hero{padding-top:16px}
 .hero-panel{grid-template-columns:1fr;gap:8px;padding:27px 22px;min-height:auto;border-radius:22px}
 .hero h1{font-size:37px;letter-spacing:-1.2px}
 .hero p{font-size:14px}
-.hero-art{min-height:155px}
-.art-circle{width:150px;font-size:78px}
+.hero-art{min-height:140px}
+.art-circle{width:130px;font-size:68px}
 .floating-note{right:2px;bottom:0;font-size:11px}
-.section{padding:19px 0}
+.quick-links{gap:9px}
+.quick-link{padding:11px;font-size:13px;gap:9px}
+.quick-link small{display:none}
+.section{padding:18px 0}
 .section-heading{align-items:start}
 .section-heading h2{font-size:25px}
 .search-box{padding-left:12px}
@@ -195,42 +272,143 @@ footer{margin-top:38px;padding:35px 0 100px;background:#fff;border-top:1px solid
 .sell-panel{align-items:start;flex-direction:column}
 .sell-panel .button{width:100%}
 .footer-row{flex-direction:column}
-.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(4,1fr);left:0;right:0;bottom:0;z-index:20;padding:8px 4px calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
-.mobile-nav a,.mobile-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0}
-.mobile-nav .nav-icon{font-size:20px}
+.modal-backdrop{padding:0;align-items:flex-end}
+.modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
+.mobile-nav a,.mobile-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0;min-height:48px}
+.mobile-nav .nav-icon{font-size:20px;line-height:1.1}
 .mobile-nav .current{color:var(--green)}
-footer{padding-bottom:115px}
+.mobile-nav .cart-count{position:absolute;top:0;right:22%;margin:0;min-width:18px;height:18px;font-size:10px}
+.toast{bottom:calc(80px + env(safe-area-inset-bottom))}
 }
 @media (prefers-reduced-motion:reduce){
 html{scroll-behavior:auto}
 *,*::before,*::after{transition:none!important}
 }
 </style>
-  <script src="./pwa-install.js"></script>
+<script src="./pwa-install.js"></script>
 </head>
 <body>
 <div class="announcement">Made for Nigerian shoppers and sellers · NGN prices</div>
+
 <header>
   <div class="container header-row">
     <a class="brand" href="#home" aria-label="SafeBuy NG home">
       <span class="brand-mark">S</span>
       <span class="brand-name">SafeBuy <span>NG</span></span>
     </a>
-    <nav class="desktop-nav" aria-label="Main navigation">
-      <a href="#home">Home</a>
-      <a href="#shop">Shop</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#sell">Sell with us</a>
+
+    <nav class="desktop-nav" id="desktop-nav" aria-label="Main navigation">
+      <a class="nav-link" href="#home" data-spy="home">Home</a>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="shop">Shop <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <div class="dd-label">Categories</div>
+          <button type="button" data-goto-category="All"><span class="ico">🛍️</span>All products</button>
+          <button type="button" data-goto-category="Electronics"><span class="ico">🎧</span>Electronics</button>
+          <button type="button" data-goto-category="Fashion"><span class="ico">👟</span>Fashion</button>
+          <button type="button" data-goto-category="Home"><span class="ico">🏠</span>Home &amp; living</button>
+          <button type="button" data-goto-category="Beauty"><span class="ico">🧴</span>Beauty</button>
+          <button type="button" data-goto-category="Groceries"><span class="ico">🍚</span>Groceries</button>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="sell">Sell <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <button type="button" data-action="sell"><span class="ico">🏪</span>Start selling / My shop</button>
+          <button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>
+          <a href="#sell"><span class="ico">ℹ️</span>Why sell with us</a>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="how-it-works">Help <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
+          <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
+          <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
+        </div>
+      </div>
     </nav>
+
     <div class="header-actions">
-      <button class="button button-outline" type="button" data-action="account">Sign in</button>
+      <button class="button button-outline" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
       <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
+
+      <div class="dd right dd-account" id="account-dd">
+        <button class="button button-outline dd-toggle-btn" type="button" id="account-dd-toggle" aria-haspopup="true" aria-expanded="false">👤 <span id="account-dd-label">Sign in</span> <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu" id="account-dd-menu"></div>
+      </div>
+
       <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
         🛒 Cart <span class="cart-count" id="cart-count">0</span>
       </button>
+      <button class="menu-toggle" type="button" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">☰</button>
     </div>
   </div>
 </header>
+
+<div class="delivery-bar" id="delivery-bar" role="status">
+  <div class="container">
+    <span id="delivery-bar-text">🚚 Delivery is not available in your area yet.</span>
+    <button type="button" data-action="delivery">Show areas available</button>
+  </div>
+</div>
+
+<!-- Mobile drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="drawer-head">
+    <a class="brand" href="#home"><span class="brand-mark">S</span><span class="brand-name">SafeBuy <span>NG</span></span></a>
+    <button class="icon-button" type="button" id="drawer-close" aria-label="Close menu">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <a class="d-single" href="#home">🏠 Home</a>
+    <details>
+      <summary>🛍️ Shop by category</summary>
+      <div class="d-links">
+        <button type="button" data-goto-category="All">All products</button>
+        <button type="button" data-goto-category="Electronics">🎧 Electronics</button>
+        <button type="button" data-goto-category="Fashion">👟 Fashion</button>
+        <button type="button" data-goto-category="Home">🏠 Home &amp; living</button>
+        <button type="button" data-goto-category="Beauty">🧴 Beauty</button>
+        <button type="button" data-goto-category="Groceries">🍚 Groceries</button>
+      </div>
+    </details>
+    <details>
+      <summary>🏪 Sell</summary>
+      <div class="d-links">
+        <button type="button" data-action="sell">Start selling / My shop</button>
+        <button type="button" data-feature="verify">✅ Get verified</button>
+        <a href="#sell">Why sell with us</a>
+      </div>
+    </details>
+    <details>
+      <summary>📦 Orders &amp; delivery</summary>
+      <div class="d-links">
+        <button type="button" data-feature="orders">My orders</button>
+        <button type="button" data-feature="delivery-orders">Delivery orders</button>
+        <button type="button" data-action="delivery">🚚 Delivery areas</button>
+        <button type="button" data-feature="messages">💬 Messages</button>
+      </div>
+    </details>
+    <details>
+      <summary>👤 Account</summary>
+      <div class="d-links" id="drawer-account"></div>
+    </details>
+    <details>
+      <summary>❓ Help</summary>
+      <div class="d-links">
+        <a href="#how-it-works">How it works</a>
+        <button type="button" data-action="safety">🛡️ Safety tips</button>
+      </div>
+    </details>
+    <button class="d-single" type="button" data-action="cart">🛒 Demo cart (<span class="cart-count-inline">0</span>)</button>
+  </div>
+</aside>
+
 <main id="home">
   <section class="hero">
     <div class="container">
@@ -251,12 +429,20 @@ html{scroll-behavior:auto}
       </div>
     </div>
   </section>
+
   <div class="container">
+    <div class="quick-links" aria-label="Quick links">
+      <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
+      <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
+      <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
+      <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
+    </div>
     <div class="prototype-notice">
       <strong>Prototype notice:</strong>
       This is a demonstration. Payments, escrow, delivery protection and real orders are not active. Do not send money based on this demo.
     </div>
   </div>
+
   <section class="section" id="shop">
     <div class="container">
       <div class="section-heading">
@@ -273,15 +459,6 @@ html{scroll-behavior:auto}
         </form>
       </div>
 
-      <div class="sort-row">
-        <label for="sort-select">Sort by</label>
-        <select id="sort-select">
-          <option value="newest">Newest first</option>
-          <option value="low">Price: low to high</option>
-          <option value="high">Price: high to low</option>
-        </select>
-      </div>
-
       <div class="categories" id="categories" aria-label="Product categories">
         <button class="category-button active" type="button" data-category="All">All products</button>
         <button class="category-button" type="button" data-category="Electronics">Electronics</button>
@@ -293,10 +470,21 @@ html{scroll-behavior:auto}
 
       <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
 
-      <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
+      <div class="toolbar">
+        <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
+        <div class="sort-row">
+          <label for="sort-select">Sort by</label>
+          <select id="sort-select">
+            <option value="newest">Newest first</option>
+            <option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option>
+          </select>
+        </div>
+      </div>
       <div class="product-grid" id="product-grid"></div>
     </div>
   </section>
+
   <section class="section" id="how-it-works">
     <div class="container">
       <div class="section-heading">
@@ -324,6 +512,7 @@ html{scroll-behavior:auto}
       </div>
     </div>
   </section>
+
   <section class="section" id="sell">
     <div class="container">
       <div class="sell-panel">
@@ -336,6 +525,7 @@ html{scroll-behavior:auto}
     </div>
   </section>
 </main>
+
 <footer>
   <div class="container footer-row">
     <div>
@@ -346,19 +536,38 @@ html{scroll-behavior:auto}
       <p>A Nigerian marketplace prototype in development. No real payments or buyer-protection services are currently active.</p>
       <p>© <span id="year">2026</span> SafeBuy NG</p>
     </div>
-    <nav class="footer-links" aria-label="Footer navigation">
-      <a href="#shop">Shop</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#sell">Sell with us</a>
-      <a href="#home">Back to top ↑</a>
+    <nav class="footer-cols" aria-label="Footer navigation">
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#shop">All products</a>
+        <button type="button" data-goto-category="Electronics">Electronics</button>
+        <button type="button" data-goto-category="Fashion">Fashion</button>
+        <button type="button" data-goto-category="Groceries">Groceries</button>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <button type="button" data-feature="orders">My orders</button>
+        <button type="button" data-feature="messages">Messages</button>
+        <button type="button" data-feature="settings">Account settings</button>
+        <button type="button" data-action="sell">Sell with us</button>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <a href="#how-it-works">How it works</a>
+        <button type="button" data-action="delivery">Delivery areas</button>
+        <button type="button" data-action="safety">Safety tips</button>
+        <a href="#home">Back to top ↑</a>
+      </div>
     </nav>
   </div>
 </footer>
-<nav class="mobile-nav" aria-label="Mobile navigation">
-  <a class="current" href="#home"><span class="nav-icon">⌂</span><span>Home</span></a>
-  <a href="#shop"><span class="nav-icon">⌕</span><span>Shop</span></a>
-  <button type="button" data-action="cart"><span class="nav-icon">🛒</span><span>Cart</span></button>
-  <a href="#sell"><span class="nav-icon">＋</span><span>Sell</span></a>
+
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+  <a class="current" href="#home" data-spy="home"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="#shop" data-spy="shop"><span class="nav-icon">⌕</span><span>Shop</span></a>
+  <button type="button" data-action="sell"><span class="nav-icon">＋</span><span>Sell</span></button>
+  <button type="button" data-action="cart"><span class="nav-icon">🛒</span><span>Cart</span><span class="cart-count cart-count-mobile">0</span></button>
+  <button type="button" id="mobile-menu-btn"><span class="nav-icon">☰</span><span>Menu</span></button>
 </nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -410,6 +619,37 @@ html{scroll-behavior:auto}
   </div>
 </div>
 
+<!-- Delivery areas modal -->
+<div class="modal-backdrop" id="delivery-backdrop" role="dialog" aria-modal="true" aria-labelledby="delivery-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="delivery-title">Delivery areas</h2>
+      <button class="icon-button" type="button" id="delivery-close" aria-label="Close">✕</button>
+    </div>
+    <p class="muted" style="margin-top:0">Find out where delivery is available. Search for your state, then tap “Use this area”.</p>
+    <label for="area-search">Search your state or city</label>
+    <input id="area-search" type="search" placeholder="e.g. Lagos, Abuja, Rivers" autocomplete="off">
+    <div id="area-results" aria-live="polite"></div>
+    <p class="modal-note" style="margin-top:14px">Delivery is not fully active in this prototype. Until delivery is available in your area, agree pickup or delivery details directly with the seller.</p>
+  </div>
+</div>
+
+<!-- Safety tips modal -->
+<div class="modal-backdrop" id="safety-backdrop" role="dialog" aria-modal="true" aria-labelledby="safety-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="safety-title">Safety tips</h2>
+      <button class="icon-button" type="button" id="safety-close" aria-label="Close">✕</button>
+    </div>
+    <ul style="color:var(--muted);line-height:1.8;padding-left:20px">
+      <li>SafeBuy NG does not handle payments or delivery yet.</li>
+      <li>Meet in a public place and inspect the item before you pay.</li>
+      <li>Prefer sellers with the ✓ Verified label.</li>
+      <li>Never send money to someone you have not met or cannot trace.</li>
+    </ul>
+  </div>
+</div>
+
 <script>
 "use strict";
 
@@ -441,7 +681,6 @@ let toastTimer;
 const productGrid = document.getElementById("product-grid");
 const searchInput = document.getElementById("search-input");
 const resultsLine = document.getElementById("results-line");
-const cartCount = document.getElementById("cart-count");
 const toast = document.getElementById("toast");
 const modalBackdrop = document.getElementById("modal-backdrop");
 const modalContent = document.getElementById("modal-content");
@@ -480,7 +719,7 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2800);
+  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3200);
 }
 
 function getVisibleProducts() {
@@ -549,7 +788,8 @@ function renderProducts() {
 }
 
 function updateCartCount() {
-  cartCount.textContent = cart.reduce(function (total, item) { return total + item.quantity; }, 0);
+  var n = cart.reduce(function (total, item) { return total + item.quantity; }, 0);
+  document.querySelectorAll(".cart-count,.cart-count-inline").forEach(function (el) { el.textContent = n; });
 }
 
 function findProduct(id) {
@@ -598,7 +838,9 @@ function closeModal() {
 
 function showCart() {
   if (cart.length === 0) {
-    showToast("Your demo cart is empty. Add a sample product first.");
+    showToast(productSource === "supabase"
+      ? "The cart is for demo products only. Tap “Chat seller” on a listing to buy."
+      : "Your demo cart is empty. Add a sample product first.");
     return;
   }
   const total = cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
@@ -608,10 +850,11 @@ function showCart() {
 
 function chooseCategory(category) {
   selectedCategory = category;
-  document.querySelectorAll("[data-category]").forEach(function (button) {
+  document.querySelectorAll(".category-button[data-category]").forEach(function (button) {
     const active = button.dataset.category === category;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", active ? "true" : "false");
+    if (active && button.scrollIntoView) button.scrollIntoView({ block: "nearest", inline: "center" });
   });
   renderProducts();
 }
@@ -646,7 +889,7 @@ document.addEventListener("click", function (event) {
 
   if (action === "add") addToCart(id);
   if (action === "view") openProduct(id);
-  if (action === "cart") showCart();
+  if (action === "cart") { closeDrawer(); showCart(); }
   if (action === "clear-search") {
     searchInput.value = "";
     searchTerm = "";
@@ -657,13 +900,6 @@ document.addEventListener("click", function (event) {
 document.getElementById("close-modal").addEventListener("click", closeModal);
 modalBackdrop.addEventListener("click", function (event) {
   if (event.target === modalBackdrop) closeModal();
-});
-
-document.addEventListener("keydown", function (event) {
-  if (event.key === "Escape") {
-    closeModal();
-    accountBackdrop.classList.remove("open");
-  }
 });
 
 document.getElementById("year").textContent = new Date().getFullYear();
@@ -697,6 +933,231 @@ renderSource();
 renderProducts();
 updateCartCount();
 </script>
+
+<!-- ============ Navigation, dropdowns, drawer, delivery areas ============ -->
+<script>
+(function () {
+  "use strict";
+
+  /* ---- Delivery areas: edit this list, or set window.SAFEBUY_DELIVERY_AREAS before this script ---- */
+  var DELIVERY_AREAS = window.SAFEBUY_DELIVERY_AREAS || [
+    { name: "Lagos", status: "available" },
+    { name: "Abuja (FCT)", status: "available" },
+    { name: "Rivers (Port Harcourt)", status: "soon" },
+    { name: "Oyo (Ibadan)", status: "soon" },
+    { name: "Kano", status: "soon" },
+    { name: "Anambra", status: "soon" },
+    { name: "Enugu", status: "soon" },
+    { name: "Kaduna", status: "soon" },
+    { name: "Delta", status: "soon" },
+    { name: "Ogun", status: "soon" },
+    { name: "Edo", status: "soon" },
+    { name: "Other states", status: "soon" }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  /* ---- Body scroll lock when any overlay is open ---- */
+  function syncLock() {
+    var open = document.querySelector(".modal-backdrop.open") || $("drawer").classList.contains("open");
+    document.body.classList.toggle("locked", !!open);
+  }
+  new MutationObserver(syncLock).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
+
+  /* ---- Dropdowns ---- */
+  function closeDropdowns(except) {
+    document.querySelectorAll(".dd.open").forEach(function (d) {
+      if (d === except) return;
+      d.classList.remove("open");
+      var t = d.querySelector("[aria-expanded]");
+      if (t) t.setAttribute("aria-expanded", "false");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var toggle = e.target.closest(".dd > button");
+    if (toggle) {
+      var dd = toggle.parentElement;
+      var willOpen = !dd.classList.contains("open");
+      closeDropdowns(willOpen ? dd : null);
+      dd.classList.toggle("open", willOpen);
+      toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      return;
+    }
+    if (!e.target.closest(".dd")) closeDropdowns();
+    else if (e.target.closest(".dd-menu a, .dd-menu button")) closeDropdowns();
+  });
+
+  /* ---- Drawer ---- */
+  var drawer = $("drawer"), dBackdrop = $("drawer-backdrop"), menuBtn = $("menu-toggle");
+  function openDrawer() {
+    drawer.classList.add("open"); dBackdrop.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false"); menuBtn.setAttribute("aria-expanded", "true");
+    syncLock();
+  }
+  window.closeDrawer = function () {
+    drawer.classList.remove("open"); dBackdrop.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true"); menuBtn.setAttribute("aria-expanded", "false");
+    syncLock();
+  };
+  menuBtn.addEventListener("click", openDrawer);
+  $("mobile-menu-btn").addEventListener("click", openDrawer);
+  $("drawer-close").addEventListener("click", window.closeDrawer);
+  dBackdrop.addEventListener("click", window.closeDrawer);
+  $("drawer-body").addEventListener("click", function (e) {
+    if (e.target.closest("a[href], button")) window.closeDrawer();
+  });
+
+  /* ---- Single Escape handler ---- */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    closeDropdowns();
+    window.closeDrawer();
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+  });
+
+  /* ---- Close a modal by tapping its backdrop / close button (new modals) ---- */
+  ["delivery", "safety"].forEach(function (name) {
+    var b = $(name + "-backdrop");
+    $(name + "-close").addEventListener("click", function () { b.classList.remove("open"); });
+    b.addEventListener("click", function (e) { if (e.target === b) b.classList.remove("open"); });
+  });
+
+  /* ---- Jump to a category from menus ---- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-goto-category]");
+    if (!b) return;
+    chooseCategory(b.dataset.gotoCategory);
+    $("shop").scrollIntoView({ behavior: "smooth" });
+  });
+
+  /* ---- Delivery areas ---- */
+  function chosenArea() { return store("safebuy_area"); }
+  function areaStatus(name) {
+    var a = DELIVERY_AREAS.filter(function (x) { return x.name === name; })[0];
+    return a ? a.status : null;
+  }
+  function renderDeliveryBar() {
+    var bar = $("delivery-bar"), txt = $("delivery-bar-text"), area = chosenArea();
+    var status = area ? areaStatus(area) : null;
+    if (status === "available") {
+      bar.classList.add("ok");
+      txt.textContent = "✓ Delivery is available in " + area + ".";
+    } else {
+      bar.classList.remove("ok");
+      txt.textContent = area
+        ? "🚚 Delivery is not available in " + area + " yet."
+        : "🚚 Delivery is not available in your area yet.";
+    }
+  }
+  function renderAreas() {
+    var q = $("area-search").value.trim().toLowerCase();
+    var list = DELIVERY_AREAS.filter(function (a) { return !q || a.name.toLowerCase().indexOf(q) !== -1; });
+    var avail = list.filter(function (a) { return a.status === "available"; });
+    var soon = list.filter(function (a) { return a.status !== "available"; });
+    var cur = chosenArea();
+
+    function row(a) {
+      return '<li><span>' + esc(a.name) + ' <span class="chip' + (a.status === "available" ? " ok\">Available" : "\">Coming soon") + '</span></span>' +
+        '<button class="button ' + (cur === a.name ? "button-primary" : "button-outline") + '" type="button" data-area="' + esc(a.name) + '">' +
+        (cur === a.name ? "Selected" : "Use this area") + '</button></li>';
+    }
+    var html = "";
+    if (avail.length) html += '<div class="area-group">Delivery available</div><ul class="area-list">' + avail.map(row).join("") + "</ul>";
+    if (soon.length) html += '<div class="area-group">Coming soon</div><ul class="area-list">' + soon.map(row).join("") + "</ul>";
+    if (!list.length) html = '<p class="muted">No match. Delivery is not available in that area yet.</p>';
+    $("area-results").innerHTML = html;
+  }
+  function openDelivery() {
+    $("area-search").value = "";
+    renderAreas();
+    $("delivery-backdrop").classList.add("open");
+  }
+  $("area-search").addEventListener("input", renderAreas);
+  $("area-results").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-area]");
+    if (!b) return;
+    store("safebuy_area", b.dataset.area);
+    renderDeliveryBar(); renderAreas();
+    showToast(areaStatus(b.dataset.area) === "available"
+      ? "Delivery is available in " + b.dataset.area + "."
+      : "Delivery is not available in " + b.dataset.area + " yet.");
+  });
+  renderDeliveryBar();
+
+  /* ---- Generic actions: delivery + safety ---- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-action]");
+    if (!b) return;
+    if (b.dataset.action === "delivery") { e.stopPropagation(); openDelivery(); }
+    if (b.dataset.action === "safety") $("safety-backdrop").classList.add("open");
+  }, true);
+
+  /* ---- Bridge to feature scripts (messages, orders, verify, settings…) ----
+     Each menu item has data-feature. We broadcast an event first so a feature script
+     can listen for it, then fall back to clicking an existing trigger rendered by that script. */
+  var FEATURE_MATCH = {
+    messages: /messag|inbox|chat/i,
+    orders: /my orders|orders/i,
+    "delivery-orders": /deliver/i,
+    settings: /setting/i,
+    verify: /verif/i
+  };
+  function ownedByNav(el) {
+    return el.closest("header,.drawer,.mobile-nav,.quick-links,footer,.product-card,.modal-backdrop,.dd-menu");
+  }
+  function triggerFeature(name) {
+    var ev = new CustomEvent("safebuy:open", { detail: { feature: name }, cancelable: true });
+    document.dispatchEvent(ev);
+    if (ev.defaultPrevented) return;
+
+    var sel = '[data-open="' + name + '"],[data-feature-open="' + name + '"],#sb-' + name + ',#sb-open-' + name;
+    var target = document.querySelector(sel);
+    if (!target) {
+      var rx = FEATURE_MATCH[name];
+      var cands = Array.prototype.slice.call(document.querySelectorAll("button,a[role=button],[role=button]"));
+      target = cands.filter(function (el) {
+        return rx && !ownedByNav(el) && el.textContent.length < 40 && rx.test(el.textContent + " " + (el.getAttribute("aria-label") || ""));
+      })[0];
+    }
+    if (target) { target.click(); return; }
+
+    var c = window.safeBuySupabase;
+    if (!c) { showToast("This feature is unavailable right now."); return; }
+    c.auth.getSession().then(function (r) {
+      if (!r.data || !r.data.session) { openAccount(); say("Sign in to use this feature."); }
+      else showToast("This section is still loading. Please try again in a moment.");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-feature]");
+    if (!b) return;
+    e.preventDefault();
+    triggerFeature(b.dataset.feature);
+  });
+
+  /* ---- Scroll spy (desktop + mobile nav) ---- */
+  var spyIds = ["home", "shop", "how-it-works", "sell"];
+  function spy() {
+    var y = window.scrollY + 120, cur = "home";
+    spyIds.forEach(function (id) {
+      var el = $(id);
+      if (el && el.getBoundingClientRect().top + window.scrollY <= y) cur = id;
+    });
+    document.querySelectorAll("[data-spy]").forEach(function (el) {
+      var on = el.dataset.spy === cur;
+      el.classList.toggle("active", on);
+      if (el.closest(".mobile-nav")) el.classList.toggle("current", on);
+    });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+
+  /* expose for the account script */
+  window.__sbNav = { openDelivery: openDelivery };
+})();
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="./supabase-config.js"></script>
 <script>
@@ -817,6 +1278,8 @@ updateCartCount();
   function say(text) { message.textContent = text; }
   function openAccount() { accountBackdrop.classList.add("open"); say(""); }
   function closeAccount() { accountBackdrop.classList.remove("open"); }
+  window.openAccount = openAccount;
+  window.say = say;
 
   function setMode(next) {
     mode = next;
@@ -827,8 +1290,58 @@ updateCartCount();
     passwordInput.autocomplete = signup ? "new-password" : "current-password";
     submit.textContent = signup ? "Create account" : "Sign in";
     toggle.textContent = signup ? "Already registered? Sign in" : "Need an account? Sign up";
+    document.getElementById("account-title").textContent = signup ? "Create your account" : "Welcome to SafeBuy NG";
     say("");
   }
+
+  /* Account dropdown + drawer section, rebuilt on sign-in state changes */
+  var accMenu = document.getElementById("account-dd-menu");
+  var accLabel = document.getElementById("account-dd-label");
+  var drawerAcc = document.getElementById("drawer-account");
+
+  function renderAccountMenus(user) {
+    if (user) {
+      var email = esc(user.email || "your account");
+      accLabel.textContent = "Account";
+      accMenu.innerHTML =
+        '<div class="dd-user">Signed in as<br><strong>' + email + '</strong></div><hr>' +
+        '<button type="button" data-feature="orders"><span class="ico">📦</span>My orders</button>' +
+        '<button type="button" data-feature="messages"><span class="ico">💬</span>Messages</button>' +
+        '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span>Delivery orders</button>' +
+        '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
+        '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
+        '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
+        '<hr><button type="button" data-auth="signout"><span class="ico">🚪</span>Sign out</button>';
+      drawerAcc.innerHTML =
+        '<div class="d-user">Signed in as ' + email + '</div>' +
+        '<button type="button" data-feature="orders">📦 My orders</button>' +
+        '<button type="button" data-feature="messages">💬 Messages</button>' +
+        '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
+        '<button type="button" data-auth="signout">🚪 Sign out</button>';
+    } else {
+      accLabel.textContent = "Sign in";
+      accMenu.innerHTML =
+        '<button type="button" data-auth="signin"><span class="ico">🔑</span>Sign in</button>' +
+        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create account</button>' +
+        '<hr><button type="button" data-feature="orders"><span class="ico">📦</span>My orders</button>' +
+        '<button type="button" data-feature="messages"><span class="ico">💬</span>Messages</button>';
+      drawerAcc.innerHTML =
+        '<button type="button" data-auth="signin">🔑 Sign in</button>' +
+        '<button type="button" data-auth="signup">✨ Create account</button>';
+    }
+  }
+  renderAccountMenus(null);
+
+  document.addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-auth]");
+    if (!b) return;
+    var a = b.dataset.auth;
+    if (a === "signin" || a === "signup") { setMode(a); openAccount(); }
+    if (a === "signout" && client) {
+      var r = await client.auth.signOut();
+      showToast(r.error ? r.error.message : "You have signed out.");
+    }
+  });
 
   document.querySelectorAll('[data-action="account"]').forEach(function (b) {
     b.addEventListener("click", openAccount);
@@ -961,6 +1474,7 @@ updateCartCount();
     }
     var user = await currentUser();
     if (!user) {
+      setMode("signin");
       openAccount();
       say("Sign in or create an account to start selling.");
       return;
@@ -1264,15 +1778,32 @@ updateCartCount();
   });
   document.getElementById("seller-close").addEventListener("click", closeSeller);
   sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSeller(); });
 
-  if (client) {
-    client.auth.onAuthStateChange(function () { currentApp = null; });
+  /* ---------- Auth state: update menus, close dialogs, go home once ---------- */
+  function goHome() {
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+    var chat = document.getElementById("sbm");
+    if (chat) chat.classList.remove("open");
+    document.body.classList.remove("locked");
+    history.replaceState(null, "", location.pathname + location.search + "#home");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (client) {
+    client.auth.onAuthStateChange(function (event, session) {
+      currentApp = null;
+      renderAccountMenus(session && session.user ? session.user : null);
+      logout.hidden = !session;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+      if (accountBackdrop.classList.contains("open")) {
+        goHome();
+        setTimeout(goHome, 250);
+      }
+    });
+
     client.auth.getSession().then(function (result) {
-      if (result.data && result.data.session) logout.hidden = false;
+      var s = result.data && result.data.session;
+      if (s) { logout.hidden = false; renderAccountMenus(s.user); }
     });
   }
 
@@ -1280,79 +1811,21 @@ updateCartCount();
 })();
 </script>
 
+<!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
-  <script src="./messages.js"></script>
+<script src="./messages.js"></script>
 <script src="./notify.js"></script>
-  <script src="./verify.js"></script>
-  <script src="./lead-capture.js"></script>
+<script src="./verify.js"></script>
+<script src="./lead-capture.js"></script>
 <script src="./buyer-account.js"></script>
 <script src="./orders.js"></script>
 <script src="./account-settings.js"></script>
 <script src="./delivery.js"></script>
 <script src="./delivery-orders.js"></script>
-  <script>
-(function () {
-  var c = window.safeBuySupabase;
-  if (!c) return;
-  var box = document.getElementById("account-backdrop");
-
-  function goHome() {
-    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) {
-      m.classList.remove("open");
-    });
-    var chat = document.getElementById("sbm");
-    if (chat) chat.classList.remove("open");
-    document.body.style.overflow = "";
-    history.replaceState(null, "", location.pathname + location.search + "#home");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  c.auth.onAuthStateChange(function (event) {
-    if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
-    if (!box || !box.classList.contains("open")) return;
-    goHome();
-    setTimeout(goHome, 250);
-  });
-})();
-  </script>
-<style>
-.product-art{cursor:pointer}
-</style>
-<script>
-document.addEventListener("click", function (e) {
-  var art = e.target.closest(".product-art");
-  if (!art) return;
-  var card = art.closest(".product-card");
-  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
-  if (link) window.location.href = link.getAttribute("href");
-});
-</script>
-    <script src="./bottom-sheet.js"></script>
-  <script src="./pwa.js"></script>
-  <script src="./protect-core.js"></script>
-  <script>
-(function () {
-  var c = window.safeBuySupabase;
-  if (!c) return;
-  var box = document.getElementById("account-backdrop");
-  function goHome() {
-    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
-    var chat = document.getElementById("sbm");
-    if (chat) chat.classList.remove("open");
-    document.body.style.overflow = "";
-    history.replaceState(null, "", location.pathname + location.search + "#home");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-  c.auth.onAuthStateChange(function (event) {
-    if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
-    if (!box || !box.classList.contains("open")) return;
-    goHome();
-    setTimeout(goHome, 250);
-  });
-})();
-  </script>
-</body>
-</html>
-<script src="./theme.js"></script>
+<script src="./bottom-sheet.js"></script>
+<script src="./pwa.js"></script>
 <script src="./protect-core.js"></script>
 <script src="./protected-option.js"></script>
+<script src="./theme.js"></script>
+</body>
+</html>
