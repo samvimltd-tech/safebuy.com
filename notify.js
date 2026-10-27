@@ -6,6 +6,8 @@
   window.__sbNotify = true;
 
   var cli = null, me = null, count = 0, isOpen = false, chan = null;
+
+  var markP = null;
   var baseTitle = document.title.replace(/^\(\d+\)\s*/, "");
 
   function esc(v) {
@@ -112,13 +114,15 @@
       ? rows.map(function (n) { return itemHtml(n, !n.read_at); }).join("")
       : '<p class="sbn-empty">No notifications yet.<br>New orders and order updates will show here.</p>';
     setCount(0);
-    cli.rpc("mark_notifications_read");
+    markP = cli.rpc("mark_notifications_read");
+    try { await markP; } catch (e) {}
   }
   function closePanel() {
     isOpen = false;
     root.classList.remove("open");
     document.body.style.overflow = "";
-    refresh();
+    /* wait for "mark as read" to finish before recounting, so the number stays at 0 */
+    Promise.resolve(markP).catch(function () {}).then(function () { refresh(); });
   }
   function go(role) {
     closePanel();
@@ -151,7 +155,7 @@
     if (isOpen) {
       var empty = bodyEl.querySelector(".sbn-empty"); if (empty) empty.remove();
       bodyEl.insertAdjacentHTML("afterbegin", itemHtml(n, true));
-      cli.rpc("mark_notifications_read");
+      markP = cli.rpc("mark_notifications_read");
     } else {
       setCount(count + 1);
     }
