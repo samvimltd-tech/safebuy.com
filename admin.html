@@ -71,6 +71,10 @@ th{background:#f3f7f4;font-size:12px;color:var(--muted)}
 tbody tr:last-child td{border-bottom:0}
 tr.fresh td{animation:fresh 2.4s ease-out}
 td .button{padding:6px 11px;font-size:12px}
+.doc{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.doc .button{padding:6px 11px;font-size:12px}
+.cap{text-transform:capitalize}
+.hint{padding:11px 14px;margin-bottom:12px;border:1px solid #f1d69a;background:#fff8e8;border-radius:12px;color:#79551b;font-size:13px}
 @media (max-width:600px){
 .stats{grid-template-columns:repeat(2,1fr)}
 .tools{flex-wrap:wrap}
@@ -114,11 +118,12 @@ td .button{padding:6px 11px;font-size:12px}
     <button class="tab" type="button" data-tab="products">Products <span class="count" id="c-products">0</span></button>
     <button class="tab" type="button" data-tab="leads">Lead generation <span class="count" id="c-leads">0</span></button>
     <button class="tab" type="button" data-tab="verify">Verification <span class="count" id="c-verify">0</span></button>
+    <button class="tab" type="button" data-tab="delivery">Delivery <span class="count" id="c-delivery">0</span></button>
   </div>
 
   <div class="tabs" id="filter-tabs"></div>
 
-  <div class="tools">
+  <div class="tools" id="tools">
     <input id="search" type="search" placeholder="Search…" aria-label="Search">
     <select id="sort" aria-label="Sort by">
       <option value="newest">Newest first</option>
@@ -127,7 +132,7 @@ td .button{padding:6px 11px;font-size:12px}
     </select>
   </div>
 
-  <p class="muted">Suspending a shop hides all of its listings from shoppers. The Verified badge and badge number are only issued from the Verification tab, after the ₦5,000 payment. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”).</p>
+  <p class="muted">Suspending a shop hides all of its listings from shoppers. The Verified badge and badge number are only issued from the Verification tab, after the subscription payment is confirmed. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”). Delivery partners are approved only after their documents are approved, and delivery works only in areas switched on under Delivery › Coverage.</p>
   <p class="msg" id="dash-msg" role="status" aria-live="polite"></p>
   <div id="list"></div>
 </main>
@@ -153,31 +158,27 @@ td .button{padding:6px 11px;font-size:12px}
   var client = null;
 
   var apps = [], prods = [], leadRows = [], leadsErr = "", vrRows = [], vrErr = "";
+  // delivery data
+  var dPartners = [], dDocs = [], dJobs = [], dPays = [], dAreas = [], dSettings = null, dOrders = [], dErr = "";
   var known = null;           // ids already seen, to highlight new arrivals
   var channel = null, pollTimer = null, refreshTimer = null;
   var lastUpdated = null, realtimeOk = false;
 
   var saved = {};
   try { saved = JSON.parse(sessionStorage.getItem("safebuy-admin-view") || "{}"); } catch (e) {}
-  var tab = saved.tab === "products" || saved.tab === "leads" || saved.tab === "verify" ? saved.tab : "applications";
-  var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open" };
+  var TABS = ["applications", "products", "leads", "verify", "delivery"];
+  var tab = TABS.indexOf(saved.tab) > -1 ? saved.tab : "applications";
+  var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open", delivery: saved.fd || "partners" };
 
   var STATUS_LABEL = { pending: "No badge", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
   var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
 
   var FILTERS = {
-    applications: [
-      ["pending", "Without badge"], ["approved", "With badge"], ["rejected", "Suspended"], ["all", "All"]
-    ],
-    products: [
-      ["all", "All"], ["published", "Live"], ["hidden", "Hidden"], ["soldout", "Sold out"]
-    ],
-    leads: [
-      ["all", "All"], ["email", "With email"], ["phone", "With phone"]
-    ],
-    verify: [
-      ["open", "Needs review"], ["approved", "Approved"], ["rejected", "Rejected"], ["expired", "Expired"], ["all", "All"]
-    ]
+    applications: [["pending", "Without badge"], ["approved", "With badge"], ["rejected", "Suspended"], ["all", "All"]],
+    products: [["all", "All"], ["published", "Live"], ["hidden", "Hidden"], ["soldout", "Sold out"]],
+    leads: [["all", "All"], ["email", "With email"], ["phone", "With phone"]],
+    verify: [["open", "Needs review"], ["approved", "Approved"], ["rejected", "Rejected"], ["expired", "Expired"], ["all", "All"]],
+    delivery: [["partners", "Partners"], ["orders", "Delivery orders"], ["jobs", "Jobs"], ["payouts", "Payouts"], ["coverage", "Coverage"], ["settings", "Settings"]]
   };
 
   function esc(v) {
@@ -186,10 +187,16 @@ td .button{padding:6px 11px;font-size:12px}
     });
   }
   function money(kobo) { return "₦" + (Number(kobo || 0) / 100).toLocaleString("en-NG"); }
+  function when(d) { return new Date(d).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }); }
   function saveView() {
     try {
-      sessionStorage.setItem("safebuy-admin-view", JSON.stringify({ tab: tab, fa: filters.applications, fp: filters.products }));
+      sessionStorage.setItem("safebuy-admin-view", JSON.stringify({ tab: tab, fa: filters.applications, fp: filters.products, fd: filters.delivery }));
     } catch (e) {}
+  }
+  async function rpc(name, args) {
+    var r = await client.rpc(name, args || {});
+    if (r.error) throw r.error;
+    return r.data;
   }
 
   function normCat(t) {
@@ -264,6 +271,7 @@ td .button{padding:6px 11px;font-size:12px}
     stopLive();
     await client.auth.signOut();
     apps = []; prods = []; known = null;
+    dPartners = []; dDocs = []; dJobs = []; dPays = []; dAreas = []; dOrders = []; dSettings = null;
     list.innerHTML = "";
     showLogin("");
   });
@@ -285,16 +293,16 @@ td .button{padding:6px 11px;font-size:12px}
     stopLive();
     setLive("", "Connecting…");
     try {
-      channel = client.channel("admin-live")
-        .on("postgres_changes", { event: "*", schema: "public", table: "seller_applications" }, scheduleRefresh)
-        .on("postgres_changes", { event: "*", schema: "public", table: "seller_products" }, scheduleRefresh)
-        .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, scheduleRefresh)
-        .on("postgres_changes", { event: "*", schema: "public", table: "verification_requests" }, scheduleRefresh)
-        .subscribe(function (status) {
-          realtimeOk = status === "SUBSCRIBED";
-          if (realtimeOk) setLive("on", "Live");
-          else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setLive("off", "Auto-refresh");
-        });
+      channel = client.channel("admin-live");
+      ["seller_applications", "seller_products", "leads", "verification_requests",
+       "delivery_partners", "delivery_documents", "delivery_jobs", "delivery_payouts"].forEach(function (t) {
+        channel = channel.on("postgres_changes", { event: "*", schema: "public", table: t }, scheduleRefresh);
+      });
+      channel.subscribe(function (status) {
+        realtimeOk = status === "SUBSCRIBED";
+        if (realtimeOk) setLive("on", "Live");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setLive("off", "Auto-refresh");
+      });
     } catch (e) {
       setLive("off", "Auto-refresh");
     }
@@ -322,7 +330,14 @@ td .button{padding:6px 11px;font-size:12px}
       client.from("seller_applications").select("*").order("created_at", { ascending: false }),
       client.from("seller_products").select("*").order("created_at", { ascending: false }),
       client.from("leads").select("*").order("created_at", { ascending: false }),
-      client.from("verification_requests").select("*").order("created_at", { ascending: false })
+      client.from("verification_requests").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_partners").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_documents").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_jobs").select("*").order("created_at", { ascending: false }).limit(150),
+      client.from("delivery_payouts").select("*").order("created_at", { ascending: false }).limit(200),
+      client.from("delivery_supported_areas").select("*").order("state").order("city"),
+      client.from("delivery_settings").select("*").eq("id", 1).maybeSingle(),
+      client.rpc("admin_delivery_orders")
     ]);
     var ar = results[0], pr = results[1], lr = results[2], vr = results[3];
     if (ar.error || pr.error) {
@@ -331,6 +346,17 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
+    var dRes = results.slice(4);
+    var dBad = dRes.filter(function (x) { return x.error; })[0];
+    dErr = dBad ? dBad.error.message : "";
+    dPartners = dErr ? [] : dRes[0].data || [];
+    dDocs = dErr ? [] : dRes[1].data || [];
+    dJobs = dErr ? [] : dRes[2].data || [];
+    dPays = dErr ? [] : dRes[3].data || [];
+    dAreas = dErr ? [] : dRes[4].data || [];
+    dSettings = dErr ? null : dRes[5].data || null;
+    dOrders = dErr ? [] : dRes[6].data || [];
+
     // mark rows that were not here on the previous fetch
     var fresh = {};
     var now = {};
@@ -338,6 +364,9 @@ td .button{padding:6px 11px;font-size:12px}
     pr.data.forEach(function (p) { now["p" + p.id] = 1; });
     (lr.error ? [] : lr.data).forEach(function (l) { now["l" + l.id] = 1; });
     (vr.error ? [] : vr.data).forEach(function (v) { now["v" + v.id] = 1; });
+    dPartners.forEach(function (p) { now["d" + p.id] = 1; });
+    dJobs.forEach(function (j) { now["j" + j.id] = 1; });
+    dOrders.forEach(function (o) { now["o" + o.order_id] = 1; });
     if (known) { Object.keys(now).forEach(function (k) { if (!known[k]) fresh[k] = 1; }); }
     known = now;
 
@@ -382,15 +411,33 @@ td .button{padding:6px 11px;font-size:12px}
     return c;
   }
 
+  function dCounts() {
+    var c = { partners: 0, orders: 0, jobs: 0, payouts: 0, coverage: 0, settings: 0, active: 0 };
+    dPartners.forEach(function (p) { if (p.status === "pending") c.partners++; });
+    dOrders.forEach(function (o) { if (o.delivery_status === "requested") c.orders++; });
+    dJobs.forEach(function (j) {
+      if (j.status === "unassigned") c.jobs++;
+      if (["searching", "offered", "assigned", "picked_up"].indexOf(j.status) > -1) c.active++;
+    });
+    dPays.forEach(function (p) { if (p.status === "pending") c.payouts++; });
+    dAreas.forEach(function (a) { if (a.is_active) c.coverage++; });
+    c.attention = c.partners + c.orders + c.jobs;
+    return c;
+  }
+
   function renderStats() {
-    var a = appCounts(), p = prodCounts();
+    var a = appCounts(), p = prodCounts(), d = dCounts();
     var cards = [
       { label: "Shops", value: a.all, go: ["applications", "all"] },
       { label: "Verified shops", value: a.approved, go: ["applications", "approved"] },
       { label: "Live products", value: p.published, go: ["products", "published"] },
       { label: "Sold out", value: p.soldout, go: ["products", "soldout"] },
       { label: "Leads", value: leadRows.length, go: ["leads", "all"] },
-      { label: "Verification requests", value: vCounts().open, go: ["verify", "open"], alert: vCounts().open > 0 }
+      { label: "Verification requests", value: vCounts().open, go: ["verify", "open"], alert: vCounts().open > 0 },
+      { label: "Delivery partners to review", value: d.partners, go: ["delivery", "partners"], alert: d.partners > 0 },
+      { label: "Delivery fees to confirm", value: d.orders, go: ["delivery", "orders"], alert: d.orders > 0 },
+      { label: "Active deliveries", value: d.active, go: ["delivery", "jobs"] },
+      { label: "Unassigned jobs", value: d.jobs, go: ["delivery", "jobs"], alert: d.jobs > 0 }
     ];
     statsBox.innerHTML = cards.map(function (c) {
       return '<button type="button" class="stat' + (c.alert ? " alert" : "") + '" data-go="' + c.go.join("|") + '">' +
@@ -399,7 +446,7 @@ td .button{padding:6px 11px;font-size:12px}
   }
 
   function renderTabs() {
-    var a = appCounts(), p = prodCounts();
+    var a = appCounts(), p = prodCounts(), d = dCounts();
     var cs = document.getElementById("c-sellers");
     cs.textContent = a.all;
     cs.className = "count";
@@ -408,13 +455,18 @@ td .button{padding:6px 11px;font-size:12px}
     var cv = document.getElementById("c-verify");
     cv.textContent = vCounts().open;
     cv.className = "count" + (vCounts().open > 0 ? " hot" : "");
+    var cd = document.getElementById("c-delivery");
+    cd.textContent = d.attention;
+    cd.className = "count" + (d.attention > 0 ? " hot" : "");
 
-    var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : tab === "verify" ? vCounts() : p;
+    var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : tab === "verify" ? vCounts() : tab === "delivery" ? d : p;
+    var hotKeys = { partners: 1, orders: 1, jobs: 1 };
     filterTabs.innerHTML = FILTERS[tab].map(function (f) {
       var on = filters[tab] === f[0];
-      var hot = false;
+      var n = counts[f[0]] || 0;
+      var hot = tab === "delivery" && hotKeys[f[0]] && n > 0;
       return '<button class="tab' + (on ? " active" : "") + '" type="button" data-filter="' + f[0] + '">' +
-        esc(f[1]) + ' <span class="count' + (hot ? " hot" : "") + '">' + (counts[f[0]] || 0) + "</span></button>";
+        esc(f[1]) + (f[0] === "settings" ? "" : ' <span class="count' + (hot ? " hot" : "") + '">' + n + "</span>") + "</button>";
     }).join("");
   }
 
@@ -424,7 +476,8 @@ td .button{padding:6px 11px;font-size:12px}
     });
     searchBox.placeholder = tab === "applications" ? "Search shops by name, phone, state…"
       : tab === "leads" ? "Search leads by email or phone…"
-      : tab === "verify" ? "Search by shop, RC/TIN, payment reference or badge…" : "Search products by name, category, shop…";
+      : tab === "verify" ? "Search by shop, RC/TIN, payment reference or badge…"
+      : tab === "delivery" ? "Search partners, orders, jobs, payouts…" : "Search products by name, category, shop…";
   }
 
   function sortRows(rows, nameKey) {
@@ -439,9 +492,13 @@ td .button{padding:6px 11px;font-size:12px}
   function renderAll(fresh) {
     renderStats();
     renderTabs();
+    // Do not wipe a form the admin is typing in during a background refresh.
+    if (tab === "delivery" && (filters.delivery === "settings" || filters.delivery === "coverage") &&
+        list.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
     if (tab === "applications") renderApplications(fresh || {});
     else if (tab === "leads") renderLeads(fresh || {});
     else if (tab === "verify") renderVerify(fresh || {});
+    else if (tab === "delivery") renderDelivery(fresh || {});
     else renderProducts(fresh || {});
   }
 
@@ -477,11 +534,11 @@ td .button{padding:6px 11px;font-size:12px}
         "Phone: " + esc(a.phone) + " · State: " + esc(a.state || "-") + "<br>" +
         "Category: " + esc(a.main_category || "-") + " · Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
         "Address: " + esc(a.business_address || a.pickup_address || "-") + "<br>" +
+        "Delivery pickup: " + (a.dp_address ? esc(a.dp_address + ", " + (a.dp_city || "") + ", " + (a.dp_state || "")) : "not set") + "<br>" +
         "Products: " + n.total + " (" + n.live + " live)<br>" +
         (a.badge_number ? "Badge number: <strong>" + esc(a.badge_number) + "</strong>" + (a.verified_until ? " · Valid until " + esc(new Date(a.verified_until).toLocaleDateString("en-NG")) : "") + "<br>" : "") +
         '<span class="muted">Applied ' + esc(new Date(a.created_at).toLocaleString("en-NG")) + "</span>" +
         '<div class="actions">' +
-        
         (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Suspend shop</button>' : "") +
         (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">' + (s === "rejected" ? "Reinstate (unverified)" : "Remove verification") + "</button>" : "") +
         '<button class="button outline" type="button" data-acat="1" data-id="' + esc(a.id) + '" data-cat="' + esc(a.main_category || "") + '">Edit category</button>' +
@@ -633,6 +690,175 @@ td .button{padding:6px 11px;font-size:12px}
     }).join("");
   }
 
+  /* ---------- Delivery ---------- */
+  var DOC_LABEL = { id_card: "Government ID", selfie: "Selfie", vehicle_doc: "Vehicle papers", cac_certificate: "CAC certificate" };
+  var ORDER_LABEL = { requested: "Waiting for fee payment", fee_paid: "Fee confirmed", dispatched: "Dispatched", cancelled: "Cancelled" };
+
+  function pMap() { var m = {}; dPartners.forEach(function (p) { m[p.id] = p; }); return m; }
+  function pName(p) { return p ? (p.partner_type === "company" && p.company_name ? p.company_name : p.full_name) : "Unknown"; }
+  function dEmpty(text) { list.innerHTML = '<div class="empty">' + esc(text) + "</div>"; }
+
+  function renderDelivery(fresh) {
+    if (dErr) {
+      list.innerHTML = '<div class="empty">Could not load delivery data: ' + esc(dErr) + "<br>Run delivery.sql and delivery_v2.sql in Supabase first.</div>";
+      return;
+    }
+    var v = filters.delivery;
+    if (v === "partners") renderPartners(fresh);
+    else if (v === "orders") renderDOrders(fresh);
+    else if (v === "jobs") renderJobs(fresh);
+    else if (v === "payouts") renderPayouts();
+    else if (v === "coverage") renderCoverage();
+    else renderSettings();
+  }
+
+  function renderPartners(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var byPartner = {};
+    dDocs.forEach(function (d) { (byPartner[d.partner_id] = byPartner[d.partner_id] || []).push(d); });
+    var rows = dPartners.filter(function (p) {
+      return !term || [p.full_name, p.company_name, p.phone, p.state, p.partner_type, p.status].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "full_name").sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1); });
+    if (!rows.length) { dEmpty(term ? "No partners match your search." : "No delivery partners yet."); return; }
+
+    list.innerHTML = rows.map(function (p) {
+      var seen = {};
+      var docs = (byPartner[p.id] || []).filter(function (d) { return seen[d.doc_type] ? false : (seen[d.doc_type] = 1); });
+      var dhtml = docs.length ? docs.map(function (d) {
+        return '<div class="doc"><div class="grow">' + esc(DOC_LABEL[d.doc_type] || d.doc_type) +
+          ' <span class="pill ' + (d.status === "approved" ? "approved" : d.status === "rejected" ? "rejected" : "") + '">' + esc(d.status) + "</span>" +
+          (d.admin_note ? ' <span class="muted">' + esc(d.admin_note) + "</span>" : "") + "</div>" +
+          '<button class="button outline" type="button" data-dview="' + esc(d.storage_path) + '">View</button>' +
+          (d.status !== "approved" ? '<button class="button" type="button" data-ddoc="approved" data-id="' + esc(d.id) + '">Approve</button>' : "") +
+          (d.status !== "rejected" ? '<button class="button danger" type="button" data-ddoc="rejected" data-id="' + esc(d.id) + '">Reject</button>' : "") + "</div>";
+      }).join("") : '<div class="doc muted">No documents uploaded yet.</div>';
+      var parent = p.company_id && pm[p.company_id] ? " · rides for " + esc(pName(pm[p.company_id])) : "";
+      return '<div class="item' + (fresh["d" + p.id] ? " fresh" : "") + '">' +
+        '<span class="pill ' + (p.status === "approved" ? "approved" : p.status === "pending" ? "" : "rejected") + '">' + esc(p.status) + "</span> " +
+        "<strong>" + esc(pName(p)) + "</strong> <span class=\"muted\">(" + esc(p.partner_type) + (p.vehicle_type ? ", " + esc(p.vehicle_type) : "") + ")</span><br>" +
+        "Contact: " + esc(p.full_name) + " · " + esc(p.phone) + " · State: <span class=\"cap\">" + esc(p.state) + "</span>" + parent +
+        (p.company_reg_no ? " · CAC: " + esc(p.company_reg_no) : "") + (p.invite_code ? " · Code: <strong>" + esc(p.invite_code) + "</strong>" : "") + "<br>" +
+        '<span class="muted">Applied ' + esc(when(p.created_at)) + (p.is_online ? " · online now" : "") +
+        (p.last_seen_at ? " · last seen " + esc(when(p.last_seen_at)) : "") + "</span>" + dhtml +
+        '<div class="actions">' +
+        (p.status !== "approved" ? '<button class="button" type="button" data-dpst="approved" data-id="' + esc(p.id) + '">Approve partner</button>' : "") +
+        (p.status === "pending" ? '<button class="button danger" type="button" data-dpst="rejected" data-id="' + esc(p.id) + '">Reject</button>' : "") +
+        (p.status === "approved" ? '<button class="button danger" type="button" data-dpst="suspended" data-id="' + esc(p.id) + '">Suspend</button>' : "") +
+        (p.status === "suspended" || p.status === "rejected" ? '<button class="button outline" type="button" data-dpst="pending" data-id="' + esc(p.id) + '">Move to pending</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderDOrders(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var rows = dOrders.filter(function (o) {
+      return !term || [o.product_name, o.shop_name, o.buyer_name, o.address, o.city, o.state, o.order_id].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    if (!rows.length) { dEmpty(term ? "No delivery orders match your search." : "No delivery requests yet."); return; }
+    list.innerHTML = rows.map(function (o) {
+      return '<div class="item' + (fresh["o" + o.order_id] ? " fresh" : "") + '"><span class="pill ' + (o.delivery_status === "requested" ? "" : o.delivery_status === "cancelled" ? "rejected" : "approved") + '">' +
+        esc(ORDER_LABEL[o.delivery_status] || o.delivery_status) + "</span> " +
+        "<strong>" + esc(o.product_name || "Product") + "</strong> · " + esc(o.shop_name || "") + "<br>" +
+        "Buyer: " + esc(o.buyer_name || "-") + " · To: " + esc(o.address) + ", <span class=\"cap\">" + esc(o.city) + ", " + esc(o.state) + "</span><br>" +
+        "Delivery fee: <strong>" + money(o.fee_kobo) + "</strong> · Order ref <strong>#" + esc(String(o.order_id).slice(0, 8)) + "</strong> · Order status: " + esc(o.order_status) + "<br>" +
+        '<span class="muted">' + esc(when(o.created_at)) + "</span>" +
+        (o.delivery_status === "requested" ? '<div class="actions"><button class="button" type="button" data-dfee="' + esc(o.order_id) + '">Confirm fee received</button></div>' : "") +
+        "</div>";
+    }).join("");
+  }
+
+  function renderJobs(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var rows = dJobs.filter(function (j) {
+      var rider = j.partner_id ? pName(pm[j.partner_id]) : "";
+      return !term || [j.status, j.pickup_city, j.dropoff_city, rider, j.order_id].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "pickup_city");
+    if (!rows.length) { dEmpty(term ? "No jobs match your search." : "No delivery jobs yet."); return; }
+    list.innerHTML = rows.map(function (j) {
+      var bad = j.status === "unassigned" || j.status === "cancelled";
+      return '<div class="item' + (fresh["j" + j.id] ? " fresh" : "") + '"><span class="pill ' + (j.status === "delivered" ? "approved" : bad ? "rejected" : "") + '">' + esc(j.status.replace("_", " ")) + "</span> " +
+        '<span class="cap">' + esc(j.pickup_city) + " → " + esc(j.dropoff_city) + "</span> · " + money(j.delivery_fee_kobo) + (j.fee_collected ? "" : " · <strong>fee NOT collected</strong>") + "<br>" +
+        "Rider: " + esc(j.partner_id ? pName(pm[j.partner_id]) : j.offered_to ? "offer sent to " + pName(pm[j.offered_to]) : "none") + " · Offers sent: " + j.attempts + "<br>" +
+        '<span class="muted">' + esc(when(j.created_at)) + (j.order_id ? " · order #" + esc(String(j.order_id).slice(0, 8)) : "") +
+        (j.delivered_at ? " · delivered " + esc(when(j.delivered_at)) : "") + "</span>" +
+        '<div class="actions">' +
+        (j.status === "unassigned" || j.status === "searching" ? '<button class="button" type="button" data-drequeue="' + esc(j.id) + '">Search again</button>' : "") +
+        (!j.fee_collected ? '<button class="button outline" type="button" data-dcollected="' + esc(j.id) + '">Mark fee collected</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderPayouts() {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var rows = dPays.filter(function (r) {
+      var p = pm[r.payee_partner_id];
+      return !term || [pName(p), p && p.phone, r.reference, r.status].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    var owed = dPays.filter(function (r) { return r.status === "pending"; }).reduce(function (s, r) { return s + Number(r.amount_kobo); }, 0);
+    var head = '<div class="hint"><strong>Owed to partners: ' + money(owed) + "</strong>. Payouts are created only after a delivery is confirmed with the buyer's code and the fee is collected.</div>";
+    if (!rows.length) { list.innerHTML = head + '<div class="empty">No payouts yet.</div>'; return; }
+    list.innerHTML = head + rows.map(function (r) {
+      var p = pm[r.payee_partner_id];
+      return '<div class="item"><span class="pill ' + (r.status === "paid" ? "approved" : "") + '">' + esc(r.status) + "</span> <strong>" + money(r.amount_kobo) + "</strong> to " + esc(pName(p)) +
+        (p ? " · " + esc(p.phone) : "") + '<br><span class="muted">' + esc(when(r.created_at)) + (r.reference ? " · ref " + esc(r.reference) : "") + "</span>" +
+        (r.status === "pending" ? '<div class="actions"><button class="button" type="button" data-dpay="' + esc(r.id) + '">Mark paid</button></div>' : "") + "</div>";
+    }).join("");
+  }
+
+  function renderCoverage() {
+    var term = searchBox.value.trim().toLowerCase();
+    var rows = dAreas.filter(function (a) { return !term || (a.state + " " + a.city).indexOf(term) !== -1; });
+    list.innerHTML =
+      '<div class="hint">Delivery works only where an area is switched on. Leave City blank to cover a whole state. Switch an area on only when you have verified, approved riders there.</div>' +
+      '<div class="item"><div class="tools" style="margin:0"><input id="cv-state" placeholder="State, e.g. Lagos" maxlength="40"><input id="cv-city" placeholder="City (optional)" maxlength="40"><button class="button" type="button" id="cv-add">Switch on</button></div></div>' +
+      (rows.length ? rows.map(function (a) {
+        return '<div class="item"><span class="pill ' + (a.is_active ? "approved" : "hidden") + '">' + (a.is_active ? "on" : "off") + '</span> <strong class="cap">' +
+          esc(a.city ? a.city + ", " + a.state : "All of " + a.state) + '</strong><div class="actions"><button class="button outline" type="button" data-dcov="' + (a.is_active ? "off" : "on") +
+          '" data-dstate="' + esc(a.state) + '" data-dcity="' + esc(a.city) + '">' + (a.is_active ? "Switch off" : "Switch on") + "</button></div></div>";
+      }).join("") : '<div class="empty">No areas yet. Delivery is off everywhere.</div>');
+  }
+
+  function renderSettings() {
+    var s = dSettings;
+    if (!s) { dEmpty("Delivery settings row is missing. Run delivery.sql again."); return; }
+    function f(id, label, val, step) {
+      return '<label for="' + id + '">' + label + '</label><input id="' + id + '" type="number" step="' + (step || 1) + '" value="' + esc(val) + '" required>';
+    }
+    list.innerHTML = '<div class="hint">Fees and shares are placeholders until you set your own. The partner share is the percentage of each delivery fee SafeBuy NG pays out to the rider (or their company).</div>' +
+      '<div class="item"><form id="st-form">' +
+      f("st-city", "Fee: same city (₦)", s.fee_same_city_kobo / 100, "0.01") +
+      f("st-state", "Fee: same state (₦)", s.fee_same_state_kobo / 100, "0.01") +
+      f("st-inter", "Fee: different states (₦)", s.fee_interstate_kobo / 100, "0.01") +
+      f("st-share", "Partner share of the fee (%)", s.partner_share_pct) +
+      f("st-offer", "Seconds a rider has to respond", s.offer_seconds) +
+      f("st-att", "Most riders offered per job", s.max_attempts) +
+      f("st-fresh", "A rider's location counts as fresh for (seconds)", s.ping_fresh_seconds) +
+      f("st-win", "Give up searching after (seconds)", s.search_window_seconds) +
+      '<label for="st-ins">How buyers pay the delivery fee (shown to buyers)</label><input id="st-ins" maxlength="500" value="' + esc(s.fee_payment_instructions) + '">' +
+      '<button class="button full" type="submit">Save delivery settings</button></form></div>';
+  }
+
+  list.addEventListener("submit", async function (event) {
+    if (event.target.id !== "st-form") return;
+    event.preventDefault();
+    var val = function (id) { return Number(document.getElementById(id).value); };
+    try {
+      await rpc("admin_update_settings", {
+        p_offer: val("st-offer"), p_attempts: val("st-att"), p_fresh: val("st-fresh"), p_window: val("st-win"), p_share: val("st-share"),
+        p_same_city: Math.round(val("st-city") * 100), p_same_state: Math.round(val("st-state") * 100), p_interstate: Math.round(val("st-inter") * 100),
+        p_instructions: document.getElementById("st-ins").value
+      });
+      document.activeElement.blur();
+      await fetchAll();
+      note("Delivery settings saved.");
+    } catch (err) { note(err.message, true); }
+  });
+
   /* ---------- Navigation: tabs, filters, search, sort, stat cards ---------- */
   function switchTab(next, filter) {
     tab = next;
@@ -668,15 +894,76 @@ td .button{padding:6px 11px;font-size:12px}
   list.addEventListener("click", async function (event) {
     var b = event.target.closest("button");
     if (!b) return;
+    var d = b.dataset;
+
+    /* delivery actions */
+    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dcov || b.id === "cv-add") {
+      note("");
+      try {
+        if (d.dview) {
+          var w = window.open("about:blank", "_blank");
+          var su = await client.storage.from("delivery-docs").createSignedUrl(d.dview, 120);
+          if (su.error) { if (w) w.close(); throw su.error; }
+          if (w) w.location.href = su.data.signedUrl; else window.location.href = su.data.signedUrl;
+          return;
+        }
+        if (d.ddoc) {
+          var reason = "";
+          if (d.ddoc === "rejected") {
+            reason = window.prompt("Reason for rejecting (the partner will see this):", "");
+            if (reason === null) return;
+          }
+          b.disabled = true;
+          await rpc("admin_set_doc_status", { p_doc: d.id, p_status: d.ddoc, p_note: reason });
+        } else if (d.dpst) {
+          if (d.dpst === "approved" && !window.confirm("Approve this partner? Make sure the documents match the person.")) return;
+          if (d.dpst === "suspended" && !window.confirm("Suspend this partner? They go offline immediately.")) return;
+          b.disabled = true;
+          await rpc("admin_set_partner_status", { p_partner: d.id, p_status: d.dpst });
+        } else if (d.dfee) {
+          if (!window.confirm("Confirm SafeBuy NG has received this delivery fee?")) return;
+          b.disabled = true;
+          await rpc("admin_confirm_delivery_fee", { p_order: d.dfee });
+        } else if (d.drequeue) {
+          b.disabled = true;
+          await rpc("admin_requeue_job", { p_job: d.drequeue });
+          note("Searching for a rider again.");
+        } else if (d.dcollected) {
+          if (!window.confirm("Mark this job's delivery fee as collected?")) return;
+          b.disabled = true;
+          await rpc("admin_mark_fee_collected", { p_job: d.dcollected });
+        } else if (d.dpay) {
+          var ref = window.prompt("Transfer reference (for your records):", "");
+          if (ref === null) return;
+          b.disabled = true;
+          await rpc("admin_mark_payout_paid", { p_payout: d.dpay, p_reference: ref });
+        } else if (d.dcov) {
+          b.disabled = true;
+          await rpc("admin_set_coverage", { p_state: d.dstate, p_city: d.dcity, p_active: d.dcov === "on" });
+        } else {
+          var st = document.getElementById("cv-state").value.trim();
+          if (!st) { note("Enter a state.", true); return; }
+          b.disabled = true;
+          await rpc("admin_set_coverage", { p_state: st, p_city: document.getElementById("cv-city").value, p_active: true });
+          document.activeElement.blur();
+        }
+        fetchAll();
+      } catch (err) {
+        note(err.message, true);
+        b.disabled = false;
+      }
+      return;
+    }
+
     b.disabled = true;
     note("");
 
-    if (b.dataset.export) { exportLeads(); b.disabled = false; return; }
+    if (d.export) { exportLeads(); b.disabled = false; return; }
 
-    if (b.dataset.vpay) {
+    if (d.vpay) {
       var vp = await client.from("verification_requests")
         .update({ status: "paid", paid_at: new Date().toISOString() })
-        .eq("id", b.dataset.vpay).eq("status", "submitted").select("id");
+        .eq("id", d.vpay).eq("status", "submitted").select("id");
       if (vp.error || !vp.data || !vp.data.length) {
         note(vp.error ? vp.error.message : "The change was not saved.", true);
         b.disabled = false;
@@ -686,21 +973,21 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.vapprove) {
+    if (d.vapprove) {
       if (!window.confirm("Check the number on the official register first. Approve and issue the badge?")) { b.disabled = false; return; }
-      var ap = await client.rpc("admin_approve_verification", { p_request: b.dataset.vapprove });
+      var ap = await client.rpc("admin_approve_verification", { p_request: d.vapprove });
       if (ap.error) { note(ap.error.message, true); b.disabled = false; return; }
       await fetchAll();
       note("Verified. Badge number " + ap.data + " issued.");
       return;
     }
 
-    if (b.dataset.vreject) {
+    if (d.vreject) {
       var why = window.prompt("Reason for rejecting (the seller will see this):", "");
       if (why === null) { b.disabled = false; return; }
       var rj = await client.from("verification_requests")
         .update({ status: "rejected", admin_note: why.trim() || null, reviewed_at: new Date().toISOString() })
-        .eq("id", b.dataset.vreject).in("status", ["submitted", "paid"]).select("id");
+        .eq("id", d.vreject).in("status", ["submitted", "paid"]).select("id");
       if (rj.error || !rj.data || !rj.data.length) {
         note(rj.error ? rj.error.message : "The change was not saved.", true);
         b.disabled = false;
@@ -710,9 +997,9 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.ldel) {
+    if (d.ldel) {
       if (!window.confirm("Delete this lead permanently?")) { b.disabled = false; return; }
-      var ld = await client.from("leads").delete().eq("id", b.dataset.ldel).select("id");
+      var ld = await client.from("leads").delete().eq("id", d.ldel).select("id");
       if (ld.error || !ld.data || !ld.data.length) {
         note(ld.error ? ld.error.message : "The lead was not deleted.", true);
         b.disabled = false;
@@ -722,11 +1009,11 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.acat || b.dataset.pcat) {
-      var isShop = !!b.dataset.acat;
+    if (d.acat || d.pcat) {
+      var isShop = !!d.acat;
       var entered = window.prompt(
         "New category (2 to 40 letters or numbers). Built-in: " + BUILTIN_CATS.join(", "),
-        b.dataset.cat || ""
+        d.cat || ""
       );
       if (entered === null) { b.disabled = false; return; }
       var cat = normCat(entered);
@@ -736,8 +1023,8 @@ td .button{padding:6px 11px;font-size:12px}
         return;
       }
       var cu = isShop
-        ? await client.from("seller_applications").update({ main_category: cat, updated_at: new Date().toISOString() }).eq("id", b.dataset.id).select("id")
-        : await client.from("seller_products").update({ category: cat, updated_at: new Date().toISOString() }).eq("id", b.dataset.id).select("id");
+        ? await client.from("seller_applications").update({ main_category: cat, updated_at: new Date().toISOString() }).eq("id", d.id).select("id")
+        : await client.from("seller_products").update({ category: cat, updated_at: new Date().toISOString() }).eq("id", d.id).select("id");
       if (cu.error || !cu.data || !cu.data.length) {
         note(cu.error ? cu.error.message : "The change was not saved. Run admin_patch.sql first.", true);
         b.disabled = false;
@@ -748,10 +1035,10 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.review) {
+    if (d.review) {
       var u = await client.from("seller_applications")
-        .update({ verification_status: b.dataset.review, updated_at: new Date().toISOString() })
-        .eq("id", b.dataset.id).select("id");
+        .update({ verification_status: d.review, updated_at: new Date().toISOString() })
+        .eq("id", d.id).select("id");
       if (u.error || !u.data || !u.data.length) {
         note(u.error ? u.error.message : "The change was not saved.", true);
         b.disabled = false;
@@ -761,9 +1048,9 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.pstatus) {
+    if (d.pstatus) {
       var s = await client.from("seller_products")
-        .update({ status: b.dataset.pstatus }).eq("id", b.dataset.id).select("id");
+        .update({ status: d.pstatus }).eq("id", d.id).select("id");
       if (s.error || !s.data || !s.data.length) {
         note(s.error ? s.error.message : "The change was not saved. Run admin_patch.sql first.", true);
         b.disabled = false;
@@ -773,15 +1060,15 @@ td .button{padding:6px 11px;font-size:12px}
       return;
     }
 
-    if (b.dataset.pdel) {
+    if (d.pdel) {
       if (!window.confirm("Delete this product permanently?")) { b.disabled = false; return; }
-      var d = await client.from("seller_products").delete().eq("id", b.dataset.pdel).select("id");
-      if (d.error || !d.data || !d.data.length) {
-        note(d.error ? d.error.message : "The product was not deleted.", true);
+      var del = await client.from("seller_products").delete().eq("id", d.pdel).select("id");
+      if (del.error || !del.data || !del.data.length) {
+        note(del.error ? del.error.message : "The product was not deleted.", true);
         b.disabled = false;
         return;
       }
-      if (b.dataset.path) await client.storage.from("product-images").remove([b.dataset.path]);
+      if (d.path) await client.storage.from("product-images").remove([d.path]);
       fetchAll();
     }
   });
