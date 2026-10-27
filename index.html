@@ -1612,7 +1612,85 @@ updateCartCount();
   <script>
 (function () {
   "use strict";
-  var CACHE_KEY = "safebuy_products_v1";
+  <script>
+(function () {
+  "use strict";
+  var CACHE_KEY = "safebuy_products_v2";
+  var cfg = window.SAFEbuySupabaseConfig;
+  var retryTimer = null;
+
+  function mapRows(rows) {
+    return (rows || []).map(function (r, i) {
+      return normalizeProduct({
+        id: r.id, name: r.name, category: r.category,
+        price: Number(r.price_kobo) / 100,
+        seller: r.shop_name, image: r.image_url,
+        description: r.description, verified: r.verified,
+        inStock: r.in_stock, slug: r.slug, condition: r.condition
+      }, i);
+    });
+  }
+
+  function readCache() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+      return c && c.length ? c : null;
+    } catch (e) { return null; }
+  }
+
+  function fetchRows() {
+    var ctrl = new AbortController();
+    var t = setTimeout(function () { ctrl.abort(); }, 10000);
+    var url = String(cfg.url).replace(/\/+$/, "") +
+      "/rest/v1/seller_products_public?select=*&order=created_at.desc";
+    return fetch(url, {
+      headers: {
+        apikey: cfg.publishableKey,
+        Authorization: "Bearer " + cfg.publishableKey,
+        Accept: "application/json"
+      },
+      cache: "no-store",
+      signal: ctrl.signal
+    }).then(function (res) {
+      clearTimeout(t);
+      if (!res.ok) {
+        return res.text().then(function (b) {
+          throw new Error("HTTP " + res.status + " " + b.slice(0, 120));
+        });
+      }
+      return res.json();
+    }).catch(function (e) { clearTimeout(t); throw e; });
+  }
+
+  function load(attempt) {
+    if (!cfg || !cfg.url || !cfg.publishableKey) {
+      setProducts(sampleProducts, "sample", "supabase-config.js is missing or incomplete.");
+      return;
+    }
+    fetchRows().then(function (rows) {
+      clearTimeout(retryTimer);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(rows)); } catch (e) {}
+      setProducts(mapRows(rows), "supabase");
+    }).catch(function (e) {
+      if (attempt < 3) { setTimeout(function () { load(attempt + 1); }, 1500); return; }
+      console.warn("SafeBuy load failed:", e);
+      if (productSource !== "supabase") {
+        setProducts(sampleProducts, "sample", "Could not reach Supabase: " + e.message);
+      }
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(function () { load(1); }, 15000);
+    });
+  }
+
+  var cached = readCache();
+  if (cached) setProducts(mapRows(cached), "supabase");
+  load(1);
+  window.addEventListener("online", function () { load(1); });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) load(1);
+  });
+})();
+</script>
   var cfg = window.SAFEbuySupabaseConfig;
 
   function mapRows(rows) {
