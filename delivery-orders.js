@@ -36,7 +36,7 @@
   /* ---------- header button ---------- */
   var actions = document.querySelector(".header-actions");
   var btn = document.createElement("button");
-  btn.className = "button button-outline"; btn.type = "button"; btn.textContent = "🚚 Deliveries"; btn.hidden = true;
+  btn.className = "button button-outline"; btn.type = "button"; btn.textContent = "🚚 Deliveries"; btn.hidden = true; btn.id = "do-btn";
   var anchor = document.getElementById("mp-orders-btn");
   actions.insertBefore(btn, anchor ? anchor.nextSibling : actions.firstChild);
   btn.onclick = showBuyer;
