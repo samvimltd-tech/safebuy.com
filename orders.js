@@ -1,4 +1,6 @@
-/* SafeBuy NG: header name, order placing, My orders, seller orders. Needs orders.sql run first. */
+/* SafeBuy NG: header name, order placing, My orders, seller orders (now delivery-aware).
+   Needs orders.sql run first. For delivery features also run delivery.sql + delivery_v2.sql
+   and load delivery-orders.js AFTER this file. */
 (function () {
   "use strict";
   var c = window.safeBuySupabase;
@@ -10,6 +12,7 @@
   function wa(p) { var d = String(p || "").replace(/\D/g, ""); if (d.indexOf("234") === 0) return d; if (d.charAt(0) === "0") return "234" + d.slice(1); if (d.length === 10) return "234" + d; return d; }
   function user() { return c.auth.getUser().then(function (r) { return r.data && r.data.user; }); }
   var STEPS = { placed: "Placed: waiting for seller", paid: "Paid", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled" };
+  var DSTEPS = { requested: "Delivery requested: fee to be paid", fee_paid: "Delivery fee confirmed", dispatched: "With the delivery network" };
 
   /* ---- modal ---- */
   var back = document.createElement("div");
@@ -79,7 +82,7 @@
       open("Place order",
         "<p><strong>" + E(name) + "</strong><br>" + N(price) + " each</p>" +
         '<label for="om-qty">Quantity</label><input id="om-qty" type="number" min="1" max="99" value="1">' +
-        '<p class="modal-note"><strong>How it works:</strong> your order goes to the seller. Seller contact unlocks once the seller marks it Paid. SafeBuy NG does not process payments yet, so never pay anyone before you are comfortable.</p>' +
+        '<p class="modal-note"><strong>How it works:</strong> your order goes to the seller. Seller contact unlocks once the seller marks it Paid. After ordering you can request delivery from the Deliveries button. SafeBuy NG does not process payments for products yet, so never pay anyone before you are comfortable.</p>' +
         '<button class="button button-primary" type="button" id="om-go">Confirm order</button>' +
         '<p class="form-message" id="om-msg"></p>');
       document.getElementById("om-go").onclick = function () {
@@ -96,30 +99,45 @@
   /* ---- buyer: My orders ---- */
   function showMyOrders() {
     open("My orders", "<p>Loading…</p>");
-    c.from("marketplace_orders").select("*").order("created_at", { ascending: false }).then(function (r) {
+    Promise.all([
+      c.from("marketplace_orders").select("*").order("created_at", { ascending: false }),
+      user()
+    ]).then(function (res) {
+      var r = res[0], u = res[1];
       if (r.error) { body.innerHTML = "<p>" + E(r.error.message) + "</p>"; return; }
-      u2();
-      function u2() {
-        user().then(function (u) {
-          var mine = (r.data || []).filter(function (o) { return u && o.buyer_id === u.id; });
-          if (!mine.length) { body.innerHTML = "<p>No orders yet.</p>"; return; }
-          body.innerHTML = mine.map(function (o) {
-            var btns = "";
-            if (o.status === "placed") btns += '<button class="button button-outline" data-ob="cancelled" data-id="' + E(o.id) + '">Cancel order</button>';
-            if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) btns += '<button class="button button-primary" data-chat="' + E(o.product_id) + '">Chat seller on WhatsApp</button>';
-            if (o.status === "shipped") btns += '<button class="button button-light" data-ob="delivered" data-id="' + E(o.id) + '">I received it</button>';
-            return '<div class="review-card"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity +
-              (o.shop_name ? '<br><span class="muted">Seller: ' + E(o.shop_name) + "</span>" : "") +
-              (o.color || o.size ? '<br><span class="muted">' + E([o.color, o.size].filter(Boolean).join(" · ")) + "</span>" : "") + "<br>" + N(o.total_kobo) + ' <span class="status-pill' + (o.status === "delivered" ? " ok" : o.status === "cancelled" ? " bad" : "") + '">' + E(STEPS[o.status] || o.status) + "</span>" +
-              '<br><span class="muted">' + new Date(o.created_at).toLocaleDateString("en-NG") + " · #" + E(String(o.id).slice(0, 8)) + "</span>" + btns + "</div>";
-          }).join("");
-        });
-      }
+      var mine = (r.data || []).filter(function (o) { return u && o.buyer_id === u.id; });
+      if (!mine.length) { body.innerHTML = "<p>No orders yet.</p>"; return; }
+      body.innerHTML = mine.map(function (o) {
+        var ds = o.delivery_status && o.delivery_status !== "cancelled" ? o.delivery_status : "";
+        var btns = "";
+        if (o.status === "placed" && ds !== "dispatched") btns += '<button class="button button-outline" data-ob="cancelled" data-id="' + E(o.id) + '" data-ds="' + E(ds) + '">Cancel order</button>';
+        if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) btns += '<button class="button button-primary" data-chat="' + E(o.product_id) + '">Chat seller on WhatsApp</button>';
+        if (o.status === "shipped") btns += '<button class="button button-light" data-ob="delivered" data-id="' + E(o.id) + '">I received it</button>';
+        if (["placed", "paid"].indexOf(o.status) > -1 && !ds) btns += '<button class="button button-light" data-dopen="1">Request delivery</button>';
+        if (ds) btns += '<button class="button button-light" data-dopen="1">Track delivery</button>';
+        return '<div class="review-card"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity +
+          (o.shop_name ? '<br><span class="muted">Seller: ' + E(o.shop_name) + "</span>" : "") +
+          (o.color || o.size ? '<br><span class="muted">' + E([o.color, o.size].filter(Boolean).join(" · ")) + "</span>" : "") + "<br>" + N(o.total_kobo) + ' <span class="status-pill' + (o.status === "delivered" ? " ok" : o.status === "cancelled" ? " bad" : "") + '">' + E(STEPS[o.status] || o.status) + "</span>" +
+          (ds ? '<br><span class="muted">🚚 ' + E(DSTEPS[ds] || ds) + "</span>" : "") +
+          '<br><span class="muted">' + new Date(o.created_at).toLocaleDateString("en-NG") + " · #" + E(String(o.id).slice(0, 8)) + "</span>" + btns + "</div>";
+      }).join("");
     });
   }
+
   body.addEventListener("click", function (e) {
-    var s = e.target.closest("[data-ob]"), ch = e.target.closest("[data-chat]");
-    if (s) { s.disabled = true; setStatus(s.dataset.id, s.dataset.ob, showMyOrders); }
+    var s = e.target.closest("[data-ob]"), ch = e.target.closest("[data-chat]"), dl = e.target.closest("[data-dopen]");
+    if (dl) {
+      // Opens the Deliveries window added by delivery-orders.js
+      var db = document.getElementById("do-btn");
+      close();
+      if (db) db.click(); else T("Delivery is not available right now.");
+      return;
+    }
+    if (s) {
+      if (s.dataset.ob === "cancelled" && s.dataset.ds &&
+          !window.confirm("You requested delivery for this order. If you already paid the delivery fee, contact SafeBuy NG about a refund. Cancel anyway?")) return;
+      s.disabled = true; setStatus(s.dataset.id, s.dataset.ob, showMyOrders);
+    }
     if (ch) {
       var win = window.open("about:blank", "_blank");
       c.rpc("seller_contact", { p_product: ch.dataset.chat }).then(function (r) {
@@ -157,12 +175,18 @@
           if (r.error) { l.textContent = r.error.message; return; }
           if (!(r.data || []).length) { l.textContent = "No orders yet."; return; }
           l.innerHTML = r.data.map(function (o) {
+            var ds = o.delivery_status && o.delivery_status !== "cancelled" ? o.delivery_status : "";
             var b = "";
-            if (o.status === "placed") b += '<button class="button button-primary" data-so="paid" data-id="' + E(o.id) + '">Mark paid</button><button class="button button-outline" data-so="cancelled" data-id="' + E(o.id) + '">Cancel</button>';
-            if (o.status === "paid") b += '<button class="button button-primary" data-so="shipped" data-id="' + E(o.id) + '">Mark shipped</button>';
+            if (o.status === "placed") b += '<button class="button button-primary" data-so="paid" data-id="' + E(o.id) + '">Mark paid</button>' + (ds === "dispatched" ? "" : '<button class="button button-outline" data-so="cancelled" data-id="' + E(o.id) + '">Cancel</button>');
+            if (o.status === "paid" && !ds) b += '<button class="button button-primary" data-so="shipped" data-id="' + E(o.id) + '">Mark shipped</button>';
+            // With delivery, the rider marks it shipped (on pickup) and delivered (with the buyer's code).
+            var dnote = ds
+              ? "<br>🚚 " + E(DSTEPS[ds] || ds) + (ds === "fee_paid" && o.status === "paid" ? ". Use “Ready for rider pickup” in the Delivery section below." : ds === "fee_paid" ? ". Mark the order Paid first." : "")
+              : "";
             return '<div class="seller-item"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity + " · " + N(o.total_kobo) +
               '<br><span class="muted">Buyer: ' + E(o.buyer_name || "-") + ([o.color, o.size].filter(Boolean).length ? " · " + E([o.color, o.size].filter(Boolean).join(", ")) : "") +
               (o.pay_method === "pay_on_delivery" ? "<br>Pay on delivery to: " + E(o.address || "-") : "") + (o.note ? "<br>Note: " + E(o.note) : "") +
+              dnote +
               '</span><br><span class="muted">' + E(STEPS[o.status] || o.status) + " · #" + E(String(o.id).slice(0, 8)) + '</span><div class="seller-actions">' + b + "</div></div>";
           }).join("");
         });
@@ -209,7 +233,7 @@
         if (r.error) { cartMsg(r.error.message, true); if (btn) btn.disabled = false; return; }
         var rm; while ((rm = cartBody().querySelector('[data-c="rm"]'))) rm.click();
         cartBody().innerHTML = '<p class="status-pill ok">' + rows.length + " order" + (rows.length === 1 ? "" : "s") + ' placed</p>' +
-          "<p>Each seller will confirm. Seller contact unlocks once a seller marks your order Paid.</p>" +
+          "<p>Each seller will confirm. Seller contact unlocks once a seller marks your order Paid. You can request delivery for each order from the Deliveries button.</p>" +
           '<button class="button button-primary" type="button" id="mp-view">View my orders</button>';
         document.getElementById("mp-view").onclick = function () { document.getElementById("cart-backdrop").classList.remove("open"); showMyOrders(); };
       });
