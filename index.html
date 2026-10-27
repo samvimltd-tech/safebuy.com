@@ -222,6 +222,13 @@ footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid 
 .chip.ok{background:var(--green-light);color:var(--green-dark)}
 .area-group{margin:16px 0 4px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 
+.header-actions>#mp-orders-btn,.header-actions>#mp-shop-btn,.header-actions>#do-btn,.header-actions>#sb-myshop,.header-actions>#role-pill{display:none!important}
+body.sb-in .signin-btn,body.sb-in .buyer-header{display:none!important}
+body:not(.sb-in) .dd-account{display:none!important}
+body.sb-seller .cart-button,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}
+.footer-col.footer-links{display:block}
+.mode-chip{display:inline-block;margin-left:6px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;background:var(--green-light);color:var(--green-dark)}
+body.sb-seller .mode-chip{background:#fff3e0;color:#7a4a05}
 @media (max-width:1000px){
 .nav-link,.dd>button.dd-toggle{padding:9px 9px}
 .header-actions .sell-header{display:none}
@@ -230,7 +237,7 @@ footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid 
 @media (max-width:900px){
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .hero-panel{grid-template-columns:1.15fr .85fr}
-.desktop-nav,.header-actions .dd-account,.header-actions .button-outline{display:none}
+.desktop-nav,.header-actions .dd-account,.header-actions .delivery-btn,.header-actions .buyer-header{display:none!important}
 .menu-toggle{display:inline-grid;place-items:center}
 }
 @media (max-width:650px){
@@ -274,7 +281,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 .footer-row{flex-direction:column}
 .modal-backdrop{padding:0;align-items:flex-end}
 .modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
-.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
+.mobile-nav{position:fixed;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
 .mobile-nav a,.mobile-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0;min-height:48px}
 .mobile-nav .nav-icon{font-size:20px;line-height:1.1}
 .mobile-nav .current{color:var(--green)}
@@ -328,14 +335,17 @@ html{scroll-behavior:auto}
         <div class="dd-menu" role="menu">
           <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
           <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
+          <button type="button" data-action="deliver"><span class="ico">🏍️</span>Deliver with us</button>
           <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
         </div>
       </div>
     </nav>
 
     <div class="header-actions">
-      <button class="button button-outline" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
+      <button class="button button-outline delivery-btn" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
       <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
+
+      <button class="button button-primary signin-btn" type="button" data-action="account">Sign in</button>
 
       <div class="dd right dd-account" id="account-dd">
         <button class="button button-outline dd-toggle-btn" type="button" id="account-dd-toggle" aria-haspopup="true" aria-expanded="false">👤 <span id="account-dd-label">Sign in</span> <span class="caret">▼</span></button>
@@ -388,10 +398,12 @@ html{scroll-behavior:auto}
     <details>
       <summary>📦 Orders &amp; delivery</summary>
       <div class="d-links">
-        <button type="button" data-feature="orders">My orders</button>
-        <button type="button" data-feature="delivery-orders">Delivery orders</button>
-        <button type="button" data-action="delivery">🚚 Delivery areas</button>
-        <button type="button" data-feature="messages">💬 Messages</button>
+        <button type="button" data-feature="orders"><span class="lbl">📦 My orders</span></button>
+        <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
+        <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
+        <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
+        <button type="button" data-action="delivery">📍 Delivery areas</button>
+        <button type="button" data-action="deliver">🏍️ Deliver with us</button>
       </div>
     </details>
     <details>
@@ -549,9 +561,10 @@ html{scroll-behavior:auto}
         <button type="button" data-feature="orders">My orders</button>
         <button type="button" data-feature="messages">Messages</button>
         <button type="button" data-feature="settings">Account settings</button>
+        <button type="button" data-feature="mode" hidden><span class="lbl">Switch mode</span></button>
         <button type="button" data-action="sell">Sell with us</button>
       </div>
-      <div class="footer-col">
+      <div class="footer-col footer-links">
         <h4>Help</h4>
         <a href="#how-it-works">How it works</a>
         <button type="button" data-action="delivery">Delivery areas</button>
@@ -1093,41 +1106,32 @@ updateCartCount();
     if (b.dataset.action === "safety") $("safety-backdrop").classList.add("open");
   }, true);
 
-  /* ---- Bridge to feature scripts (messages, orders, verify, settings…) ----
-     Each menu item has data-feature. We broadcast an event first so a feature script
-     can listen for it, then fall back to clicking an existing trigger rendered by that script. */
-  var FEATURE_MATCH = {
-    messages: /messag|inbox|chat/i,
-    orders: /my orders|orders/i,
-    "delivery-orders": /deliver/i,
-    settings: /setting/i,
-    verify: /verif/i
+  /* ---- Bridge to feature scripts ----
+     Those scripts create real buttons (orders.js, delivery-orders.js, account-settings.js,
+     messages.js). Menu items click those buttons, so behaviour stays identical to the originals. */
+  var FEATURE_BTN = {
+    orders: "mp-orders-btn", "delivery-orders": "do-btn", neworders: "mp-shop-btn",
+    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab"
   };
-  function ownedByNav(el) {
-    return el.closest("header,.drawer,.mobile-nav,.quick-links,footer,.product-card,.modal-backdrop,.dd-menu");
-  }
+  function signedIn() { return document.body.classList.contains("sb-in"); }
+  function sellerMode() { return document.body.classList.contains("sb-seller"); }
+
   function triggerFeature(name) {
-    var ev = new CustomEvent("safebuy:open", { detail: { feature: name }, cancelable: true });
-    document.dispatchEvent(ev);
-    if (ev.defaultPrevented) return;
-
-    var sel = '[data-open="' + name + '"],[data-feature-open="' + name + '"],#sb-' + name + ',#sb-open-' + name;
-    var target = document.querySelector(sel);
-    if (!target) {
-      var rx = FEATURE_MATCH[name];
-      var cands = Array.prototype.slice.call(document.querySelectorAll("button,a[role=button],[role=button]"));
-      target = cands.filter(function (el) {
-        return rx && !ownedByNav(el) && el.textContent.length < 40 && rx.test(el.textContent + " " + (el.getAttribute("aria-label") || ""));
-      })[0];
+    if (name === "verify") {
+      var sell = document.querySelector('[data-action="sell"]');
+      if (sell) sell.click();
+      setTimeout(function () { var v = $("vf-box"); if (v && v.scrollIntoView) v.scrollIntoView({ behavior: "smooth", block: "start" }); }, 1200);
+      return;
     }
-    if (target) { target.click(); return; }
-
-    var c = window.safeBuySupabase;
-    if (!c) { showToast("This feature is unavailable right now."); return; }
-    c.auth.getSession().then(function (r) {
-      if (!r.data || !r.data.session) { openAccount(); say("Sign in to use this feature."); }
-      else showToast("This section is still loading. Please try again in a moment.");
-    });
+    var btn = $(FEATURE_BTN[name]);
+    if (name === "messages") { if (btn) btn.click(); else showToast("Messages are loading. Try again in a moment."); return; }
+    if (!signedIn() && name !== "mode") { window.openAccount(); window.say("Sign in to use this feature."); return; }
+    if (sellerMode() && (name === "orders" || name === "delivery-orders")) {
+      showToast("You are in seller mode. Switch to buyer mode to see your purchases.");
+      return;
+    }
+    if (!btn) { showToast("This section is still loading. Please try again in a moment."); return; }
+    btn.click();
   }
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-feature]");
@@ -1135,6 +1139,32 @@ updateCartCount();
     e.preventDefault();
     triggerFeature(b.dataset.feature);
   });
+
+  /* Keep menu items in step with the real buttons (visibility, labels, buyer/seller mode) */
+  var syncQueued = false;
+  function syncFeatures() {
+    syncQueued = false;
+    var signed = signedIn(), seller = sellerMode();
+    document.querySelectorAll("[data-feature]").forEach(function (el) {
+      var n = el.dataset.feature, real = $(FEATURE_BTN[n]), hide = false;
+      if (n === "neworders" || n === "mode") hide = !signed || !real || real.hidden;
+      else if (signed && (n === "orders" || n === "delivery-orders")) hide = seller || (!!real && real.hidden);
+      if (el.hidden !== hide) el.hidden = hide;
+      var lbl = el.querySelector(".lbl");
+      if (lbl && real && (n === "neworders" || n === "mode")) {
+        var t = (n === "mode" ? "🔄 " : "") + real.textContent.trim();
+        if (lbl.textContent !== t) lbl.textContent = t;
+      }
+    });
+    document.querySelectorAll("[data-mode-chip]").forEach(function (c) {
+      var t = seller ? "Seller mode" : "Buyer mode";
+      if (c.textContent !== t) c.textContent = t;
+    });
+  }
+  function queueSync() { if (!syncQueued) { syncQueued = true; requestAnimationFrame(syncFeatures); } }
+  window.__sbSync = queueSync;
+  new MutationObserver(queueSync).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["hidden", "class"] });
+  setTimeout(queueSync, 1500);
 
   /* ---- Scroll spy (desktop + mobile nav) ---- */
   var spyIds = ["home", "shop", "how-it-works", "sell"];
@@ -1152,6 +1182,19 @@ updateCartCount();
   }
   window.addEventListener("scroll", spy, { passive: true });
   spy();
+
+  /* ---- Mirror the cart number (shop-extras.js only updates #cart-count) ---- */
+  var cartMaster = $("cart-count");
+  function mirrorCart() {
+    var n = cartMaster ? cartMaster.textContent.trim() : "0";
+    document.querySelectorAll(".cart-count-mobile,.cart-count-inline").forEach(function (el) {
+      if (el.textContent !== n) el.textContent = n;
+      var none = !n || n === "0";
+      if (el.classList.contains("cart-count-mobile") && el.hidden !== none) el.hidden = none;
+    });
+  }
+  if (cartMaster) new MutationObserver(mirrorCart).observe(cartMaster, { childList: true, characterData: true, subtree: true });
+  mirrorCart();
 
   /* expose for the account script */
   window.__sbNav = { openDelivery: openDelivery };
@@ -1300,35 +1343,37 @@ updateCartCount();
   var drawerAcc = document.getElementById("drawer-account");
 
   function renderAccountMenus(user) {
+    document.body.classList.toggle("sb-in", !!user);
+    if (!user) document.body.classList.remove("sb-seller", "sb-buyer");
     if (user) {
       var email = esc(user.email || "your account");
       accLabel.textContent = "Account";
       accMenu.innerHTML =
-        '<div class="dd-user">Signed in as<br><strong>' + email + '</strong></div><hr>' +
-        '<button type="button" data-feature="orders"><span class="ico">📦</span>My orders</button>' +
-        '<button type="button" data-feature="messages"><span class="ico">💬</span>Messages</button>' +
-        '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span>Delivery orders</button>' +
-        '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
+        '<div class="dd-user">Signed in as<br><strong>' + email + '</strong><br><span class="mode-chip" data-mode-chip>Buyer mode</span></div><hr>' +
+        '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
+        '<button type="button" data-feature="orders"><span class="ico">📦</span><span class="lbl">My orders</span></button>' +
+        '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
+        '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
+        '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
+        '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
         '<hr><button type="button" data-auth="signout"><span class="ico">🚪</span>Sign out</button>';
       drawerAcc.innerHTML =
-        '<div class="d-user">Signed in as ' + email + '</div>' +
-        '<button type="button" data-feature="orders">📦 My orders</button>' +
-        '<button type="button" data-feature="messages">💬 Messages</button>' +
+        '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
+        '<button type="button" data-feature="mode" hidden><span class="lbl">🔄 Switch mode</span></button>' +
         '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
         '<button type="button" data-auth="signout">🚪 Sign out</button>';
     } else {
       accLabel.textContent = "Sign in";
       accMenu.innerHTML =
         '<button type="button" data-auth="signin"><span class="ico">🔑</span>Sign in</button>' +
-        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create account</button>' +
-        '<hr><button type="button" data-feature="orders"><span class="ico">📦</span>My orders</button>' +
-        '<button type="button" data-feature="messages"><span class="ico">💬</span>Messages</button>';
+        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create buyer or seller account</button>';
       drawerAcc.innerHTML =
         '<button type="button" data-auth="signin">🔑 Sign in</button>' +
-        '<button type="button" data-auth="signup">✨ Create account</button>';
+        '<button type="button" data-auth="signup">✨ Create buyer or seller account</button>';
     }
+    if (window.__sbSync) window.__sbSync();
   }
   renderAccountMenus(null);
 
@@ -1811,6 +1856,16 @@ updateCartCount();
 })();
 </script>
 
+<script>
+/* Tap a product photo to open its page (restored from the original) */
+document.addEventListener("click", function (e) {
+  var art = e.target.closest(".product-art");
+  if (!art) return;
+  var card = art.closest(".product-card");
+  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
+  if (link) window.location.href = link.getAttribute("href");
+});
+</script>
 <!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
 <script src="./messages.js"></script>
