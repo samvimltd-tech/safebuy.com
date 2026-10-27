@@ -38,7 +38,8 @@
   load(0);
 })();
 
-/* SafeBuy NG: Account settings (name, email, password, shop contact). Load after orders.js */
+/* SafeBuy NG: Account settings (name, email, password, shop contact, delivery partner link).
+   Load after orders.js and before delivery.js / delivery-orders.js. */
 (function () {
   "use strict";
   var c = window.safeBuySupabase;
@@ -76,12 +77,43 @@
       var u = r.data && r.data.user;
       if (!u) { body.innerHTML = "<p>Please sign in first.</p>"; return; }
       c.from("seller_applications").select("id,shop_name,phone,state").eq("user_id", u.id).maybeSingle().then(function (a) {
-        render(u, a.data);
+        var app = a.data;
+        // Delivery details are optional: if the delivery tables are not installed yet, this section is simply left out.
+        Promise.all([
+          c.from("delivery_partners").select("status,partner_type,company_name").eq("user_id", u.id).maybeSingle(),
+          app ? c.from("seller_applications").select("dp_address,dp_city,dp_state").eq("id", app.id).maybeSingle() : Promise.resolve({ data: null })
+        ]).then(function (x) {
+          render(u, app, {
+            show: !x[0].error,
+            partner: x[0].error ? null : x[0].data,
+            pickup: x[1].error ? undefined : x[1].data
+          });
+        }, function () { render(u, app, { show: false }); });
       });
     });
   }
 
-  function render(u, app) {
+  function deliveryHtml(d, app) {
+    if (!d || !d.show) return "";
+    var h = "<h3>Delivery</h3>";
+    if (d.partner) {
+      var st = d.partner.status;
+      h += '<p class="muted">Delivery partner account: <span class="status-pill' + (st === "approved" ? " ok" : st === "pending" ? "" : " bad") + '">' +
+        E(st === "approved" ? "Approved" : st === "pending" ? "Under review" : st) + "</span></p>" +
+        '<button class="button button-light" type="button" id="as-deliver" data-action="deliver">Open delivery dashboard</button>';
+    } else {
+      h += '<p class="muted">Earn by delivering SafeBuy NG orders. Every partner is verified before taking jobs.</p>' +
+        '<button class="button button-light" type="button" id="as-deliver" data-action="deliver">Become a delivery partner</button>';
+    }
+    if (app && d.pickup !== undefined) {
+      h += '<p class="muted" style="margin-top:12px">Shop pickup for delivery: ' +
+        (d.pickup && d.pickup.dp_address ? E(d.pickup.dp_address + ", " + (d.pickup.dp_city || "") + ", " + (d.pickup.dp_state || "")) : "not set") +
+        ". Change it under My shop › Delivery.</p>";
+    }
+    return h;
+  }
+
+  function render(u, app, d) {
     var name = (u.user_metadata && u.user_metadata.full_name) || "";
     body.innerHTML =
       "<h3>Account mode</h3>" +
@@ -104,9 +136,12 @@
           '<label for="as-state">State</label><input id="as-state" type="text" value="' + E(app.state) + '">' +
           '<button class="button button-primary" type="submit">Save shop contact</button></form>' +
           '<p class="form-message" id="as-m3" role="status" aria-live="polite"></p>'
-        : "");
+        : "") +
+      deliveryHtml(d, app);
 
     document.getElementById("as-mode").onclick = function () { switchMode(); close(); };
+    var dv = document.getElementById("as-deliver");
+    if (dv) dv.addEventListener("click", close);   // delivery.js opens its own window from the same click
     document.getElementById("as-profile").onsubmit = function (e) {
       e.preventDefault();
       var email = document.getElementById("as-email").value.trim();
@@ -157,7 +192,7 @@
 
   var st = document.createElement("style");
   st.textContent =
-    "body.sb-seller .cart-button,body.sb-seller #mp-orders-btn,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}" +
+    "body.sb-seller .cart-button,body.sb-seller #mp-orders-btn,body.sb-seller #do-btn,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}" +
     "body.sb-buyer #mp-shop-btn{display:none!important}#sb-myshop{display:none!important}body.sb-seller #sb-myshop{display:inline-flex!important}";
   document.head.appendChild(st);
 
