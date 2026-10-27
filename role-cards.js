@@ -1,105 +1,261 @@
-/* SafeBuy NG: role-cards.js
-   Adds (1) a "Become a delivery rider or partner" card on the hero and
-   (2) three clear paths: I want to buy / I want to sell / Rider (delivery partner).
-   Does not edit index.html logic, product loading or Supabase code. Load AFTER ./delivery-boost.js. */
+
+/* SafeBuy NG: single Rider / Delivery partner homepage card.
+   Uses existing delivery.js registration and dashboard.
+   Preserves buyer and seller delivery flows.
+   Image path: ./images/safebuy-rider.jpg
+   Load AFTER delivery.js, delivery-orders.js and delivery-boost.js. */
+
 (function () {
   "use strict";
+
   var KEY = "safebuy_intent";
-  var MAX_AGE = 2 * 60 * 60 * 1000; // intent expires after 2 hours
-  var LABEL = { sell: "sell on SafeBuy NG", ride: "deliver with SafeBuy NG" };
+  var MAX_AGE = 2 * 60 * 60 * 1000;
 
-  function q(sel) { return document.querySelector(sel); }
-  function store(k, v) {
-    try {
-      if (v === undefined) return localStorage.getItem(k);
-      if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);
-    } catch (e) { return null; }
+  function q(selector) {
+    return document.querySelector(selector);
   }
-  function signedIn() { return document.body.classList.contains("sb-in"); }
-  function press(el) { if (el) { el.click(); return true; } return false; }
 
-  /* Open the existing flow for each role (uses the buttons your page already has). */
-  function act(role) {
-    if (role === "buy") {
-      var shop = q("#shop");
-      if (shop) shop.scrollIntoView({ behavior: "smooth" });
-    } else if (role === "sell") {
-      press(q('#sell [data-action="sell"]')) || press(q('[data-action="sell"]'));
-    } else if (role === "ride") {
-      press(q('.dd-menu [data-action="deliver"]')) || press(q('[data-action="deliver"]'));
+  function store(key, value) {
+    try {
+      if (value === undefined) {
+        return localStorage.getItem(key);
+      }
+
+      if (value === null) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, value);
+      }
+    } catch (error) {
+      return null;
     }
   }
 
-  function choose(role) {
-    if (role === "buy" || signedIn()) { act(role); return; }
-    // Selling and riding need an account: remember the choice, open Create account, continue after sign-in.
-    store(KEY, JSON.stringify({ r: role, t: Date.now() }));
-    var signup = q('#drawer-account [data-auth="signup"]') || q('[data-auth="signup"]');
-    if (!press(signup)) press(q('[data-action="account"]'));
-    setTimeout(function () {
-      if (window.say) window.say("Create your account to " + LABEL[role] + ". We will take you there as soon as you are signed in.");
-    }, 60);
+  function signedIn() {
+    return document.body.classList.contains("sb-in");
   }
 
-  /* After sign-in, take the person to the path they picked. */
-  function resume() {
+  // Open the existing rider registration/dashboard.
+  function openRiderFlow() {
+    var button = q('[data-action="deliver"]');
+
+    if (button) {
+      button.click();
+      return;
+    }
+
+    if (window.showToast) {
+      window.showToast(
+        "Delivery registration is temporarily unavailable. Please try again."
+      );
+    }
+  }
+
+  function chooseRider() {
+    if (signedIn()) {
+      openRiderFlow();
+      return;
+    }
+
+    // Remember the rider choice until sign-in is complete.
+    store(KEY, JSON.stringify({
+      r: "ride",
+      t: Date.now()
+    }));
+
+    var signup =
+      q('#drawer-account [data-auth="signup"]') ||
+      q('[data-auth="signup"]') ||
+      q('[data-action="account"]');
+
+    if (signup) {
+      signup.click();
+    }
+
+    if (window.showToast) {
+      window.showToast(
+        "Sign in or create an account to become a delivery partner."
+      );
+    } else if (window.say) {
+      window.say(
+        "Create your account to deliver with SafeBuy NG."
+      );
+    }
+  }
+
+  // Resume the rider flow after successful authentication.
+  function resumeRiderFlow() {
     var raw = store(KEY);
-    if (!raw || !signedIn()) return;
-    var d = null;
-    try { d = JSON.parse(raw); } catch (e) {}
-    store(KEY, null);
-    if (!d || !d.r || Date.now() - d.t > MAX_AGE) return;
-    setTimeout(function () { act(d.r); }, 900);
-  }
-  new MutationObserver(resume).observe(document.body, { attributes: true, attributeFilter: ["class"] });
-  resume();
 
-  /* ---------- Look ---------- */
+    if (!raw || !signedIn()) {
+      return;
+    }
+
+    var intent;
+
+    try {
+      intent = JSON.parse(raw);
+    } catch (error) {
+      store(KEY, null);
+      return;
+    }
+
+    if (
+      !intent ||
+      intent.r !== "ride" ||
+      !intent.t ||
+      Date.now() - intent.t > MAX_AGE
+    ) {
+      store(KEY, null);
+      return;
+    }
+
+    store(KEY, null);
+
+    window.setTimeout(openRiderFlow, 900);
+  }
+
+  // Card styling.
   var style = document.createElement("style");
+
   style.textContent =
-    ".rr-hero{display:flex;align-items:center;gap:12px;margin-top:18px;padding:12px 14px;max-width:520px;background:#fff;border:1px solid #bfe6d1;border-radius:16px;box-shadow:0 8px 25px #173b2812}" +
-    ".rr-ico{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:var(--green-light);font-size:22px}" +
-    ".rr-hero .rr-text{flex:1;min-width:0}" +
-    ".rr-hero strong{display:block;font-size:15px;line-height:1.3}" +
-    ".rr-hero small{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:2px}" +
-    ".rr-hero .button{flex-shrink:0;padding:10px 14px;font-size:13px}" +
-    ".rr-roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 22px}" +
-    ".rr-role{display:flex;align-items:center;gap:12px;padding:16px;background:#fff;border:1px solid var(--line);border-radius:16px;text-align:left;color:var(--ink);font-weight:800;font-size:15px}" +
-    ".rr-role:hover{border-color:var(--green);background:var(--green-light)}" +
-    ".rr-role small{display:block;color:var(--muted);font-weight:400;font-size:12px;line-height:1.4}" +
-    ".rr-role.rider{border-color:#bfe6d1;background:var(--green-light)}" +
-    "@media (max-width:650px){.rr-roles{grid-template-columns:1fr;gap:9px}.rr-hero{flex-wrap:wrap}.rr-hero .button{width:100%}}";
+    ".rr-hero{" +
+      "display:flex;" +
+      "align-items:center;" +
+      "gap:14px;" +
+      "margin:18px 0 22px;" +
+      "padding:14px 16px;" +
+      "max-width:560px;" +
+      "background:#fff;" +
+      "border:1px solid #bfe6d1;" +
+      "border-radius:16px;" +
+      "box-shadow:0 8px 25px #173b2812;" +
+    "}" +
+
+    ".rr-ico{" +
+      "display:grid;" +
+      "place-items:center;" +
+      "flex:0 0 64px;" +
+      "width:64px;" +
+      "height:64px;" +
+      "overflow:hidden;" +
+      "border-radius:14px;" +
+      "background:#101010;" +
+    "}" +
+
+    ".rr-ico img{" +
+      "display:block;" +
+      "width:100%;" +
+      "height:100%;" +
+      "object-fit:contain;" +
+      "object-position:center;" +
+    "}" +
+
+    ".rr-text{" +
+      "flex:1;" +
+      "min-width:0;" +
+    "}" +
+
+    ".rr-text strong{" +
+      "display:block;" +
+      "font-size:15px;" +
+      "line-height:1.35;" +
+    "}" +
+
+    ".rr-text small{" +
+      "display:block;" +
+      "margin-top:3px;" +
+      "color:var(--muted);" +
+      "font-size:12px;" +
+      "line-height:1.5;" +
+    "}" +
+
+    ".rr-hero .button{" +
+      "flex-shrink:0;" +
+      "padding:10px 14px;" +
+      "font-size:13px;" +
+    "}" +
+
+    "@media(max-width:520px){" +
+      ".rr-hero{" +
+        "align-items:center;" +
+        "flex-wrap:wrap;" +
+      "}" +
+      ".rr-hero .rr-text{" +
+        "flex:1;" +
+        "min-width:150px;" +
+      "}" +
+      ".rr-hero .button{" +
+        "width:100%;" +
+      "}" +
+    "}";
+
   document.head.appendChild(style);
 
-  function build() {
-    var buttons = q(".hero-buttons");
-    var quick = q(".quick-links");
-    if (!buttons || !quick || document.getElementById("rr-hero")) return;
+  // Create one card only.
+  function buildCard() {
+    if (document.getElementById("rr-hero")) {
+      return;
+    }
 
-    var hero = document.createElement("div");
-    hero.id = "rr-hero";
-    hero.className = "rr-hero";
-    hero.innerHTML =
-      '<span class="rr-ico" aria-hidden="true">🏍️</span>' +
-      '<div class="rr-text"><strong>Become a delivery rider or partner</strong>' +
-      "<small>Earn by delivering SafeBuy NG orders. Individual riders and delivery companies welcome. Every partner is verified.</small></div>" +
-      '<button class="button button-primary" type="button" data-rr="ride">Apply →</button>';
-    buttons.insertAdjacentElement("afterend", hero);
+    var heroButtons = q(".hero-buttons");
 
-    var roles = document.createElement("section");
-    roles.className = "rr-roles";
-    roles.setAttribute("aria-label", "Choose how you want to use SafeBuy NG");
-    roles.innerHTML =
-      '<button class="rr-role" type="button" data-rr="buy"><span class="rr-ico" aria-hidden="true">🛍️</span><span>I want to buy<small>Browse products and chat with sellers</small></span></button>' +
-      '<button class="rr-role" type="button" data-rr="sell"><span class="rr-ico" aria-hidden="true">🏪</span><span>I want to sell<small>Open a shop and list products</small></span></button>' +
-      '<button class="rr-role rider" type="button" data-rr="ride"><span class="rr-ico" aria-hidden="true">🏍️</span><span>Rider / Delivery partner<small>Deliver orders and get paid</small></span></button>';
-    quick.insertAdjacentElement("beforebegin", roles);
+    if (!heroButtons) {
+      return;
+    }
+
+    var card = document.createElement("section");
+
+    card.id = "rr-hero";
+    card.className = "rr-hero";
+    card.setAttribute(
+      "aria-label",
+      "Rider / Delivery partner"
+    );
+
+    card.innerHTML =
+      '<span class="rr-ico">' +
+        '<img ' +
+          'src="./images/safebuy-rider.jpg" ' +
+          'alt="SafeBuy NG delivery rider" ' +
+          'loading="eager" ' +
+          'onerror="this.style.display=\'none\'">' +
+      '</span>' +
+
+      '<span class="rr-text">' +
+        '<strong>Rider / Delivery partner</strong>' +
+        '<small>Deliver orders and get paid</small>' +
+      '</span>' +
+
+      '<button ' +
+        'class="button button-primary" ' +
+        'type="button" ' +
+        'data-rr="ride">' +
+        'Get started →' +
+      '</button>';
+
+    heroButtons.insertAdjacentElement("afterend", card);
   }
 
-  document.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-rr]");
-    if (b) choose(b.dataset.rr);
+  // Only the rider card responds to this handler.
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest('[data-rr="ride"]');
+
+    if (button) {
+      chooseRider();
+    }
   });
 
-  build();
+  // Watch for authentication changes.
+  new MutationObserver(resumeRiderFlow).observe(
+    document.body,
+    {
+      attributes: true,
+      attributeFilter: ["class"]
+    }
+  );
+
+  buildCard();
+  resumeRiderFlow();
+
 })();
