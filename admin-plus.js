@@ -144,7 +144,7 @@
   function headers(extra) { var h = { apikey: cfg.publishableKey, Authorization: "Bearer " + token() }; for (var k in extra) h[k] = extra[k]; return h; }
   function closeSite() {
     if (panel.hidden) return;
-    panel.hidden = true; siteTab.classList.remove("active");
+    panel.hidden = true; siteTab.classList.remove("active"); areaTab.classList.remove("active");
     covered.forEach(function (i) { $(i).hidden = false; });
   }
   async function openSite() {
