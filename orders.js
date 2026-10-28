@@ -181,7 +181,7 @@
             if (o.status === "paid" && !ds) b += '<button class="button button-primary" data-so="shipped" data-id="' + E(o.id) + '">Mark shipped</button>';
             // With delivery, the rider marks it shipped (on pickup) and delivered (with the buyer's code).
             var dnote = ds
-              ? "<br>🚚 " + E(DSTEPS[ds] || ds) + (ds === "fee_paid" && o.status === "paid" ? ". Use “Ready for rider pickup” in the Delivery section below." : ds === "fee_paid" ? ". Mark the order Paid first." : "")
+              ? "<br>🚚 " + E(DSTEPS[ds] || ds) + (ds === "fee_paid" && o.status === "paid" ? ". A rider is being requested." : ds === "fee_paid" ? ". Mark the order Paid and a rider is requested automatically." : "")
               : "";
             return '<div class="seller-item"><strong>' + E(o.product_name || "Product") + "</strong> × " + o.quantity + " · " + N(o.total_kobo) +
               '<br><span class="muted">Buyer: ' + E(o.buyer_name || "-") + ([o.color, o.size].filter(Boolean).length ? " · " + E([o.color, o.size].filter(Boolean).join(", ")) : "") +
