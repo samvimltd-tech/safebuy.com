@@ -815,6 +815,7 @@ td .button{padding:6px 11px;font-size:12px}
     var rows = dAreas.filter(function (a) { return !term || (a.state + " " + a.city).indexOf(term) !== -1; });
     list.innerHTML =
       '<div class="hint">Delivery works only where an area is switched on. Leave City blank to cover a whole state. Switch an area on only when you have verified, approved riders there.</div>' +
+      '<div class="item"><div class="actions" style="margin:0"><button class="button" type="button" data-dcovall="on">Switch on all</button><button class="button danger" type="button" data-dcovall="off">Switch off all</button></div></div>' +
       '<div class="item"><div class="tools" style="margin:0"><input id="cv-state" placeholder="State, e.g. Lagos" maxlength="40"><input id="cv-city" placeholder="City (optional)" maxlength="40"><button class="button" type="button" id="cv-add">Switch on</button></div></div>' +
       (rows.length ? rows.map(function (a) {
         return '<div class="item"><span class="pill ' + (a.is_active ? "approved" : "hidden") + '">' + (a.is_active ? "on" : "off") + '</span> <strong class="cap">' +
@@ -897,7 +898,7 @@ td .button{padding:6px 11px;font-size:12px}
     var d = b.dataset;
 
     /* delivery actions */
-    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dcov || b.id === "cv-add") {
+    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dcov || d.dcovall || b.id === "cv-add") {
       note("");
       try {
         if (d.dview) {
@@ -937,6 +938,16 @@ td .button{padding:6px 11px;font-size:12px}
           if (ref === null) return;
           b.disabled = true;
           await rpc("admin_mark_payout_paid", { p_payout: d.dpay, p_reference: ref });
+        } else if (d.dcovall) {
+          var turnOn = d.dcovall === "on";
+          var todo = dAreas.filter(function (a) { return !!a.is_active !== turnOn; });
+          if (!todo.length) { note("Everything is already " + (turnOn ? "on." : "off.")); return; }
+          if (!window.confirm((turnOn ? "Switch ON " : "Switch OFF ") + todo.length + " areas?")) return;
+          b.disabled = true;
+          for (var i = 0; i < todo.length; i++) {
+            await rpc("admin_set_coverage", { p_state: todo[i].state, p_city: todo[i].city || "", p_active: turnOn });
+          }
+          note(todo.length + " areas switched " + (turnOn ? "on." : "off."));
         } else if (d.dcov) {
           b.disabled = true;
           await rpc("admin_set_coverage", { p_state: d.dstate, p_city: d.dcity, p_active: d.dcov === "on" });
