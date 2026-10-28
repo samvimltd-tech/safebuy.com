@@ -1869,3 +1869,267 @@ updateCartCount();
   function startEdit(id) {
     var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
     if (!p) return;
+    editingId = p.id;
+    document.getElementById("pf-heading").textContent = "Edit product";
+    document.getElementById("pf-name").value = p.name || "";
+    document.getElementById("pf-cat").value = p.category || CATEGORIES[0];
+    document.getElementById("pf-cond").value = p.condition || "new";
+    document.getElementById("pf-price").value = (Number(p.price_kobo) / 100).toString();
+    document.getElementById("pf-desc").value = p.description || "";
+    document.getElementById("pf-stock").checked = p.in_stock !== false;
+    document.getElementById("pf-photo-label").textContent = "Replace photo (optional)";
+    document.getElementById("pf-submit").textContent = "Save changes";
+    document.getElementById("pf-cancel").hidden = false;
+    formMessage("");
+    document.getElementById("pf-heading").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function submitProduct(event) {
+    event.preventDefault();
+    var btn = document.getElementById("pf-submit");
+    var user = await currentUser();
+    if (!user || !currentApp) { formMessage("Please sign in again.", true); return; }
+
+    var naira = Number(document.getElementById("pf-price").value);
+    var priceKobo = Math.round(naira * 100);
+    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero.", true); return; }
+
+    var file = document.getElementById("pf-photo").files[0];
+    if (file) {
+      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP.", true); return; }
+      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB.", true); return; }
+    }
+
+    btn.disabled = true;
+    formMessage(editingId ? "Saving…" : "Publishing…");
+
+    var newPath = null;
+    var newUrl = null;
+    if (file) {
+      newPath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
+      var up = await client.storage.from("product-images").upload(newPath, file, { contentType: file.type, upsert: false });
+      if (up.error) {
+        formMessage("Photo upload failed: " + up.error.message, true);
+        btn.disabled = false;
+        return;
+      }
+      newUrl = client.storage.from("product-images").getPublicUrl(newPath).data.publicUrl;
+    }
+
+    var fields = {
+      name: document.getElementById("pf-name").value.trim(),
+      description: document.getElementById("pf-desc").value.trim(),
+      category: document.getElementById("pf-cat").value,
+      condition: document.getElementById("pf-cond").value,
+      price_kobo: priceKobo,
+      in_stock: document.getElementById("pf-stock").checked
+    };
+
+    var editing = editingId
+      ? myProducts.filter(function (x) { return String(x.id) === String(editingId); })[0]
+      : null;
+    var failure = null;
+
+    if (editing) {
+      if (newPath) { fields.image_path = newPath; fields.image_url = newUrl; }
+      fields.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(fields).eq("id", editing.id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) failure = upd.error ? upd.error.message : "The change was not saved.";
+      else if (newPath && editing.image_path) await client.storage.from("product-images").remove([editing.image_path]);
+    } else {
+      fields.seller_application_id = currentApp.id;
+      fields.status = "published";
+      fields.image_path = newPath;
+      fields.image_url = newUrl;
+      var ins = await client.from("seller_products").insert(fields);
+      if (ins.error) failure = ins.error.message;
+    }
+
+    if (failure) {
+      if (newPath) await client.storage.from("product-images").remove([newPath]);
+      formMessage("Could not save the product: " + failure, true);
+      btn.disabled = false;
+      return;
+    }
+
+    showToast(editing ? "Changes saved." : "Product published. It is live now.");
+    editingId = null;
+    renderDashboard();
+    loadProducts();
+  }
+
+  async function loadMyProducts() {
+    var box = document.getElementById("my-products");
+    if (!box || !currentApp) return;
+    var r = await client.from("seller_products")
+      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock,condition")
+      .eq("seller_application_id", currentApp.id)
+      .order("created_at", { ascending: false });
+    if (r.error) { box.textContent = r.error.message; return; }
+    myProducts = r.data || [];
+    if (!myProducts.length) { box.textContent = "No listings yet. Add your first product above."; return; }
+
+    box.innerHTML = myProducts.map(function (p) {
+      var live = p.status === "published";
+      var thumb = p.image_url && /^https:\/\//.test(p.image_url)
+        ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
+        : '<div class="thumb"></div>';
+      return '<div class="seller-item">' +
+        '<div class="seller-item-top">' + thumb + '<div class="grow"><strong>' + esc(p.name) + "</strong><br>" +
+        '<span class="muted">' + esc(money(Number(p.price_kobo) / 100)) + " · " +
+        (live ? "Live" : "Hidden") + (p.in_stock === false ? " · Sold out" : "") + "</span></div></div>" +
+        '<div class="seller-actions">' +
+        '<button class="button button-outline" type="button" data-act="edit" data-id="' + esc(p.id) + '">Edit</button>' +
+        '<button class="button button-outline" type="button" data-act="stock" data-id="' + esc(p.id) + '">' + (p.in_stock === false ? "Back in stock" : "Mark sold out") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="visible" data-id="' + esc(p.id) + '">' + (live ? "Hide" : "Show") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="delete" data-id="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
+        "</div></div>";
+    }).join("");
+  }
+
+  sellerBody.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-act]");
+    if (!button) return;
+    var id = button.dataset.id;
+    var act = button.dataset.act;
+    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!p) return;
+
+    if (act === "edit") { startEdit(id); return; }
+    button.disabled = true;
+
+    if (act === "delete") {
+      if (!window.confirm("Delete this listing permanently?")) { button.disabled = false; return; }
+      var del = await client.from("seller_products").delete().eq("id", id).select("id");
+      if (del.error || !del.data || !del.data.length) {
+        showToast(del.error ? del.error.message : "Could not delete that listing.");
+        button.disabled = false;
+        return;
+      }
+      if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
+      showToast("Listing deleted.");
+    } else {
+      var change = act === "stock"
+        ? { in_stock: p.in_stock === false }
+        : { status: p.status === "published" ? "hidden" : "published" };
+      change.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(change).eq("id", id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) {
+        showToast(upd.error ? upd.error.message : "The change was not saved.");
+        button.disabled = false;
+        return;
+      }
+    }
+    loadMyProducts();
+    loadProducts();
+  });
+
+  /* Buyer: "Chat seller" opens WhatsApp. The number is fetched only when tapped. */
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest('[data-action="whatsapp"]');
+    if (!button || !client) return;
+    var product = findProduct(button.dataset.id);
+    if (!product) return;
+
+    var win = window.open("about:blank", "_blank");
+    button.disabled = true;
+    var r = await client.rpc("seller_contact", { p_product: product.id });
+    button.disabled = false;
+
+    var number = r.error ? "" : waNumber(r.data);
+    if (!number) {
+      if (win) win.close();
+      showToast("This seller's contact is not available right now.");
+      return;
+    }
+    var text = "Hello, I'm interested in \"" + product.name + "\" (" + money(product.price) + ") on SafeBuy NG. Is it still available?";
+    var url = "https://wa.me/" + number + "?text=" + encodeURIComponent(text);
+    if (win) win.location.href = url; else window.location.href = url;
+  });
+
+  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
+    button.addEventListener("click", startSelling);
+  });
+  document.getElementById("seller-close").addEventListener("click", closeSeller);
+  sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
+
+  /* ---------- Auth state: update menus, close dialogs, go home once ---------- */
+  function goHome() {
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+    var chat = document.getElementById("sbm");
+    if (chat) chat.classList.remove("open");
+    document.body.classList.remove("locked");
+    history.replaceState(null, "", location.pathname + location.search + "#home");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  if (client) {
+    client.auth.onAuthStateChange(function (event, session) {
+      currentApp = null;
+      renderAccountMenus(session && session.user ? session.user : null);
+      logout.hidden = !session;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+      if (accountBackdrop.classList.contains("open")) {
+        goHome();
+        setTimeout(goHome, 250);
+      }
+    });
+
+    client.auth.getSession().then(function (result) {
+      var s = result.data && result.data.session;
+      if (s) { logout.hidden = false; renderAccountMenus(s.user); }
+    });
+  }
+
+  setMode("signin");
+})();
+</script>
+
+<script>
+/* Tap a product photo to open its page */
+document.addEventListener("click", function (e) {
+  var art = e.target.closest(".product-art");
+  if (!art) return;
+  var card = art.closest(".product-card");
+  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
+  if (link) window.location.href = link.getAttribute("href");
+});
+
+/* Scroll reveal and header shadow (used by the new layout) */
+(function () {
+  var header = document.getElementById("site-header");
+  window.addEventListener("scroll", function () {
+    if (header) header.classList.toggle("scrolled", window.scrollY > 8);
+  }, { passive: true });
+  var items = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window) || !items.length) return;
+  document.documentElement.classList.add("reveal-on");
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  items.forEach(function (el) { io.observe(el); });
+})();
+</script>
+<!-- Feature scripts (unchanged) -->
+<script src="./shop-extras.js"></script>
+<script src="./messages.js"></script>
+<script src="./notify.js"></script>
+<script src="./verify.js"></script>
+<script src="./lead-capture.js"></script>
+<script src="./buyer-account.js"></script>
+<script src="./orders.js"></script>
+<script src="./account-settings.js"></script>
+<script src="./delivery.js"></script>
+<script src="./delivery-orders.js"></script>
+<script src="./delivery-boost.js"></script>
+<script src="./role-cards.js"></script>
+<script src="./bottom-sheet.js"></script>
+<script src="./pwa.js"></script>
+<script src="./protect-core.js"></script>
+<script src="./protected-option.js"></script>
+<script src="./theme.js"></script>
+</body>
+</html>
+    
