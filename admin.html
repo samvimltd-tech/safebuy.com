@@ -172,6 +172,8 @@ td .button{padding:6px 11px;font-size:12px}
 
   var STATUS_LABEL = { pending: "No badge", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
   var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
+  // Same spelling as the dropdown in the shop app, so coverage always matches what buyers send.
+  var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
 
   var FILTERS = {
     applications: [["pending", "Without badge"], ["approved", "With badge"], ["rejected", "Suspended"], ["all", "All"]],
@@ -816,7 +818,7 @@ td .button{padding:6px 11px;font-size:12px}
     list.innerHTML =
       '<div class="hint">Delivery works only where an area is switched on. Leave City blank to cover a whole state. Switch an area on only when you have verified, approved riders there.</div>' +
       '<div class="item"><div class="actions" style="margin:0"><button class="button" type="button" data-dcovall="on">Switch on all</button><button class="button danger" type="button" data-dcovall="off">Switch off all</button></div></div>' +
-      '<div class="item"><div class="tools" style="margin:0"><input id="cv-state" placeholder="State, e.g. Lagos" maxlength="40"><input id="cv-city" placeholder="City (optional)" maxlength="40"><button class="button" type="button" id="cv-add">Switch on</button></div></div>' +
+      '<div class="item"><div class="tools" style="margin:0"><select id="cv-state" aria-label="State">' + STATES.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("") + '</select><input id="cv-city" placeholder="City (optional)" maxlength="40"><button class="button" type="button" id="cv-add">Switch on</button></div></div>' +
       (rows.length ? rows.map(function (a) {
         return '<div class="item"><span class="pill ' + (a.is_active ? "approved" : "hidden") + '">' + (a.is_active ? "on" : "off") + '</span> <strong class="cap">' +
           esc(a.city ? a.city + ", " + a.state : "All of " + a.state) + '</strong><div class="actions"><button class="button outline" type="button" data-dcov="' + (a.is_active ? "off" : "on") +
@@ -941,8 +943,17 @@ td .button{padding:6px 11px;font-size:12px}
         } else if (d.dcovall) {
           var turnOn = d.dcovall === "on";
           var todo = dAreas.filter(function (a) { return !!a.is_active !== turnOn; });
+          if (turnOn) {
+            // Also add a whole-state row for every Nigerian state that has none yet.
+            var have = {};
+            dAreas.forEach(function (a) { if (!a.city) have[String(a.state).trim().toLowerCase()] = 1; });
+            STATES.forEach(function (s) {
+              var k = s.toLowerCase();
+              if (!have[k]) { todo.push({ state: s, city: "" }); have[k] = 1; }
+            });
+          }
           if (!todo.length) { note("Everything is already " + (turnOn ? "on." : "off.")); return; }
-          if (!window.confirm((turnOn ? "Switch ON " : "Switch OFF ") + todo.length + " areas?")) return;
+          if (!window.confirm((turnOn ? "Switch ON " : "Switch OFF ") + todo.length + " areas? A state with no city covers all of its cities.")) return;
           b.disabled = true;
           for (var i = 0; i < todo.length; i++) {
             await rpc("admin_set_coverage", { p_state: todo[i].state, p_city: todo[i].city || "", p_active: turnOn });
