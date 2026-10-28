@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Buy and sell products across Nigeria, with delivery by approved riders. SafeBuy NG is a marketplace prototype with built-in delivery.">
+<meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
 <!-- seo:start -->
 <link rel="canonical" href="https://samvimltd-tech.github.io/safebuy.com/">
 <meta property="og:type" content="website">
@@ -18,24 +19,24 @@
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"SafeBuy NG","url":"https://samvimltd-tech.github.io/safebuy.com/","description":"Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly."}</script>
 <!-- seo:end -->
-<title>SafeBuy NG | Buy, sell and deliver products in Nigeria</title>
+<title>SafeBuy NG | Shop with Confidence</title>
 <style>
-:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px;--header-h:68px;--shadow:0 1px 2px #173b2810,0 10px 28px #173b2812;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px;--header-h:68px}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--background);color:var(--ink);font-family:var(--font);line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--background);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5;overflow-x:hidden}
 body.locked{overflow:hidden}
 button,input,select,textarea{font:inherit}
 button,a{-webkit-tap-highlight-color:transparent}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
 :focus-visible{outline:3px solid #78d3ad;outline-offset:2px}
+.announcement{padding:8px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
 .container{width:min(1160px,100% - 36px);margin:auto}
 
 /* ---------- Header ---------- */
-header{background:#ffffffeb;-webkit-backdrop-filter:saturate(1.4) blur(10px);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;transition:box-shadow .2s}
-header.scrolled{box-shadow:0 6px 22px #173b2812}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
 .header-row{min-height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:14px}
 .brand{display:flex;align-items:center;gap:9px;flex-shrink:0}
 .brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:#fff;background:var(--green);font-size:22px;font-weight:800}
@@ -58,20 +59,23 @@ header.scrolled{box-shadow:0 6px 22px #173b2812}
 .dd-menu .dd-label{padding:6px 12px 4px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
 .dd-menu .dd-user{padding:8px 12px;font-size:13px;color:var(--muted);word-break:break-all}
 .header-actions{display:flex;align-items:center;gap:8px}
-.button{border:0;border-radius:12px;padding:12px 17px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .15s,box-shadow .15s}
-.button:active{transform:scale(.98)}
+.button{border:0;border-radius:12px;padding:12px 17px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .button-primary{background:var(--green);color:#fff}
 .button-primary:hover{background:var(--green-dark)}
 .button-light{background:var(--green-light);color:var(--green-dark)}
-.button-light:hover{background:#d4f0e1}
-.button-outline{background:var(--white);border:1px solid var(--line);color:var(--ink)}
-.button-outline:hover{border-color:var(--green)}
-.button-lg{padding:14px 22px;font-size:15px;border-radius:14px}
+.button-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
 .button[disabled]{opacity:.55;cursor:not-allowed}
 .header-actions .button{padding:10px 14px;font-size:14px}
-.cart-button{position:relative;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:700;white-space:nowrap;font-size:14px}
+.cart-button{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:700;white-space:nowrap;font-size:14px}
 .cart-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;margin-left:4px;background:var(--green);color:#fff;border-radius:20px;font-size:12px}
-.menu-toggle{display:none;border:1px solid var(--line);background:var(--white);border-radius:12px;width:42px;height:42px;font-size:20px;line-height:1}
+.menu-toggle{display:none;border:1px solid var(--line);background:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;line-height:1}
+
+/* ---------- Delivery bar ---------- */
+.delivery-bar{background:#fff8e8;border-bottom:1px solid #f1d69a;color:#79551b;font-size:13px}
+.delivery-bar.ok{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark)}
+.delivery-bar .container{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:8px 0;text-align:center}
+.delivery-bar button{border:0;background:transparent;color:inherit;font-weight:800;text-decoration:underline;padding:2px 4px;font-size:13px}
+
 /* ---------- Mobile drawer ---------- */
 .drawer-backdrop{position:fixed;inset:0;z-index:45;background:#10271d99;display:none}
 .drawer-backdrop.open{display:block}
@@ -91,137 +95,81 @@ header.scrolled{box-shadow:0 6px 22px #173b2812}
 .drawer .d-user{padding:10px 8px;color:var(--muted);font-size:13px;word-break:break-all}
 
 /* ---------- Hero ---------- */
-.hero{padding:clamp(16px,3vw,32px) 0 6px}
-.hero-panel{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);align-items:center;gap:clamp(24px,3.5vw,48px);padding:clamp(26px,5vw,60px);border-radius:28px;border:1px solid #d9ecdf;background:radial-gradient(760px 360px at 100% 0,#d3f1de 0,transparent 62%),linear-gradient(135deg,#eef9f2,#f8fcf8);overflow:hidden}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:30px;background:var(--white);color:var(--green-dark);font-size:12px;font-weight:800;letter-spacing:.3px;box-shadow:0 1px 2px #173b2810}
-.eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:#1fae6f}
-.hero h1{margin:18px 0 14px;max-width:640px;font-size:clamp(32px,4.5vw,52px);line-height:1.06;letter-spacing:-.035em}
+.hero{padding:30px 0 24px}
+.hero-panel{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:28px;min-height:320px;padding:clamp(25px,5vw,55px);border-radius:28px;overflow:hidden;background:radial-gradient(circle at 85% 20%,#d5f2df 0,transparent 32%),linear-gradient(120deg,#eaf8ef,#f6fbf6)}
+.eyebrow{display:inline-block;padding:7px 11px;border-radius:30px;background:#fff;color:var(--green-dark);font-size:12px;font-weight:800;letter-spacing:.4px}
+.hero h1{margin:17px 0 13px;max-width:620px;font-size:clamp(34px,5.5vw,56px);line-height:1.08;letter-spacing:-1.8px}
 .hero h1 span{color:var(--green)}
-.hero-lead{max-width:520px;margin:0;color:#4a6156;font-size:clamp(15px,1.6vw,17px);line-height:1.7}
-.hero-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
-.delivery-bar{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:22px;padding:6px 6px 6px 14px;border-radius:999px;border:1px solid #f1d69a;background:#fffaf0;color:#79551b;font-size:13px;font-weight:600}
-.delivery-bar::before{content:"";width:8px;height:8px;border-radius:50%;background:#d9a441;flex-shrink:0}
-.delivery-bar.ok{border-color:#bfe6d1;background:#f2fbf6;color:var(--green-dark)}
-.delivery-bar.ok::before{background:#1fae6f;box-shadow:0 0 0 4px #1fae6f22}
-.delivery-bar button{border:0;border-radius:999px;background:var(--white);color:inherit;font-weight:800;font-size:12px;padding:6px 12px;box-shadow:0 1px 2px #0001}
-.hero-points{display:flex;flex-wrap:wrap;gap:8px 18px;margin:18px 0 0;padding:0;list-style:none;color:#52675c;font-size:13px;font-weight:600}
-.hero-points li::before{content:"✓";margin-right:6px;color:var(--green);font-weight:800}
-.hero-visual{position:relative;display:grid;place-items:center;padding:14px 0 26px}
-.order-card{position:relative;width:min(380px,100%);padding:18px;border-radius:22px;background:var(--white);box-shadow:var(--shadow);border:1px solid #e3efe7}
-.oc-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.oc-thumb{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:#e9eaff;font-size:26px;flex-shrink:0}
-.oc-head b{display:block;font-size:14px}
-.oc-head small{color:var(--muted);font-size:12px}
-.oc-price{margin-left:auto;font-weight:800;font-size:14px}
-.oc-steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:0}
-.oc-steps li{position:relative;display:flex;gap:12px;padding:0 0 14px}
-.oc-steps li:last-child{padding-bottom:0}
-.oc-steps li::before{content:"";position:absolute;left:8px;top:18px;bottom:0;width:2px;background:var(--line)}
-.oc-steps li:last-child::before{display:none}
-.oc-dot{position:relative;z-index:1;flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--white);border:2px solid #cfdcd3;animation:ocStep 6.4s infinite;animation-delay:calc(var(--i) * 1.6s)}
-.oc-steps b{display:block;font-size:13.5px;line-height:1.3}
-.oc-steps small{color:var(--muted);font-size:12px}
-.oc-code{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding:11px 14px;border-radius:13px;background:var(--green-light);color:var(--green-dark);font-size:12px;font-weight:700}
-.oc-code b{font-size:18px;letter-spacing:.35em;margin-right:-.35em}
-.oc-chip{position:absolute;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;background:var(--white);box-shadow:var(--shadow);font-size:12px;font-weight:700;border:1px solid #e3efe7}
-.oc-chip.a{top:-2px;right:-6px}
-.oc-chip.b{bottom:2px;left:6px}
-@keyframes ocStep{0%,22%{background:var(--green);border-color:var(--green);box-shadow:0 0 0 5px #087f5b22}30%,100%{background:var(--white);border-color:#cfdcd3;box-shadow:none}}
+.hero p{max-width:520px;color:#52675c;font-size:16px;line-height:1.8}
+.hero-buttons{display:flex;flex-wrap:wrap;gap:11px;margin-top:22px}
+.hero-art{min-height:220px;display:grid;place-items:center;position:relative}
+.art-circle{width:min(240px,100%);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#c7ecd4;font-size:clamp(80px,12vw,130px);box-shadow:0 20px 50px #087f5b18}
+.floating-note{position:absolute;bottom:5px;right:0;background:#fff;padding:12px 15px;border-radius:14px;box-shadow:0 8px 25px #173b2812;font-size:13px;font-weight:700}
+.quick-links{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+.quick-link{display:flex;align-items:center;gap:11px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;color:var(--ink);font-weight:700;font-size:14px}
+.quick-link:hover{border-color:var(--green);background:var(--green-light)}
+.quick-link .ql-ico{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:11px;background:var(--green-light);font-size:19px}
+.quick-link small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.prototype-notice{margin:0 auto 20px;padding:13px 16px;border:1px solid #f1d69a;background:#fff8e8;border-radius:13px;color:#79551b;font-size:13px}
+.prototype-notice strong{color:#66440c}
 
 /* ---------- Sections / shop ---------- */
-.section{padding:clamp(22px,3.4vw,40px) 0;scroll-margin-top:calc(var(--header-h) + 12px)}
+.section{padding:22px 0;scroll-margin-top:calc(var(--header-h) + 16px)}
 .section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:18px}
-.section-heading h2{margin:0;font-size:clamp(25px,3.6vw,34px);line-height:1.15;letter-spacing:-.03em}
-.section-heading p{margin:6px 0 0;color:var(--muted);font-size:14.5px;max-width:560px}
+.section-heading h2{margin:0;font-size:clamp(24px,4vw,31px);letter-spacing:-.7px}
+.section-heading p{margin:5px 0 0;color:var(--muted);font-size:14px}
 .search-wrap{margin-bottom:14px}
-.search-box{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid #dce5de;border-radius:15px;padding:5px 6px 5px 16px;box-shadow:0 5px 20px #173b2806;transition:border-color .15s,box-shadow .15s}
-.search-box:focus-within{border-color:var(--green);box-shadow:0 0 0 4px #087f5b18}
+.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce5de;border-radius:15px;padding:5px 6px 5px 16px;box-shadow:0 5px 20px #173b2806}
 .search-icon{color:var(--green);font-size:22px}
 .search-box input{width:100%;min-width:0;border:0;outline:none;background:transparent;padding:12px 0;color:var(--ink);font-size:16px}
 .search-box input::placeholder{color:#98a39c}
 .search-box button{flex-shrink:0}
-.categories{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;margin-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.categories::-webkit-scrollbar{display:none}
-.category-button{flex-shrink:0;border:1px solid var(--line);background:var(--white);border-radius:30px;padding:9px 16px;color:#52645a;font-size:13px;font-weight:700;transition:background .15s,color .15s,border-color .15s}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px;margin-bottom:8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.category-button{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 17px;color:#52645a;font-size:13px;font-weight:700}
 .category-button.active,.category-button:hover{background:var(--green);color:#fff;border-color:var(--green)}
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
 .results-line{margin:0;color:var(--muted);font-size:13px}
 .sort-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--white);color:var(--ink);font:inherit}
-.source-banner{margin:0 0 14px;padding:11px 14px;border-radius:12px;font-size:13px;border:1px solid var(--line);background:var(--white)}
-.source-banner.sample{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
-.link-btn{border:0;background:transparent;color:inherit;font-weight:800;text-decoration:underline;padding:0 2px}
-.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-.product-card{min-width:0;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s,border-color .2s}
-.product-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#d5e5db}
-.product-art{position:relative;aspect-ratio:4/3;display:grid;place-items:center;font-size:64px;background:#edf6ef;cursor:pointer;overflow:hidden}
-.product-art .tag{position:absolute;top:10px;left:10px;z-index:1;padding:5px 9px;border-radius:8px;background:var(--white);color:var(--green-dark);font-size:10px;font-weight:800;box-shadow:0 1px 3px #0002}
-.product-card.soldout .product-art img{filter:grayscale(.8);opacity:.7}
+.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
+.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.product-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #173b2810}
+.product-art{position:relative;min-height:175px;aspect-ratio:1.15/1;display:grid;place-items:center;font-size:75px;background:#edf6ef;cursor:pointer}
+.product-art .tag{position:absolute;top:11px;left:11px;z-index:1;padding:5px 8px;border-radius:8px;background:#fff;color:var(--green-dark);font-size:10px;font-weight:800}
 .product-info{padding:14px}
 .product-category{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.product-info h3{margin:6px 0 6px;font-size:15px;line-height:1.35;min-height:2.7em;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.product-info h3 a{color:inherit}
-.product-info h3 a:hover{color:var(--green)}
+.product-info h3{margin:7px 0 8px;font-size:15px;line-height:1.4;min-height:42px;overflow-wrap:anywhere}
 .seller-name{margin:0 0 10px;color:var(--muted);font-size:12px}
 .product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
-.price{color:var(--ink);font-size:18px;font-weight:800;letter-spacing:-.02em}
+.price{color:var(--ink);font-size:17px;font-weight:800}
 .product-bottom .rating{color:#a66a0b;font-size:11px;white-space:nowrap}
 .product-actions{display:grid;grid-template-columns:1fr auto;gap:7px}
-.product-actions .button{padding:10px 9px;font-size:13px}
-.icon-button{border:1px solid var(--line);border-radius:10px;background:var(--white);padding:8px 10px;color:var(--green);font-size:17px}
+.product-actions .button{padding:10px 9px;font-size:12px}
+.icon-button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--green);font-size:17px}
 a.icon-button{display:inline-grid;place-items:center;text-decoration:none}
-.product-card.skeleton{pointer-events:none}
-.product-card.skeleton .product-art{background:linear-gradient(100deg,#edf2ee 30%,#f7faf8 50%,#edf2ee 70%);background-size:200% 100%;animation:shimmer 1.3s infinite linear}
-.sk{display:block;height:12px;margin:10px 0;border-radius:6px;background:linear-gradient(100deg,#edf2ee 30%,#f7faf8 50%,#edf2ee 70%);background-size:200% 100%;animation:shimmer 1.3s infinite linear}
-.sk.s{width:40%}.sk.m{width:70%}.sk.l{width:90%}.sk.btn{height:38px;border-radius:10px;margin-top:16px}
-@keyframes shimmer{to{background-position:-200% 0}}
-.empty-state{grid-column:1/-1;padding:44px 18px;border:1px dashed #cbd9ce;border-radius:18px;text-align:center;background:var(--white)}
-.empty-state h3{margin:0 0 6px}
-.empty-state p{color:var(--muted);margin:0 0 14px}
-
-/* ---------- Delivery section ---------- */
-.dsteps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;list-style:none;margin:0;padding:0}
-.dstep{padding:20px 18px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius)}
-.dstep .n{display:grid;place-items:center;width:34px;height:34px;margin-bottom:14px;border-radius:11px;background:var(--green-light);color:var(--green-dark);font-weight:800;font-size:14px}
-.dstep h3{margin:0 0 6px;font-size:16px}
-.dstep p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.65}
-.dwhere{display:flex;align-items:center;justify-content:space-between;gap:14px 20px;flex-wrap:wrap;margin-top:14px;padding:18px 20px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius)}
-.dwhere strong{display:block;font-size:15px}
-.dwhere span{color:var(--muted);font-size:13.5px}
-.dw-actions{display:flex;gap:10px;flex-wrap:wrap}
-.faq{display:grid;gap:8px;margin-top:14px}
-.faq details{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:0 16px}
-.faq summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;font-weight:700;font-size:14.5px}
-.faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";flex-shrink:0;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--green-light);color:var(--green-dark);font-weight:800}
-.faq details[open] summary::after{content:"–"}
-.faq p{margin:0 0 15px;color:var(--muted);font-size:13.5px;line-height:1.75}
-
-/* ---------- Sell + ride ---------- */
-.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.duo-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:clamp(22px,3.5vw,34px);border-radius:22px;color:#fff;background:#173b2c}
-.duo-card.ride{background:linear-gradient(135deg,#0e5a43,#087f5b)}
-.duo-card .kicker{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#9fd9bb}
-.duo-card h2{margin:0;font-size:clamp(22px,3vw,28px);line-height:1.2;letter-spacing:-.02em}
-.duo-card p{margin:0 0 8px;max-width:440px;color:#d4e6dc;font-size:14px;line-height:1.75}
-.duo-card .button{margin-top:auto;background:#d8f5e3;color:#145338}
-.duo-card .button:hover{background:#fff}
-
-/* ---------- Footer ---------- */
-footer{margin-top:28px;padding:34px 0 40px;background:var(--white);border-top:1px solid var(--line)}
+.product-info h3 a{color:inherit}
+.product-info h3 a:hover{color:var(--green)}
+.empty-state{grid-column:1/-1;padding:40px 18px;border:1px dashed #cbd9ce;border-radius:18px;text-align:center;background:#fff}
+.empty-state p{color:var(--muted)}
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.trust-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.trust-icon{display:grid;place-items:center;width:43px;height:43px;background:var(--green-light);border-radius:13px;font-size:22px}
+.trust-card h3{margin:13px 0 7px;font-size:16px}
+.trust-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.sell-panel{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:clamp(24px,4vw,38px);border-radius:22px;background:#173b2c;color:#fff}
+.sell-panel h2{margin:0 0 9px;font-size:clamp(24px,4vw,32px)}
+.sell-panel p{max-width:580px;margin:0;color:#d4e6dc;font-size:14px;line-height:1.8}
+.sell-panel .button{flex-shrink:0;background:#d8f5e3;color:#145338}
+footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid var(--line)}
 .footer-row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
 .footer-row p{color:var(--muted);font-size:13px;max-width:420px}
 .footer-cols{display:flex;gap:40px;flex-wrap:wrap}
-.footer-col h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.footer-col h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 .footer-col a,.footer-col button{display:block;padding:4px 0;border:0;background:transparent;font-size:14px;font-weight:600;color:var(--ink);text-align:left}
 .footer-col a:hover,.footer-col button:hover{color:var(--green)}
 .mobile-nav{display:none}
 .toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:13px;background:#173b2c;color:#fff;font-size:14px;box-shadow:0 8px 30px #0002;z-index:80;display:none}
 .toast.show{display:block}
-
-/* scroll reveal (only active when JS adds .reveal-on) */
-.reveal-on .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease;transition-delay:calc(var(--d,0) * 70ms)}
-.reveal-on .reveal.in{opacity:1;transform:none}
 
 /* ---------- Modals ---------- */
 .modal-backdrop{position:fixed;inset:0;z-index:60;padding:20px;background:#10271dcc;display:none;align-items:center;justify-content:center}
@@ -282,56 +230,59 @@ body.sb-seller .cart-button,body.sb-seller .mobile-nav [data-action=cart]{displa
 .footer-col.footer-links{display:block}
 .mode-chip{display:inline-block;margin-left:6px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;background:var(--green-light);color:var(--green-dark)}
 body.sb-seller .mode-chip{background:#fff3e0;color:#7a4a05}
-
 @media (max-width:1000px){
 .nav-link,.dd>button.dd-toggle{padding:9px 9px}
 .header-actions .sell-header{display:none}
+.quick-links{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:900px){
 .product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-.hero-panel{grid-template-columns:1fr}
-.hero-visual{display:none}
-.dsteps{grid-template-columns:repeat(2,minmax(0,1fr))}
-.desktop-nav,.header-actions .dd-account,.header-actions .buyer-header{display:none!important}
+.hero-panel{grid-template-columns:1.15fr .85fr}
+.desktop-nav,.header-actions .dd-account,.header-actions .delivery-btn,.header-actions .buyer-header{display:none!important}
 .menu-toggle{display:inline-grid;place-items:center}
 }
 @media (max-width:650px){
 :root{--header-h:60px}
 body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 .container{width:calc(100% - 26px)}
+.announcement{font-size:11px}
 .header-row{gap:8px}
 .brand-mark{width:36px;height:36px;font-size:20px}
 .brand-name{font-size:19px}
 .cart-button{display:none}
-.hero-panel{padding:26px 20px;border-radius:22px}
-.hero h1{font-size:35px;letter-spacing:-.03em}
-.hero-buttons .button{flex:1 1 calc(50% - 5px);padding:13px 12px}
-.delivery-bar{display:flex;border-radius:16px;padding:10px 10px 10px 14px}
-.delivery-bar button{margin-left:auto}
-.section{padding:20px 0}
+.delivery-bar .container{justify-content:flex-start;text-align:left;font-size:12px;padding:7px 0}
+.hero{padding-top:16px}
+.hero-panel{grid-template-columns:1fr;gap:8px;padding:27px 22px;min-height:auto;border-radius:22px}
+.hero h1{font-size:37px;letter-spacing:-1.2px}
+.hero p{font-size:14px}
+.hero-art{min-height:140px}
+.art-circle{width:130px;font-size:68px}
+.floating-note{right:2px;bottom:0;font-size:11px}
+.quick-links{gap:9px}
+.quick-link{padding:11px;font-size:13px;gap:9px}
+.quick-link small{display:none}
+.section{padding:18px 0}
 .section-heading{align-items:start}
+.section-heading h2{font-size:25px}
 .search-box{padding-left:12px}
 .search-box .button{padding:11px}
-.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.product-art{font-size:52px}
+.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.product-art{min-height:135px;font-size:58px}
 .product-info{padding:11px}
-.product-info h3{font-size:14px}
+.product-info h3{font-size:14px;min-height:40px}
 .product-bottom{align-items:start;flex-direction:column;gap:3px}
 .price{font-size:16px}
 .product-actions{grid-template-columns:1fr}
 .product-actions .icon-button{display:none}
 .product-actions .button{width:100%}
-.dsteps{grid-template-columns:1fr;gap:10px}
-.dstep{display:grid;grid-template-columns:34px 1fr;column-gap:14px;padding:16px}
-.dstep .n{grid-row:1/3;margin:0}
-.dwhere{padding:16px}
-.dw-actions,.dw-actions .button{width:100%}
-.duo{grid-template-columns:1fr}
-.duo-card .button{width:100%}
+.trust-grid{grid-template-columns:1fr}
+.trust-card{padding:18px}
+.sell-panel{align-items:start;flex-direction:column}
+.sell-panel .button{width:100%}
 .footer-row{flex-direction:column}
 .modal-backdrop{padding:0;align-items:flex-end}
 .modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
-.mobile-nav{position:fixed;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#ffffffef;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
+.mobile-nav{position:fixed;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
 .mobile-nav a,.mobile-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0;min-height:48px}
 .mobile-nav .nav-icon{font-size:20px;line-height:1.1}
 .mobile-nav .current{color:var(--green)}
@@ -340,15 +291,15 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 }
 @media (prefers-reduced-motion:reduce){
 html{scroll-behavior:auto}
-*,*::before,*::after{transition:none!important;animation:none!important}
-.oc-dot{background:var(--green);border-color:var(--green)}
-.reveal-on .reveal{opacity:1;transform:none}
+*,*::before,*::after{transition:none!important}
 }
 </style>
 <script src="./pwa-install.js"></script>
 </head>
 <body>
-<header id="site-header">
+<div class="announcement">Made for Nigerian shoppers and sellers · NGN prices</div>
+
+<header>
   <div class="container header-row">
     <a class="brand" href="#home" aria-label="SafeBuy NG home">
       <span class="brand-mark">S</span>
@@ -356,21 +307,43 @@ html{scroll-behavior:auto}
     </a>
 
     <nav class="desktop-nav" id="desktop-nav" aria-label="Main navigation">
-      <a class="nav-link" href="#shop" data-spy="shop">Shop</a>
-      <a class="nav-link" href="#sell" data-spy="sell">Sell</a>
-      <a class="nav-link" href="#delivery" data-spy="delivery">Delivery</a>
+      <a class="nav-link" href="#home" data-spy="home">Home</a>
+
       <div class="dd">
-        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false">More <span class="caret">▼</span></button>
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="shop">Shop <span class="caret">▼</span></button>
         <div class="dd-menu" role="menu">
+          <div class="dd-label">Categories</div>
+          <button type="button" data-goto-category="All"><span class="ico">🛍️</span>All products</button>
+          <button type="button" data-goto-category="Electronics"><span class="ico">🎧</span>Electronics</button>
+          <button type="button" data-goto-category="Fashion"><span class="ico">👟</span>Fashion</button>
+          <button type="button" data-goto-category="Home"><span class="ico">🏠</span>Home &amp; living</button>
+          <button type="button" data-goto-category="Beauty"><span class="ico">🧴</span>Beauty</button>
+          <button type="button" data-goto-category="Groceries"><span class="ico">🍚</span>Groceries</button>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="sell">Sell <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <button type="button" data-action="sell"><span class="ico">🏪</span>Start selling / My shop</button>
           <button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>
+          <a href="#sell"><span class="ico">ℹ️</span>Why sell with us</a>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="how-it-works">Help <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
+          <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
           <button type="button" data-action="deliver"><span class="ico">🏍️</span>Deliver with us</button>
-          <button type="button" data-action="delivery"><span class="ico">📍</span>Delivery areas</button>
           <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
         </div>
       </div>
     </nav>
 
     <div class="header-actions">
+      <button class="button button-outline delivery-btn" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
       <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
 
       <button class="button button-primary signin-btn" type="button" data-action="account">Sign in</button>
@@ -387,6 +360,13 @@ html{scroll-behavior:auto}
     </div>
   </div>
 </header>
+
+<div class="delivery-bar" id="delivery-bar" role="status">
+  <div class="container">
+    <span id="delivery-bar-text">🚚 Delivery is not available in your area yet.</span>
+    <button type="button" data-action="delivery">Show areas available</button>
+  </div>
+</div>
 
 <!-- Mobile drawer -->
 <div class="drawer-backdrop" id="drawer-backdrop"></div>
@@ -423,7 +403,6 @@ html{scroll-behavior:auto}
         <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
         <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
         <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
-        <a href="#delivery">🧭 How delivery works</a>
         <button type="button" data-action="delivery">📍 Delivery areas</button>
         <button type="button" data-action="deliver">🏍️ Deliver with us</button>
       </div>
@@ -435,7 +414,7 @@ html{scroll-behavior:auto}
     <details>
       <summary>❓ Help</summary>
       <div class="d-links">
-        <a href="#delivery">How delivery works</a>
+        <a href="#how-it-works">How it works</a>
         <button type="button" data-action="safety">🛡️ Safety tips</button>
       </div>
     </details>
@@ -444,58 +423,45 @@ html{scroll-behavior:auto}
 </aside>
 
 <main id="home">
-  <!-- Hero: one message, two actions, delivery status -->
   <section class="hero">
     <div class="container">
       <div class="hero-panel">
-        <div class="hero-copy">
-          <span class="eyebrow">Marketplace + delivery · Nigeria</span>
-          <h1>Buy and sell products.<br><span>We handle the delivery.</span></h1>
-          <p class="hero-lead">Shop from Nigerian sellers, open your own shop in minutes, and get orders to the door with approved riders.</p>
+        <div>
+          <span class="eyebrow">YOUR EVERYDAY MARKETPLACE</span>
+          <h1>Good finds.<br><span>Better shopping.</span></h1>
+          <p>Discover fashion, electronics, home essentials and more from one simple marketplace made for Nigeria.</p>
           <div class="hero-buttons">
-            <a class="button button-primary button-lg" href="#shop">Shop products</a>
-            <button class="button button-outline button-lg" type="button" data-action="sell">Start selling</button>
+            <a class="button button-primary" href="#shop">Explore products →</a>
+            <a class="button button-outline" href="#how-it-works">How it works</a>
           </div>
-          <div class="delivery-bar" id="delivery-bar" role="status">
-            <span id="delivery-bar-text">Choose your area to check delivery.</span>
-            <button type="button" id="delivery-bar-btn" data-action="delivery">Check my area</button>
-          </div>
-          <ul class="hero-points" aria-label="Why SafeBuy NG">
-            <li>Verified-seller badges</li>
-            <li>Approved delivery riders</li>
-            <li>Handover confirmed by code</li>
-          </ul>
         </div>
-
-        <div class="hero-visual" aria-hidden="true">
-          <div class="order-card">
-            <div class="oc-head">
-              <span class="oc-thumb">🎧</span>
-              <div><b>Wireless headphones</b><small>Example order</small></div>
-              <span class="oc-price">₦18,500</span>
-            </div>
-            <ol class="oc-steps">
-              <li style="--i:0"><span class="oc-dot"></span><div><b>Seller marks it ready</b><small>Packed for pickup</small></div></li>
-              <li style="--i:1"><span class="oc-dot"></span><div><b>Nearest rider accepts</b><small>Approved by SafeBuy NG</small></div></li>
-              <li style="--i:2"><span class="oc-dot"></span><div><b>On the way to you</b><small>Item collected from the seller</small></div></li>
-              <li style="--i:3"><span class="oc-dot"></span><div><b>Delivered</b><small>You check it, then share your code</small></div></li>
-            </ol>
-            <div class="oc-code"><span>Delivery code</span><b>••••</b></div>
-          </div>
-          <span class="oc-chip a">✓ Verified seller</span>
-          <span class="oc-chip b">🏍️ Approved rider</span>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-circle">🛍️</div>
+          <div class="floating-note">✨ Discover something good</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Shop -->
+  <div class="container">
+    <div class="quick-links" aria-label="Quick links">
+      <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
+      <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
+      <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
+      <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
+    </div>
+    <div class="prototype-notice">
+      <strong>Prototype notice:</strong>
+      This is a demonstration. Payments, escrow, delivery protection and real orders are not active. Do not send money based on this demo.
+    </div>
+  </div>
+
   <section class="section" id="shop">
     <div class="container">
       <div class="section-heading">
         <div>
-          <h2>Shop products</h2>
-          <p id="shop-subtitle">Browse listings from Nigerian sellers.</p>
+          <h2>Find your next favourite</h2>
+          <p id="shop-subtitle">Explore products across popular categories.</p>
         </div>
       </div>
       <div class="search-wrap">
@@ -515,7 +481,7 @@ html{scroll-behavior:auto}
         <button class="category-button" type="button" data-category="Groceries">Groceries</button>
       </div>
 
-      <div class="source-banner" id="source-banner" role="status" aria-live="polite" hidden></div>
+      <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
 
       <div class="toolbar">
         <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
@@ -532,72 +498,42 @@ html{scroll-behavior:auto}
     </div>
   </section>
 
-  <!-- Delivery -->
-  <section class="section" id="delivery">
-    <span id="how-it-works" aria-hidden="true"></span>
+  <section class="section" id="how-it-works">
     <div class="container">
       <div class="section-heading">
         <div>
-          <h2>Delivery you can follow</h2>
-          <p>From the seller to your door in four steps, with a handover code so nothing is marked delivered until you say so.</p>
+          <h2>Shopping should feel simple</h2>
+          <p>Our planned marketplace is being built around clearer information.</p>
         </div>
       </div>
-
-      <ol class="dsteps">
-        <li class="dstep reveal" style="--d:0"><div class="n">1</div><div><h3>Request</h3><p>Choose delivery on your order. You see the fee before you pay.</p></div></li>
-        <li class="dstep reveal" style="--d:1"><div class="n">2</div><div><h3>Rider matched</h3><p>The nearest approved rider is offered the job. Declined? The next one gets it.</p></div></li>
-        <li class="dstep reveal" style="--d:2"><div class="n">3</div><div><h3>Pickup and transit</h3><p>The rider collects from the seller and heads to you. Follow the status.</p></div></li>
-        <li class="dstep reveal" style="--d:3"><div class="n">4</div><div><h3>Confirm with your code</h3><p>Check the item, then give the rider your 4-digit code to complete delivery.</p></div></li>
-      </ol>
-
-      <div class="dwhere reveal">
-        <div>
-          <strong id="dw-where-title">Where we deliver</strong>
-          <span id="dw-where-text">Delivery opens area by area, once each has approved riders.</span>
-        </div>
-        <div class="dw-actions">
-          <button class="button button-primary" type="button" data-action="delivery">Check my area</button>
-          <button class="button button-outline" type="button" data-action="deliver">Become a rider</button>
-        </div>
-      </div>
-
-      <div class="faq reveal">
-        <details>
-          <summary>How is my rider chosen?</summary>
-          <p>SafeBuy NG offers each job to one approved rider at a time, starting with the nearest. If a rider declines or does not answer, the next rider gets it. Only one rider can ever hold a job.</p>
-        </details>
-        <details>
-          <summary>What does delivery cost, and who gets paid?</summary>
-          <p>The fee depends on whether pickup and drop-off are in the same city, the same state or different states, and you see it before you pay. You pay the fee to SafeBuy NG, and the rider is paid only after delivery is confirmed.</p>
-        </details>
-        <details>
-          <summary>What if no rider is found?</summary>
-          <p>You will see “No rider yet” while our team steps in. If we cannot find one, you get a full refund of the delivery fee, or a free retry if you prefer.</p>
-        </details>
-        <details>
-          <summary>Who can ride with SafeBuy NG?</summary>
-          <p>Individual riders and delivery companies can apply. We check each rider’s ID and documents before anyone can take a job.</p>
-        </details>
+      <div class="trust-grid">
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🔎</div>
+          <h3>Discover products</h3>
+          <p>Compare product details and prices before deciding what to buy.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">👤</div>
+          <h3>Know the seller</h3>
+          <p>Every shop shows a clear Verified or Unverified label. Verification is added by SafeBuy NG, and shops that break the rules can be suspended. Detailed identity checks and reviews are limited in this demo.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🧾</div>
+          <h3>Clear order records</h3>
+          <p>The future service will need real order tracking, payment confirmation and a documented process for resolving problems.</p>
+        </article>
       </div>
     </div>
   </section>
 
-  <!-- Sell + ride -->
   <section class="section" id="sell">
     <div class="container">
-      <div class="duo">
-        <div class="duo-card reveal" style="--d:0">
-          <span class="kicker">For sellers</span>
-          <h2>Open a shop in one step</h2>
-          <p>List products with photos straight away. Buyers contact you on WhatsApp, and SafeBuy riders handle delivery.</p>
-          <button class="button" type="button" data-action="sell">Start selling →</button>
+      <div class="sell-panel">
+        <div>
+          <h2>Have products to sell?</h2>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Create a shop in one step and list products with photos straight away. Shoppers contact you directly on WhatsApp.</p>
         </div>
-        <div class="duo-card ride reveal" style="--d:1">
-          <span class="kicker">For riders and companies</span>
-          <h2>Earn by delivering orders</h2>
-          <p>Apply as an individual rider or a delivery company. Once approved, you receive nearby jobs and get paid after each confirmed delivery.</p>
-          <button class="button" type="button" data-action="deliver">Deliver with us →</button>
-        </div>
+        <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
       </div>
     </div>
   </section>
@@ -608,9 +544,9 @@ html{scroll-behavior:auto}
     <div>
       <a class="brand" href="#home">
         <span class="brand-mark">S</span>
-        <span class="brand-name">SafeBuy NG</span>
+        <span class="brand-name">SafeBuy <span>NG</span></span>
       </a>
-      <p>A Nigerian marketplace for products and delivery, in development. Payments and delivery are not live in every area yet.</p>
+      <p>A Nigerian marketplace prototype in development. No real payments or buyer-protection services are currently active.</p>
       <p>© <span id="year">2026</span> SafeBuy NG</p>
     </div>
     <nav class="footer-cols" aria-label="Footer navigation">
@@ -630,10 +566,9 @@ html{scroll-behavior:auto}
         <button type="button" data-action="sell">Sell with us</button>
       </div>
       <div class="footer-col footer-links">
-        <h4>Delivery</h4>
-        <a href="#delivery">How it works</a>
+        <h4>Help</h4>
+        <a href="#how-it-works">How it works</a>
         <button type="button" data-action="delivery">Delivery areas</button>
-        <button type="button" data-action="deliver">Deliver with us</button>
         <button type="button" data-action="safety">Safety tips</button>
         <a href="#home">Back to top ↑</a>
       </div>
@@ -813,31 +748,22 @@ function getVisibleProducts() {
   return list;
 }
 
-function skeletonCards(n) {
-  const one = '<article class="product-card skeleton" aria-hidden="true"><div class="product-art"></div>' +
-    '<div class="product-info"><i class="sk s"></i><i class="sk l"></i><i class="sk m"></i><i class="sk btn"></i></div></article>';
-  return new Array(n + 1).join(one);
-}
-
 function renderProducts() {
   if (productSource === "loading") {
     resultsLine.textContent = "Loading products…";
-    productGrid.setAttribute("aria-busy", "true");
-    productGrid.innerHTML = skeletonCards(8);
+    productGrid.innerHTML = "";
     return;
   }
-  productGrid.removeAttribute("aria-busy");
 
   const visible = getVisibleProducts();
-  resultsLine.textContent = "Showing " + visible.length + (productSource === "sample" ? " sample" : "") +
-    " product" + (visible.length === 1 ? "" : "s");
+  const label = productSource === "supabase" ? "Supabase" : "sample";
+  resultsLine.textContent = "Showing " + visible.length + " " + label + " product" + (visible.length === 1 ? "" : "s");
 
   if (visible.length === 0) {
     if (products.length === 0 && productSource === "supabase") {
       productGrid.innerHTML =
         '<div class="empty-state"><h3>No products yet</h3>' +
-        '<p>No seller has published a listing yet. Be the first.</p>' +
-        '<button class="button button-primary" type="button" data-action="sell">Start selling</button></div>';
+        '<p>No approved seller has published a listing yet. Check back soon.</p></div>';
     } else {
       productGrid.innerHTML =
         '<div class="empty-state"><h3>No matching products found</h3>' +
@@ -849,7 +775,7 @@ function renderProducts() {
 
   productGrid.innerHTML = visible.map(function (p) {
     return `
-      <article class="product-card${p.inStock ? "" : " soldout"}">
+      <article class="product-card">
         <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
           ${!p.inStock ? '<span class="tag">Sold out</span>' : p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
           ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
@@ -860,7 +786,7 @@ function renderProducts() {
           <p class="seller-name">Sold by ${esc(p.seller)}${productSource === "supabase" ? (p.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
           <div class="product-bottom">
             <span class="price">${money(p.price)}</span>
-            ${productSource === "sample" ? '<span class="rating">Sample</span>' : ""}
+            ${productSource === "sample" ? '<span class="rating">★ Sample</span>' : ""}
           </div>
           <div class="product-actions">
             ${productSource === "supabase"
@@ -978,7 +904,6 @@ document.addEventListener("click", function (event) {
   if (action === "add") addToCart(id);
   if (action === "view") openProduct(id);
   if (action === "cart") { closeDrawer(); showCart(); }
-  if (action === "retry-products" && window.__sbReloadProducts) window.__sbReloadProducts();
   if (action === "clear-search") {
     searchInput.value = "";
     searchTerm = "";
@@ -996,17 +921,17 @@ document.getElementById("year").textContent = new Date().getFullYear();
 function renderSource() {
   const banner = document.getElementById("source-banner");
   const sub = document.getElementById("shop-subtitle");
+  banner.className = "source-banner " + productSource;
 
-  if (productSource === "sample") {
-    banner.className = "source-banner sample";
-    banner.innerHTML = "<strong>Live listings could not be loaded.</strong> These are sample products, not real listings. " +
-      esc(sourceMessage) + ' <button type="button" class="link-btn" data-action="retry-products">Try again</button>';
-    banner.hidden = false;
+  if (productSource === "supabase") {
+    banner.textContent = "✓ Supabase products — loaded live from the database.";
+    sub.textContent = "Browse products from our database.";
+  } else if (productSource === "sample") {
+    banner.innerHTML = "<strong>⚠ Database unavailable.</strong> These are sample products, not real listings. " + esc(sourceMessage);
     sub.textContent = "Showing sample products only.";
   } else {
-    banner.hidden = true;
-    banner.textContent = "";
-    sub.textContent = "Browse listings from Nigerian sellers.";
+    banner.textContent = "Connecting to Supabase…";
+    sub.textContent = "Explore products across popular categories.";
   }
 }
 
@@ -1028,11 +953,8 @@ updateCartCount();
 (function () {
   "use strict";
 
-  /* ---- Delivery areas ----
-     This built-in list is only a fallback. The live list comes from Supabase (table delivery_supported_areas,
-     the same table Admin > Delivery > Coverage edits) and replaces it as soon as it loads.
-     Set window.SAFEBUY_DELIVERY_AREAS before this script to change the fallback. */
-  var DELIVERY_AREAS = (window.SAFEBUY_DELIVERY_AREAS || [
+  /* ---- Delivery areas: edit this list, or set window.SAFEBUY_DELIVERY_AREAS before this script ---- */
+  var DELIVERY_AREAS = window.SAFEBUY_DELIVERY_AREAS || [
     { name: "Lagos", status: "available" },
     { name: "Abuja (FCT)", status: "available" },
     { name: "Rivers (Port Harcourt)", status: "soon" },
@@ -1045,7 +967,7 @@ updateCartCount();
     { name: "Ogun", status: "soon" },
     { name: "Edo", status: "soon" },
     { name: "Other states", status: "soon" }
-  ]).slice();
+  ];
 
   var $ = function (id) { return document.getElementById(id); };
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -1125,76 +1047,34 @@ updateCartCount();
 
   /* ---- Delivery areas ---- */
   function chosenArea() { return store("safebuy_area"); }
-  function norm(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
-  function titleCase(s) { return String(s || "").replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); }); }
-
-  /* Find an area by the name the visitor saved. Accepts exact names and older saved names such as "Abuja (FCT)". */
-  function findArea(name) {
-    var exact = DELIVERY_AREAS.filter(function (x) { return x.name === name; })[0];
-    if (exact) return exact;
-    var n = norm(name);
-    if (!n) return null;
-    return DELIVERY_AREAS.filter(function (x) {
-      var s = x.state || norm(x.name);
-      return s && (n === norm(x.name) || n.indexOf(s) !== -1) && (!x.city || n.indexOf(x.city) !== -1);
-    })[0] || null;
-  }
   function areaStatus(name) {
-    var a = findArea(name);
+    var a = DELIVERY_AREAS.filter(function (x) { return x.name === name; })[0];
     return a ? a.status : null;
   }
-  /* Areas that are open, without listing a city separately when its whole state is already open. */
-  function openAreas() {
-    var open = DELIVERY_AREAS.filter(function (a) { return a.status === "available"; });
-    var wholeStates = {};
-    open.forEach(function (a) { if (a.state && !a.city) wholeStates[a.state] = 1; });
-    return open.filter(function (a) { return !(a.city && wholeStates[a.state]); });
-  }
-  function availCount() { return openAreas().length; }
-
   function renderDeliveryBar() {
-    var bar = $("delivery-bar"), txt = $("delivery-bar-text"), btn = $("delivery-bar-btn"), area = chosenArea();
-    if (!bar || !txt) return;
+    var bar = $("delivery-bar"), txt = $("delivery-bar-text"), area = chosenArea();
     var status = area ? areaStatus(area) : null;
-    var n = availCount();
-    bar.classList.toggle("ok", status === "available" || (!area && n > 0));
-    if (area) {
-      txt.textContent = status === "available" ? "Delivery is available in " + area : "Delivery isn’t open in " + area + " yet";
+    if (status === "available") {
+      bar.classList.add("ok");
+      txt.textContent = "✓ Delivery is available in " + area + ".";
     } else {
-      txt.textContent = n > 0 ? "Delivery is open in " + n + " area" + (n === 1 ? "" : "s") : "Delivery is opening soon";
+      bar.classList.remove("ok");
+      txt.textContent = area
+        ? "🚚 Delivery is not available in " + area + " yet."
+        : "🚚 Delivery is not available in your area yet.";
     }
-    if (btn) btn.textContent = area ? "Change area" : "Check my area";
   }
-
-  /* The "Where we deliver" line in the delivery section */
-  function renderWhere() {
-    var t = $("dw-where-title"), d = $("dw-where-text");
-    if (!t || !d) return;
-    var open = openAreas();
-    var soon = DELIVERY_AREAS.filter(function (a) { return a.status !== "available"; }).length;
-    if (!open.length) {
-      t.textContent = "Delivery is opening soon";
-      d.textContent = "We switch on each area once it has approved riders.";
-      return;
-    }
-    var names = open.slice(0, 4).map(function (a) { return a.name; }).join(", ") + (open.length > 4 ? " and " + (open.length - 4) + " more" : "");
-    t.textContent = "Delivery is open in " + names;
-    d.textContent = soon > 0 ? soon + " more area" + (soon === 1 ? "" : "s") + " coming soon." : "More areas open as we add approved riders.";
-  }
-
   function renderAreas() {
     var q = $("area-search").value.trim().toLowerCase();
     var list = DELIVERY_AREAS.filter(function (a) { return !q || a.name.toLowerCase().indexOf(q) !== -1; });
     var avail = list.filter(function (a) { return a.status === "available"; });
     var soon = list.filter(function (a) { return a.status !== "available"; });
     var cur = chosenArea();
-    var curArea = cur ? findArea(cur) : null;
 
     function row(a) {
-      var sel = curArea === a;
       return '<li><span>' + esc(a.name) + ' <span class="chip' + (a.status === "available" ? " ok\">Available" : "\">Coming soon") + '</span></span>' +
-        '<button class="button ' + (sel ? "button-primary" : "button-outline") + '" type="button" data-area="' + esc(a.name) + '">' +
-        (sel ? "Selected" : "Use this area") + '</button></li>';
+        '<button class="button ' + (cur === a.name ? "button-primary" : "button-outline") + '" type="button" data-area="' + esc(a.name) + '">' +
+        (cur === a.name ? "Selected" : "Use this area") + '</button></li>';
     }
     var html = "";
     if (avail.length) html += '<div class="area-group">Delivery available</div><ul class="area-list">' + avail.map(row).join("") + "</ul>";
@@ -1213,38 +1093,11 @@ updateCartCount();
     if (!b) return;
     store("safebuy_area", b.dataset.area);
     renderDeliveryBar(); renderAreas();
-    document.dispatchEvent(new Event("sb:area"));
     showToast(areaStatus(b.dataset.area) === "available"
       ? "Delivery is available in " + b.dataset.area + "."
       : "Delivery is not available in " + b.dataset.area + " yet.");
   });
-
-  /* Replace the built-in list with the live one from Supabase. Returns false when there is nothing to show. */
-  function setAreasFromDb(rows) {
-    var seen = {}, list = [];
-    (rows || []).forEach(function (r) {
-      var state = norm(r.state), city = norm(r.city);
-      if (!state) return;
-      var name = city ? titleCase(city) + ", " + titleCase(state) : titleCase(state);
-      var key = name.toLowerCase();
-      var status = r.is_active ? "available" : "soon";
-      if (seen[key]) { if (status === "available") seen[key].status = "available"; return; }
-      seen[key] = { name: name, state: state, city: city, status: status };
-      list.push(seen[key]);
-    });
-    if (!list.length) return false;
-    list.sort(function (a, b) {
-      return (a.status === "available" ? 0 : 1) - (b.status === "available" ? 0 : 1) || a.name.localeCompare(b.name);
-    });
-    DELIVERY_AREAS.length = 0;
-    list.forEach(function (a) { DELIVERY_AREAS.push(a); });
-    renderDeliveryBar(); renderWhere();
-    if ($("delivery-backdrop").classList.contains("open")) renderAreas();
-    document.dispatchEvent(new Event("sb:area"));
-    return true;
-  }
   renderDeliveryBar();
-  renderWhere();
 
   /* ---- Generic actions: delivery + safety ---- */
   document.addEventListener("click", function (e) {
@@ -1315,7 +1168,7 @@ updateCartCount();
   setTimeout(queueSync, 1500);
 
   /* ---- Scroll spy (desktop + mobile nav) ---- */
-  var spyIds = ["home", "shop", "delivery", "sell"];
+  var spyIds = ["home", "shop", "how-it-works", "sell"];
   function spy() {
     var y = window.scrollY + 120, cur = "home";
     spyIds.forEach(function (id) {
@@ -1344,113 +1197,43 @@ updateCartCount();
   if (cartMaster) new MutationObserver(mirrorCart).observe(cartMaster, { childList: true, characterData: true, subtree: true });
   mirrorCart();
 
-  /* expose for the account script and the live delivery-area loader */
-  window.__sbNav = { openDelivery: openDelivery, areas: DELIVERY_AREAS, setAreas: setAreasFromDb };
+  /* expose for the account script */
+  window.__sbNav = { openDelivery: openDelivery };
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>');</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="./supabase-config.js"></script>
 <script>
 (function () {
   "use strict";
 
   var cfg = window.SAFEbuySupabaseConfig;
-  var cfgOk = !!(cfg && cfg.url && cfg.publishableKey);
   var client = null;
   var failReason = "";
-  var VIEW = "seller_products_public";
 
   if (!window.supabase) {
     failReason = "The Supabase library did not load.";
-  } else if (!cfgOk) {
+  } else if (!cfg || !cfg.url || !cfg.publishableKey) {
     failReason = "supabase-config.js is missing, not loaded, or incomplete.";
   } else {
     try {
       client = window.supabase.createClient(cfg.url, cfg.publishableKey);
       window.safeBuySupabase = client;
-      document.dispatchEvent(new CustomEvent("sb:supabase-ready"));
     } catch (e) {
       failReason = "Could not create the Supabase client: " + e.message;
       console.error("SafeBuy: could not create Supabase client.", e);
     }
   }
 
-  /* ---------- Small helpers ---------- */
-  function withTimeout(promise, ms) {
-    var t;
-    var timeout = new Promise(function (_, reject) {
-      t = setTimeout(function () { reject(new Error("The request timed out.")); }, ms);
-    });
-    return Promise.race([promise, timeout]).then(
-      function (v) { clearTimeout(t); return v; },
-      function (e) { clearTimeout(t); throw e; }
-    );
-  }
-
-  function unwrap(res) {
-    if (res && res.error) {
-      var e = new Error(res.error.message || "Database error");
-      e.code = res.error.code;
-      e.status = res.status;
-      throw e;
-    }
-    return (res && res.data) || [];
-  }
-
-  /* Direct REST request, used when the Supabase library is missing or one of its calls fails. */
-  function restGet(path) {
-    var controller = typeof AbortController === "function" ? new AbortController() : null;
-    var timer = controller ? setTimeout(function () { controller.abort(); }, 8000) : null;
-    return fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/" + path, {
-      headers: { apikey: cfg.publishableKey, Accept: "application/json" },
-      signal: controller ? controller.signal : undefined
-    }).then(function (res) {
-      if (timer) clearTimeout(timer);
-      if (!res.ok) {
-        return res.text().then(function (txt) {
-          var e = new Error("HTTP " + res.status + " " + txt.slice(0, 160));
-          e.status = res.status;
-          throw e;
-        });
-      }
-      return res.json();
-    }, function (e) { if (timer) clearTimeout(timer); throw e; });
-  }
-
-  /* Try each task in order. Resolves with the first success; rejects with the FIRST error if all fail. */
-  function firstThat(tasks) {
-    if (!tasks.length) return Promise.reject(new Error(failReason || "No connection method is available."));
-    var firstErr = null;
-    var deadline = Date.now() + 15000;
-    return tasks.reduce(function (chain, task) {
-      return chain.catch(function (e) {
-        if (e && !firstErr) firstErr = e;
-        if (firstErr && Date.now() > deadline) throw firstErr;
-        return task();
-      });
-    }, Promise.reject(null)).catch(function (e) { throw firstErr || e; });
-  }
-
-  function explain(err) {
-    var m = String((err && err.message) || err || "");
-    var s = err && err.status;
-    if (/did not load/i.test(m)) return "The Supabase library could not be downloaded. Check the connection or any ad-blocker.";
-    if (/supabase-config/i.test(m)) return "supabase-config.js is missing or incomplete.";
-    if (s === 401 || s === 403 || /invalid api key|jwt|apikey/i.test(m)) return "The database rejected the key in supabase-config.js.";
-    if (s === 404 || /PGRST205|does not exist|could not find the table|schema cache/i.test(m)) return "The “" + VIEW + "” view was not found. Run the products SQL in Supabase.";
-    if (/timed out|failed to fetch|networkerror|load failed|abort/i.test(m)) return "The database could not be reached. If the Supabase project is paused, restore it from the dashboard.";
-    return m;
-  }
-
   /* ---------- Load products ---------- */
+  function fail(message) {
+    console.warn("SafeBuy:", message);
+    setProducts(sampleProducts, "sample", message);
+  }
+
   function mapRows(rows) {
-    // Newest first, done here so a missing created_at column can never break the query.
-    var sorted = (rows || []).slice().sort(function (a, b) {
-      return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0);
-    });
-    return sorted.map(function (r, i) {
+    return (rows || []).map(function (r, i) {
       return normalizeProduct({
         id: r.id,
         name: r.name,
@@ -1467,71 +1250,60 @@ updateCartCount();
     });
   }
 
-  function productTasks() {
-    var t = [];
-    if (client) {
-      t.push(function () { return withTimeout(client.from(VIEW).select("*").order("created_at", { ascending: false }), 8000).then(unwrap); });
-      t.push(function () { return withTimeout(client.from(VIEW).select("*"), 8000).then(unwrap); });
-    }
-    if (cfgOk) {
-      t.push(function () { return restGet(VIEW + "?select=*&order=created_at.desc"); });
-      t.push(function () { return restGet(VIEW + "?select=*"); });
-    }
-    return t;
+  /* Direct REST request: used if the Supabase library fails for any reason. */
+  function restFallback(reason) {
+    console.warn("SafeBuy: library path failed (" + reason + "). Trying a direct request.");
+    if (!cfg || !cfg.url || !cfg.publishableKey) { fail(reason); return; }
+
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = setTimeout(function () { if (controller) controller.abort(); }, 10000);
+
+    fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+      headers: { apikey: cfg.publishableKey, Accept: "application/json" },
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            throw new Error("HTTP " + res.status + " " + t.slice(0, 160));
+          });
+        }
+        return res.json();
+      })
+      .then(function (rows) {
+        clearTimeout(timer);
+        setProducts(mapRows(rows), "supabase");
+      })
+      .catch(function (e) {
+        clearTimeout(timer);
+        fail(reason + " Direct request also failed: " + e.message);
+      });
   }
 
-  var loadSeq = 0;
   function loadProducts() {
-    var seq = ++loadSeq;
-    firstThat(productTasks()).then(function (rows) {
-      if (seq !== loadSeq) return;
-      setProducts(mapRows(rows), "supabase");
-    }).catch(function (e) {
-      if (seq !== loadSeq) return;
-      console.warn("SafeBuy: products could not be loaded.", e);
-      setProducts(sampleProducts, "sample", explain(e));
+    if (!client) { restFallback(failReason); return; }
+
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
+
+    Promise.race([
+      client.from("seller_products_public").select("*").order("created_at", { ascending: false }),
+      timeout
+    ])
+      .then(function (result) {
+        if (result.error) {
+          restFallback("Supabase error: " + result.error.message);
+          return;
+        }
+        setProducts(mapRows(result.data), "supabase");
+      })
+      .catch(function (e) {
+        restFallback("Could not reach Supabase: " + e.message);
+      });
   }
-
-  window.__sbReloadProducts = function () {
-    setProducts([], "loading");
-    loadProducts();
-  };
-  window.addEventListener("online", function () {
-    if (productSource === "sample") window.__sbReloadProducts();
-  });
-
-  /* ---------- Delivery areas (the same table Admin > Delivery > Coverage edits) ---------- */
-  function loadAreas() {
-    var tasks = [];
-    if (client) tasks.push(function () { return withTimeout(client.from("delivery_supported_areas").select("state,city,is_active"), 8000).then(unwrap); });
-    if (cfgOk) tasks.push(function () { return restGet("delivery_supported_areas?select=state,city,is_active"); });
-    if (!tasks.length) return;
-    firstThat(tasks).then(function (rows) {
-      var ok = window.__sbNav && window.__sbNav.setAreas && window.__sbNav.setAreas(rows);
-      if (!ok) console.info("SafeBuy: delivery_supported_areas returned no rows, so the built-in area list is shown. If areas are switched on in Admin, add a public read policy on that table.");
-    }).catch(function (e) {
-      console.info("SafeBuy: using the built-in delivery area list.", e && e.message);
-    });
-  }
-
-  /* Run safeBuyDiagnose() in the browser console to see exactly what is failing. */
-  window.safeBuyDiagnose = function () {
-    var info = { library: !!window.supabase, config: cfgOk, client: !!client, url: cfgOk ? cfg.url : null };
-    return Promise.all([
-      firstThat(productTasks()).then(function (r) { return "OK (" + r.length + " rows)"; }, function (e) { return "FAILED: " + explain(e); }),
-      firstThat(client ? [function () { return withTimeout(client.from("delivery_supported_areas").select("state,city,is_active"), 8000).then(unwrap); }] : cfgOk ? [function () { return restGet("delivery_supported_areas?select=state,city,is_active"); }] : [])
-        .then(function (r) { return "OK (" + r.length + " rows)"; }, function (e) { return "FAILED: " + explain(e); })
-    ]).then(function (r) {
-      info.products = r[0];
-      info.deliveryAreas = r[1];
-      console.table(info);
-      return info;
-    });
-  };
 
   loadProducts();
-  loadAreas();
 
   /* ---------- Account ---------- */
   var form = document.getElementById("account-form");
@@ -2086,7 +1858,7 @@ updateCartCount();
 </script>
 
 <script>
-/* Tap a product photo to open its page */
+/* Tap a product photo to open its page (restored from the original) */
 document.addEventListener("click", function (e) {
   var art = e.target.closest(".product-art");
   if (!art) return;
@@ -2094,23 +1866,6 @@ document.addEventListener("click", function (e) {
   var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
   if (link) window.location.href = link.getAttribute("href");
 });
-
-/* Scroll reveal and header shadow (used by the new layout) */
-(function () {
-  var header = document.getElementById("site-header");
-  window.addEventListener("scroll", function () {
-    if (header) header.classList.toggle("scrolled", window.scrollY > 8);
-  }, { passive: true });
-  var items = document.querySelectorAll(".reveal");
-  if (!("IntersectionObserver" in window) || !items.length) return;
-  document.documentElement.classList.add("reveal-on");
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
-    });
-  }, { threshold: 0.12 });
-  items.forEach(function (el) { io.observe(el); });
-})();
 </script>
 <!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
@@ -2123,7 +1878,8 @@ document.addEventListener("click", function (e) {
 <script src="./account-settings.js"></script>
 <script src="./delivery.js"></script>
 <script src="./delivery-orders.js"></script>
-<script src="./delivery-boost.js"></scripfonl
+  <script src="./delivery-boost.js"></script>
+  <script src="./role-cards.js"></script>
 <script src="./bottom-sheet.js"></script>
 <script src="./pwa.js"></script>
 <script src="./protect-core.js"></script>
@@ -2131,4 +1887,3 @@ document.addEventListener("click", function (e) {
 <script src="./theme.js"></script>
 </body>
 </html>
-    
