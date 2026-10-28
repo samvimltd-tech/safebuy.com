@@ -170,6 +170,9 @@ td .button{padding:6px 11px;font-size:12px}
   var tab = TABS.indexOf(saved.tab) > -1 ? saved.tab : "applications";
   var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open", delivery: saved.fd || "partners" };
 
+  // Set to true after Paystack and the backend functions are set up (see SETUP.md).
+  var AUTO_PAYOUTS = false;
+
   var STATUS_LABEL = { pending: "No badge", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
   var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
   // Same spelling as the dropdown in the shop app, so coverage always matches what buyers send.
@@ -740,7 +743,7 @@ td .button{padding:6px 11px;font-size:12px}
       return '<div class="item' + (fresh["d" + p.id] ? " fresh" : "") + '">' +
         '<span class="pill ' + (p.status === "approved" ? "approved" : p.status === "pending" ? "" : "rejected") + '">' + esc(p.status) + "</span> " +
         "<strong>" + esc(pName(p)) + "</strong> <span class=\"muted\">(" + esc(p.partner_type) + (p.vehicle_type ? ", " + esc(p.vehicle_type) : "") + ")</span><br>" +
-        "Contact: " + esc(p.full_name) + " · " + esc(p.phone) + " · State: <span class=\"cap\">" + esc(p.state) + "</span>" + parent +
+        (p.paystack_recipient_code ? "Bank: " + esc(p.bank_name || "") + " ••••" + esc(p.bank_last4 || "") + " (" + esc(p.bank_account_name || "") + ")<br>" : "") + "Contact: " + esc(p.full_name) + " · " + esc(p.phone) + " · State: <span class=\"cap\">" + esc(p.state) + "</span>" + parent +
         (p.company_reg_no ? " · CAC: " + esc(p.company_reg_no) : "") + (p.invite_code ? " · Code: <strong>" + esc(p.invite_code) + "</strong>" : "") + "<br>" +
         '<span class="muted">Applied ' + esc(when(p.created_at)) + (p.is_online ? " · online now" : "") +
         (p.last_seen_at ? " · last seen " + esc(when(p.last_seen_at)) : "") + "</span>" + dhtml +
@@ -802,13 +805,21 @@ td .button{padding:6px 11px;font-size:12px}
       return !term || [pName(p), p && p.phone, r.reference, r.status].join(" ").toLowerCase().indexOf(term) !== -1;
     });
     var owed = dPays.filter(function (r) { return r.status === "pending"; }).reduce(function (s, r) { return s + Number(r.amount_kobo); }, 0);
-    var head = '<div class="hint"><strong>Owed to partners: ' + money(owed) + "</strong>. Payouts are created only after a delivery is confirmed with the buyer's code and the fee is collected.</div>";
+    var head = '<div class="hint"><strong>Owed to partners: ' + money(owed) + "</strong>. Payouts are created after a delivery is confirmed with the buyer's code. Pay the rider, then tap Mark paid manually.</div>" +
+      (AUTO_PAYOUTS ? '<div class="item"><div class="actions" style="margin:0"><button class="button" type="button" data-dpayall="1">Pay all pending now</button></div></div>' : "");
     if (!rows.length) { list.innerHTML = head + '<div class="empty">No payouts yet.</div>'; return; }
     list.innerHTML = head + rows.map(function (r) {
       var p = pm[r.payee_partner_id];
-      return '<div class="item"><span class="pill ' + (r.status === "paid" ? "approved" : "") + '">' + esc(r.status) + "</span> <strong>" + money(r.amount_kobo) + "</strong> to " + esc(pName(p)) +
-        (p ? " · " + esc(p.phone) : "") + '<br><span class="muted">' + esc(when(r.created_at)) + (r.reference ? " · ref " + esc(r.reference) : "") + "</span>" +
-        (r.status === "pending" ? '<div class="actions"><button class="button" type="button" data-dpay="' + esc(r.id) + '">Mark paid</button></div>' : "") + "</div>";
+      var inflight = r.status === "pending" && r.transfer_ref && !r.payout_blocked;
+      var state = r.status === "paid" ? "paid" : r.payout_blocked ? "needs attention" : inflight ? "sending" : "pending";
+      var bank = p && p.paystack_recipient_code ? esc(p.bank_name || "Bank") + " ••••" + esc(p.bank_last4 || "") : "<strong>no bank account yet</strong>";
+      return '<div class="item"><span class="pill ' + (r.status === "paid" ? "approved" : r.payout_blocked ? "rejected" : "") + '">' + esc(state) + "</span> <strong>" + money(r.amount_kobo) + "</strong> to " + esc(pName(p)) +
+        (p ? " · " + esc(p.phone) : "") + "<br>Bank: " + bank +
+        (r.payout_error ? '<br><span class="muted">' + esc(r.payout_error) + "</span>" : "") +
+        '<br><span class="muted">' + esc(when(r.created_at)) + (r.reference ? " · ref " + esc(r.reference) : "") + "</span>" +
+        (r.status === "pending" ? '<div class="actions">' +
+          (!AUTO_PAYOUTS ? "" : r.payout_blocked ? '<button class="button" type="button" data-dretry="' + esc(r.id) + '">Retry</button>' : inflight ? '<button class="button outline" type="button" data-dpayrun="' + esc(r.id) + '">Check status</button>' : '<button class="button" type="button" data-dpayrun="' + esc(r.id) + '">Pay now</button>') +
+          '<button class="button outline" type="button" data-dpay="' + esc(r.id) + '">Mark paid manually</button></div>' : "") + "</div>";
     }).join("");
   }
 
@@ -900,7 +911,7 @@ td .button{padding:6px 11px;font-size:12px}
     var d = b.dataset;
 
     /* delivery actions */
-    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dcov || d.dcovall || b.id === "cv-add") {
+    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dpayrun || d.dpayall || d.dretry || d.dcov || d.dcovall || b.id === "cv-add") {
       note("");
       try {
         if (d.dview) {
@@ -935,6 +946,22 @@ td .button{padding:6px 11px;font-size:12px}
           if (!window.confirm("Mark this job's delivery fee as collected?")) return;
           b.disabled = true;
           await rpc("admin_mark_fee_collected", { p_job: d.dcollected });
+        } else if (d.dpayrun || d.dpayall) {
+          b.disabled = true;
+          note("Sending…");
+          var pr = await client.functions.invoke("payout-run", { body: d.dpayrun ? { payout_id: d.dpayrun } : {} });
+          if (pr.error) {
+            var em = pr.error.message;
+            try { var ej = await pr.error.context.json(); if (ej && ej.error) em = ej.error; } catch (x) {}
+            throw new Error(em);
+          }
+          var o = pr.data || {};
+          note("Paid " + o.paid + " · sent " + o.sent + " · waiting " + (o.waiting + o.skipped) + " · failed " + o.failed + (o.notes && o.notes.length ? ". " + o.notes.join(" ") : ""), o.failed > 0);
+          await fetchAll();
+          return;
+        } else if (d.dretry) {
+          b.disabled = true;
+          await rpc("admin_retry_payout", { p_payout: d.dretry });
         } else if (d.dpay) {
           var ref = window.prompt("Transfer reference (for your records):", "");
           if (ref === null) return;
