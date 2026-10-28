@@ -123,6 +123,74 @@
     window.scrollTo(0, 0);
   });
 
+
+  /* ---- Site content tab: edit what visitors see on index.html ---- */
+  var FIELDS = [
+    ["h", "Announcement bar"], ["ann_show", "Show the announcement bar", "on"], ["ann_text", "Announcement text", "text"],
+    ["h", "Home page"], ["hero_title", "Main headline", "text"], ["hero_lead", "Line under the headline", "area"],
+    ["role_buy_sub", "Buy card text", "text"], ["role_sell_sub", "Sell card text", "text"], ["role_ride_sub", "Deliver card text", "text"],
+    ["h", "Show or hide sections"], ["show_quicklinks", "Quick links row", "on"], ["show_notice", "Prototype notice", "on"], ["show_pulse", "Marketplace pulse", "on"], ["show_sell", "Sell and rider block", "on"],
+    ["h", "Sell panel"], ["sell_title", "Title", "text"], ["sell_text", "Text", "area"], ["sell_button", "Button label", "text"],
+    ["h", "Safety tips"], ["safety_tips", "One tip per line", "area"],
+    ["h", "Footer"], ["footer_text", "Footer text", "area"],
+    ["h", "Brand"], ["brand_color", "Main colour, for example #087f5b", "text"]
+  ];
+  var siteTab = document.createElement("button");
+  siteTab.type = "button"; siteTab.className = "tab"; siteTab.dataset.plustab = "site"; siteTab.textContent = "Site content";
+  $("main-tabs").appendChild(siteTab);
+  var panel = document.createElement("div");
+  panel.id = "site-panel"; panel.hidden = true; list.parentNode.insertBefore(panel, list.nextSibling);
+  var covered = ["filter-tabs", "tools", "list", "dash-msg"];
+  function headers(extra) { var h = { apikey: cfg.publishableKey, Authorization: "Bearer " + token() }; for (var k in extra) h[k] = extra[k]; return h; }
+  function closeSite() {
+    if (panel.hidden) return;
+    panel.hidden = true; siteTab.classList.remove("active");
+    covered.forEach(function (i) { $(i).hidden = false; });
+  }
+  async function openSite() {
+    document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
+    siteTab.classList.add("active");
+    covered.forEach(function (i) { $(i).hidden = true; });
+    panel.hidden = false; panel.innerHTML = '<p class="muted">Loading…</p>';
+    var v = {};
+    try { var r = await fetch(base + "/rest/v1/site_content?key=eq.site&select=value", { headers: headers() }); if (r.ok) { var rows = await r.json(); v = (rows[0] && rows[0].value) || {}; } else throw 0; }
+    catch (e) { panel.innerHTML = '<div class="empty">Could not read site content. Run site-content.sql in Supabase first.</div>'; return; }
+    panel.innerHTML = '<p class="muted">Leave a text box empty to keep the page’s own wording. Changes show on the live site the next time a visitor opens it.</p><div class="item"><form id="site-form">' +
+      FIELDS.map(function (f) {
+        if (f[0] === "h") return '<h3 style="margin:18px 0 4px;font-size:15px">' + esc(f[1]) + "</h3>";
+        var id = "sc-" + f[0], val = v[f[0]];
+        if (f[2] === "on") return '<label style="display:flex;gap:9px;align-items:center;font-weight:400"><input type="checkbox" id="' + id + '" style="width:auto"' + (val === false ? "" : " checked") + "> " + esc(f[1]) + "</label>";
+        if (f[2] === "area") return '<label for="' + id + '">' + esc(f[1]) + '</label><textarea id="' + id + '" rows="3" maxlength="800" style="width:100%;padding:12px;border:1px solid #dce5de;border-radius:12px;font:inherit">' + esc(val || "") + "</textarea>";
+        return '<label for="' + id + '">' + esc(f[1]) + '</label><input id="' + id + '" maxlength="200" value="' + esc(val || "") + '">';
+      }).join("") +
+      '<button class="button full" type="submit">Save changes</button><button class="button outline full" type="button" id="site-reset">Reset everything to the page’s own wording</button></form><p class="msg" id="site-msg" role="status"></p></div>';
+  }
+  async function saveSite(value) {
+    var m = $("site-msg"); m.className = "msg"; m.textContent = "Saving…";
+    try {
+      var r = await fetch(base + "/rest/v1/site_content?on_conflict=key", { method: "POST", headers: headers({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }), body: JSON.stringify({ key: "site", value: value, updated_at: new Date().toISOString() }) });
+      if (!r.ok) throw new Error((await r.text()).slice(0, 160) || "Not saved");
+      m.textContent = "Saved. The live site shows it the next time it loads.";
+    } catch (e) { m.className = "msg err"; m.textContent = "Not saved: " + e.message + " (run site-content.sql, then refresh this page)"; }
+  }
+  siteTab.addEventListener("click", openSite);
+  document.addEventListener("click", function (e) { if (e.target.closest("[data-tab],[data-go]")) closeSite(); });
+  panel.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var out = {};
+    FIELDS.forEach(function (f) {
+      if (f[0] === "h") return;
+      var el = $("sc-" + f[0]);
+      if (f[2] === "on") { if (!el.checked) out[f[0]] = false; }
+      else if (el.value.trim()) out[f[0]] = el.value.trim();
+    });
+    if (out.brand_color && !/^#[0-9a-f]{6}$/i.test(out.brand_color)) { $("site-msg").className = "msg err"; $("site-msg").textContent = "Colour must look like #087f5b."; return; }
+    saveSite(out);
+  });
+  panel.addEventListener("click", function (e) {
+    if (e.target.id === "site-reset" && window.confirm("Remove all your changes and go back to the page's own wording?")) saveSite({}).then(openSite);
+  });
+
   function run() { fillCats(); decorateStats(); decorateItems(); applyCat(); }
   function refresh() {
     run();
