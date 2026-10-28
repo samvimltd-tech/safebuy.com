@@ -6,6 +6,9 @@
   var c = window.safeBuySupabase;
   if (!c) return;
 
+  // Set to true after Paystack and the backend functions are set up (see SETUP.md).
+  var ONLINE_PAYMENTS = false;
+
   var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
   var JOB_LABEL = { searching: "Finding a rider…", offered: "Finding a rider…", assigned: "Rider on the way to the seller", picked_up: "Rider has your item", delivered: "Delivered", unassigned: "No rider yet. SafeBuy NG is working on it", cancelled: "Cancelled" };
 
@@ -14,6 +17,17 @@
   function T(m) { if (window.showToast) window.showToast(m); }
   function user() { return c.auth.getUser().then(function (r) { return r.data && r.data.user; }); }
   async function rpc(n, a) { var r = await c.rpc(n, a || {}); if (r.error) throw r.error; return r.data; }
+  // Call a backend function and return its JSON, or throw a readable error.
+  async function fn(name, payload) {
+    var r = await c.functions.invoke(name, { body: payload });
+    if (r.error) {
+      var msg = r.error.message;
+      try { var j = await r.error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    if (r.data && r.data.error) throw new Error(r.data.error);
+    return r.data;
+  }
   function phone(v) {
     var d = String(v || "").replace(/\D/g, "");
     if (d.indexOf("234") === 0) d = d.slice(3); else if (d.charAt(0) === "0") d = d.slice(1);
@@ -44,6 +58,47 @@
   c.auth.onAuthStateChange(function () { setTimeout(refreshBtn, 0); });
   refreshBtn();
 
+
+  /* ---------- in-app alerts (everyone: buyers, sellers, riders) ---------- */
+  var abk = document.createElement("div");
+  abk.className = "modal-backdrop";
+  abk.innerHTML = '<div class="modal"><div class="modal-top"><h2>Updates</h2><button class="icon-button" type="button" id="da-close" aria-label="Close">✕</button></div><div id="da-body"></div></div>';
+  document.body.appendChild(abk);
+  var abody = abk.querySelector("#da-body");
+  abk.querySelector("#da-close").onclick = function () { abk.classList.remove("open"); };
+  abk.addEventListener("click", function (e) { if (e.target === abk) abk.classList.remove("open"); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") abk.classList.remove("open"); });
+
+  var abtn = document.createElement("button");
+  abtn.className = "button button-outline"; abtn.type = "button"; abtn.hidden = true; abtn.id = "da-btn"; abtn.textContent = "📣 Updates";
+  actions.insertBefore(abtn, btn.nextSibling);
+  var seenTop = null, firstLoad = true;
+
+  async function loadAlerts(openIt) {
+    var u = await user();
+    if (!u) { abtn.hidden = true; return; }
+    var r = await c.from("user_alerts").select("*").order("created_at", { ascending: false }).limit(30);
+    if (r.error) return;                       // table not installed yet: stay quiet
+    var rows = r.data || [], unread = rows.filter(function (n) { return !n.read_at; });
+    abtn.hidden = false;
+    abtn.textContent = "📣 Updates" + (unread.length ? " (" + unread.length + ")" : "");
+    if (!firstLoad && unread.length && unread[0].id !== seenTop && !openIt) T(unread[0].title + ": " + (unread[0].body || ""));
+    firstLoad = false;
+    seenTop = unread.length ? unread[0].id : seenTop;
+    if (openIt) {
+      abody.innerHTML = rows.length ? rows.map(function (n) {
+        return '<div class="review-card"><strong>' + E(n.title) + (n.read_at ? "" : ' <span class="status-pill">new</span>') + "</strong><br>" + E(n.body || "") +
+          '<br><span class="muted">' + new Date(n.created_at).toLocaleString("en-NG") + "</span></div>";
+      }).join("") : "<p>No updates yet.</p>";
+      abk.classList.add("open");
+      if (unread.length) { await c.rpc("alerts_mark_read"); abtn.textContent = "📣 Updates"; }
+    }
+  }
+  abtn.onclick = function () { loadAlerts(true); };
+  c.auth.onAuthStateChange(function () { firstLoad = true; seenTop = null; setTimeout(function () { loadAlerts(false); }, 0); });
+  setInterval(function () { if (!document.hidden) loadAlerts(false); }, 30000);
+  loadAlerts(false);
+
   /* ---------- buyer ---------- */
   async function showBuyer() {
     body.innerHTML = "<p>Loading…</p>";
@@ -51,6 +106,13 @@
     var u = await user();
     var r = await c.from("marketplace_orders").select("*").order("created_at", { ascending: false }).limit(40);
     if (r.error) { body.innerHTML = "<p>" + E(r.error.message) + "</p>"; return; }
+    // If the buyer paid online and came back, ask Paystack and confirm the fee before drawing the list.
+    var waiting = !ONLINE_PAYMENTS ? [] : (r.data || []).filter(function (o) { return u && o.buyer_id === u.id && o.delivery_status === "requested" && o.delivery_fee_ref; });
+    if (waiting.length) {
+      await Promise.all(waiting.map(function (o) { return fn("delivery-pay", { action: "verify", order_id: o.id }).catch(function () {}); }));
+      r = await c.from("marketplace_orders").select("*").order("created_at", { ascending: false }).limit(40);
+      if (r.error) { body.innerHTML = "<p>" + E(r.error.message) + "</p>"; return; }
+    }
     var mine = (r.data || []).filter(function (o) {
       return u && o.buyer_id === u.id && o.status !== "cancelled" &&
         (o.delivery_status || o.status === "placed" || o.status === "paid");
@@ -70,10 +132,11 @@
       if (!inf) {
         inner = '<div class="seller-actions"><button class="button button-primary" type="button" data-dform="' + E(o.id) + '">Request delivery</button></div><div class="do-form"></div>';
       } else if (inf.delivery_status === "requested") {
-        inner = '<p><span class="status-pill">Waiting for your payment</span></p><p>Delivery fee: <strong>' + N(inf.fee_kobo) + "</strong></p><p class=\"muted\">" + E(inf.instructions) +
-          "</p><p class=\"muted\">Quote your order number #" + E(String(o.id).slice(0, 8)) + " when you pay.</p>";
+        inner = '<p><span class="status-pill">Waiting for your payment</span></p><p>Delivery fee: <strong>' + N(inf.fee_kobo) + "</strong></p>" +
+          (ONLINE_PAYMENTS ? '<div class="seller-actions"><button class="button button-primary" type="button" data-dpay="' + E(o.id) + '">Pay ' + N(inf.fee_kobo) + ' now</button></div><p class="form-message do-paymsg"></p>' : "") +
+          "<p class=\"muted\">" + (ONLINE_PAYMENTS ? "Your payment is confirmed automatically. Cannot pay online? " : "") + E(inf.instructions) + " Quote order #" + E(String(o.id).slice(0, 8)) + " when you pay.</p>";
       } else if (inf.delivery_status === "fee_paid") {
-        inner = '<p><span class="status-pill ok">Fee confirmed</span></p><p class="muted">Waiting for the seller to hand your item to a rider.</p>';
+        inner = '<p><span class="status-pill ok">Fee confirmed</span></p><p class="muted">' + (o.status === "paid" ? "We are finding a rider for you." : "We will find a rider as soon as the seller marks your order Paid.") + "</p>";
       } else if (inf.delivery_status === "dispatched") {
         inner = '<p><span class="status-pill' + (inf.job_status === "delivered" ? " ok" : inf.job_status === "unassigned" ? " bad" : "") + '">' + E(JOB_LABEL[inf.job_status] || inf.job_status) + "</span></p>" +
           (inf.rider_name ? "<p>Rider: <strong>" + E(inf.rider_name) + "</strong>" + (inf.rider_vehicle ? " (" + E(inf.rider_vehicle) + ")" : "") + "</p>" : "") +
@@ -100,7 +163,30 @@
     }
     var s = e.target.closest("[data-dsend]");
     if (s) sendRequest(s);
+    var pay = e.target.closest("[data-dpay]");
+    if (pay) payFee(pay);
   });
+
+  async function payFee(btn) {
+    var m = btn.closest(".review-card").querySelector(".do-paymsg");
+    btn.disabled = true; m.style.color = ""; m.textContent = "Opening secure payment…";
+    try {
+      var res = await fn("delivery-pay", {
+        action: "init", order_id: btn.dataset.dpay,
+        return_url: location.origin + location.pathname + "?dfee=" + encodeURIComponent(btn.dataset.dpay)
+      });
+      if (res.url) { location.href = res.url; return; }
+      T("Delivery fee confirmed."); showBuyer();
+    } catch (err) { m.textContent = err.message; m.style.color = "#8a1f1f"; btn.disabled = false; }
+  }
+
+  // Back from Paystack: open the deliveries window, which re-checks the payment.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (!q.get("dfee")) return;
+    try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
+    setTimeout(function () { showBuyer(); }, 800);
+  })();
 
   async function sendRequest(s) {
     var box = s.closest(".do-form");
@@ -147,7 +233,7 @@
     var list = (o.data || []).map(function (x) {
       var st = x.delivery_status, act = "";
       if (st === "fee_paid" && x.status === "paid") act = '<button class="button button-primary" type="button" data-ddisp="' + E(x.id) + '">Ready for rider pickup</button>';
-      else if (st === "fee_paid") act = '<span class="muted">Mark the order Paid, then hand it to a rider.</span>';
+      else if (st === "fee_paid") act = '<span class="muted">Mark the order Paid. A rider is requested automatically.</span>';
       return '<div class="seller-item"><strong>' + E(x.product_name || "Product") + "</strong> × " + x.quantity +
         '<br><span class="muted">' + (st === "requested" ? "Buyer must pay the delivery fee first" : st === "fee_paid" ? "Delivery fee confirmed" : "With the rider network") +
         " · #" + E(String(x.id).slice(0, 8)) + '</span><div class="seller-actions">' + act + "</div></div>";
