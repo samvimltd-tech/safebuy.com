@@ -160,6 +160,7 @@ td .button{padding:6px 11px;font-size:12px}
   var apps = [], prods = [], leadRows = [], leadsErr = "", vrRows = [], vrErr = "";
   // delivery data
   var dPartners = [], dDocs = [], dJobs = [], dPays = [], dAreas = [], dSettings = null, dOrders = [], dErr = "";
+  var settingsDirty = false;   // true while the admin has unsaved edits in the settings form
   var known = null;           // ids already seen, to highlight new arrivals
   var channel = null, pollTimer = null, refreshTimer = null;
   var lastUpdated = null, realtimeOk = false;
@@ -498,6 +499,7 @@ td .button{padding:6px 11px;font-size:12px}
     renderStats();
     renderTabs();
     // Do not wipe a form the admin is typing in during a background refresh.
+    if (tab === "delivery" && filters.delivery === "settings" && settingsDirty) return;
     if (tab === "delivery" && (filters.delivery === "settings" || filters.delivery === "coverage") &&
         list.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
     if (tab === "applications") renderApplications(fresh || {});
@@ -854,27 +856,52 @@ td .button{padding:6px 11px;font-size:12px}
       f("st-fresh", "A rider's location counts as fresh for (seconds)", s.ping_fresh_seconds) +
       f("st-win", "Give up searching after (seconds)", s.search_window_seconds) +
       '<label for="st-ins">How buyers pay the delivery fee (shown to buyers)</label><input id="st-ins" maxlength="500" value="' + esc(s.fee_payment_instructions) + '">' +
-      '<button class="button full" type="submit">Save delivery settings</button></form></div>';
+      '<button class="button full" type="submit" id="st-save">Save delivery settings</button><p class="msg" id="st-msg" role="status" aria-live="polite"></p></form></div>';
   }
+
+  list.addEventListener("input", function (event) {
+    if (event.target.closest("#st-form")) settingsDirty = true;
+  });
 
   list.addEventListener("submit", async function (event) {
     if (event.target.id !== "st-form") return;
     event.preventDefault();
+    var say = function (text, bad) {
+      var m = document.getElementById("st-msg");
+      if (m) { m.textContent = text; m.className = "msg" + (bad ? " err" : ""); }
+    };
     var val = function (id) { return Number(document.getElementById(id).value); };
+    var want = {
+      fee_same_city_kobo: Math.round(val("st-city") * 100),
+      fee_same_state_kobo: Math.round(val("st-state") * 100),
+      fee_interstate_kobo: Math.round(val("st-inter") * 100)
+    };
+    var save = document.getElementById("st-save");
+    save.disabled = true;
+    say("Saving…");
     try {
-      await rpc("admin_update_settings", {
+      await rpc("admin_save_settings", {
         p_offer: val("st-offer"), p_attempts: val("st-att"), p_fresh: val("st-fresh"), p_window: val("st-win"), p_share: val("st-share"),
-        p_same_city: Math.round(val("st-city") * 100), p_same_state: Math.round(val("st-state") * 100), p_interstate: Math.round(val("st-inter") * 100),
+        p_same_city: want.fee_same_city_kobo, p_same_state: want.fee_same_state_kobo, p_interstate: want.fee_interstate_kobo,
         p_instructions: document.getElementById("st-ins").value
       });
+      settingsDirty = false;
       document.activeElement.blur();
       await fetchAll();
-      note("Delivery settings saved.");
-    } catch (err) { note(err.message, true); }
+      var kept = dSettings && dSettings.fee_same_city_kobo === want.fee_same_city_kobo &&
+        dSettings.fee_same_state_kobo === want.fee_same_state_kobo && dSettings.fee_interstate_kobo === want.fee_interstate_kobo;
+      if (kept) { say("Saved. Buyers will now be charged these fees."); note("Delivery settings saved."); }
+      else say("The save went through but the fees did not change. Make sure you ran the admin_save_settings SQL in Supabase.", true);
+    } catch (err) {
+      var em = String(err.message || err);
+      say("Not saved: " + (/could not find the function|schema cache/i.test(em) ? "run the admin_save_settings SQL in Supabase first." : em), true);
+      save.disabled = false;
+    }
   });
 
   /* ---------- Navigation: tabs, filters, search, sort, stat cards ---------- */
   function switchTab(next, filter) {
+    settingsDirty = false;
     tab = next;
     if (filter) filters[tab] = filter;
     searchBox.value = "";
@@ -891,6 +918,7 @@ td .button{padding:6px 11px;font-size:12px}
   filterTabs.addEventListener("click", function (e) {
     var b = e.target.closest("[data-filter]");
     if (!b) return;
+    settingsDirty = false;
     filters[tab] = b.dataset.filter;
     saveView();
     renderAll();
