@@ -37,6 +37,35 @@
     return STATES.map(function (s) { return "<option" + (s.toLowerCase() === sel ? " selected" : "") + ">" + E(s) + "</option>"; }).join("");
   }
 
+
+  /* ---------- contact buttons + timeline (connect_roles.sql) ---------- */
+  var st0 = document.createElement("style");
+  st0.textContent =
+    ".cx-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.cx-row a{flex:1 1 120px;text-align:center;padding:10px 12px;border-radius:12px;font-weight:800;font-size:14px;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:#fff}" +
+    ".cx-row a.cx-wa{background:#25d366;border-color:#25d366;color:#fff}" +
+    ".cx-box{margin:10px 0;padding:12px;border:1px solid #bfe6d1;border-radius:14px;background:var(--green-light)}.cx-box strong{display:block}" +
+    ".cx-code{display:inline-block;margin:4px 0;padding:4px 14px;border-radius:10px;background:#fff;border:1px dashed var(--green);font-size:26px;font-weight:800;letter-spacing:6px}" +
+    ".cx-stars{display:flex;gap:6px;margin:6px 0}.cx-star{border:0;background:none;font-size:34px;line-height:1;color:#c9d6cd;cursor:pointer;padding:2px}.cx-star.on,.cx-star:hover{color:#f5b301}" +
+    ".tl{list-style:none;margin:8px 0 0;padding:0 0 0 6px}.tl li{position:relative;padding:0 0 12px 22px;font-size:14px}.tl li::before{content:'';position:absolute;left:0;top:5px;width:10px;height:10px;border-radius:50%;background:var(--green)}.tl li::after{content:'';position:absolute;left:4px;top:15px;bottom:-2px;width:2px;background:#cfe6da}.tl li:last-child::after{display:none}.tl li.now::before{box-shadow:0 0 0 4px #1fae6f33}.tl small{display:block;color:var(--muted);font-size:12px}";
+  document.head.appendChild(st0);
+  function waDigits(v) { var p = phone(v); return p ? p.replace("+", "") : ""; }
+  // Call and WhatsApp buttons. Returns "" when there is no usable number.
+  function contactRow(num, who, about) {
+    var wa = waDigits(num), tel = phone(num);
+    if (!tel) return "";
+    return '<div class="cx-row"><a href="tel:' + E(tel) + '">📞 Call ' + E(who) + '</a>' +
+      '<a class="cx-wa" target="_blank" rel="noopener" href="https://wa.me/' + wa + (about ? "?text=" + encodeURIComponent(about) : "") + '">💬 WhatsApp</a></div>';
+  }
+  function timeline(events) {
+    if (!events || !events.length) return "";
+    return '<details class="cx-tl"><summary><strong>Order progress</strong></summary><ul class="tl">' + events.map(function (ev, i) {
+      return '<li' + (i === events.length - 1 ? ' class="now"' : "") + ">" + E(ev.label) + "<small>" + new Date(ev.at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) + "</small></li>";
+    }).join("") + "</ul></details>";
+  }
+  function track(id) {
+    return c.rpc("order_tracking", { p_order: id }).then(function (r) { return r.error ? null : r.data; }, function () { return null; });
+  }
+
   /* ---------- modal ---------- */
   var back = document.createElement("div");
   back.className = "modal-backdrop";
@@ -125,8 +154,10 @@
         : Promise.resolve(null);
     }));
 
+    var trks = await Promise.all(mine.map(function (o) { return o.delivery_status ? track(o.id) : Promise.resolve(null); }));
+
     body.innerHTML = mine.map(function (o, i) {
-      var inf = infos[i];
+      var inf = infos[i], trk = trks[i];
       var head = "<strong>" + E(o.product_name || "Product") + "</strong> × " + o.quantity + '<br><span class="muted">#' + E(String(o.id).slice(0, 8)) + "</span>";
       var inner = "";
       if (!inf) {
@@ -141,9 +172,20 @@
         inner = '<p><span class="status-pill' + (inf.job_status === "delivered" ? " ok" : inf.job_status === "unassigned" ? " bad" : "") + '">' + E(JOB_LABEL[inf.job_status] || inf.job_status) + "</span></p>" +
           (inf.rider_name ? "<p>Rider: <strong>" + E(inf.rider_name) + "</strong>" + (inf.rider_vehicle ? " (" + E(inf.rider_vehicle) + ")" : "") + "</p>" : "") +
           (inf.delivery_code ? '<p class="modal-note">Your delivery code: <strong style="font-size:22px;letter-spacing:4px">' + E(inf.delivery_code) +
-            "</strong><br>Give it to the rider only after you have received and checked your item.</p>" : "");
+            "</strong><br>Give it to the rider only after you have received and checked your item.</p>" : "") +
+          (trk && trk.rider ? '<div class="cx-box"><strong>Your rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(trk.rider.vehicle) + ")" : "") +
+            (trk.rider.rating_count ? " · ★ " + E(trk.rider.rating_avg) + " (" + E(trk.rider.rating_count) + ")" : "") + "</strong>" +
+            contactRow(trk.rider.phone, "rider", "Hello, I am the buyer of order #" + String(o.id).slice(0, 8) + " on SafeBuy NG.") + "</div>" : "");
       }
-      return '<div class="review-card">' + head + inner + "</div>";
+      var rate = "";
+      if (trk && trk.can_rate) {
+        rate = '<div class="cx-box"><strong>How was your rider?</strong><div class="cx-stars" data-order="' + E(o.id) + '">' +
+          [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" class="cx-star" data-stars="' + n + '" aria-label="' + n + ' star' + (n > 1 ? "s" : "") + '">★</button>'; }).join("") +
+          '</div><p class="muted cx-ratemsg">Tap a star to rate.</p></div>';
+      } else if (trk && trk.my_rating) {
+        rate = '<p class="muted">You rated this delivery ' + E(trk.my_rating) + " ★. Thank you!</p>";
+      }
+      return '<div class="review-card">' + head + inner + rate + timeline(trk && trk.events) + "</div>";
     }).join("");
   }
 
@@ -165,7 +207,23 @@
     if (s) sendRequest(s);
     var pay = e.target.closest("[data-dpay]");
     if (pay) payFee(pay);
+    var star = e.target.closest(".cx-star");
+    if (star) rateRider(star);
   });
+
+  async function rateRider(star) {
+    var wrap = star.closest(".cx-stars"), msg = wrap.parentNode.querySelector(".cx-ratemsg");
+    var n = Number(star.dataset.stars);
+    [].forEach.call(wrap.children, function (b) { b.disabled = true; b.classList.toggle("on", Number(b.dataset.stars) <= n); });
+    try {
+      await rpc("rate_delivery", { p_order: wrap.dataset.order, p_stars: n });
+      T("Thanks for rating your rider.");
+      showBuyer();
+    } catch (err) {
+      msg.textContent = err.message; msg.style.color = "#8a1f1f";
+      [].forEach.call(wrap.children, function (b) { b.disabled = false; });
+    }
+  }
 
   async function payFee(btn) {
     var m = btn.closest(".review-card").querySelector(".do-paymsg");
@@ -230,13 +288,25 @@
         '</p><button class="button button-outline" type="button" data-dpick="1">Change pickup location</button>'
       : '<p class="modal-note">Set your pickup location so buyers can request delivery on your products.</p><button class="button button-primary" type="button" data-dpick="1">Set pickup location</button>';
 
-    var list = (o.data || []).map(function (x) {
+    var rows = o.data || [];
+    var trks = await Promise.all(rows.map(function (x) { return track(x.id); }));
+    var list = rows.map(function (x, i) {
+      var trk = trks[i], extra = "";
+      if (trk && trk.pickup_code) {
+        extra += '<div class="cx-box"><strong>Pickup code</strong><span class="cx-code">' + E(trk.pickup_code) + "</span>" +
+          "<div class=\"muted\">Give this code to the rider when they arrive. They need it to collect the item.</div></div>";
+      }
+      if (trk && trk.rider) {
+        extra += '<div class="cx-box"><strong>Rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(trk.rider.vehicle) + ")" : "") + "</strong>" +
+          contactRow(trk.rider.phone, "rider", "Hello, I am the seller for order #" + String(x.id).slice(0, 8) + " on SafeBuy NG.") + "</div>";
+      }
+      extra += timeline(trk && trk.events);
       var st = x.delivery_status, act = "";
       if (st === "fee_paid" && x.status === "paid") act = '<button class="button button-primary" type="button" data-ddisp="' + E(x.id) + '">Ready for rider pickup</button>';
       else if (st === "fee_paid") act = '<span class="muted">Mark the order Paid. A rider is requested automatically.</span>';
       return '<div class="seller-item"><strong>' + E(x.product_name || "Product") + "</strong> × " + x.quantity +
         '<br><span class="muted">' + (st === "requested" ? "Buyer must pay the delivery fee first" : st === "fee_paid" ? "Delivery fee confirmed" : "With the rider network") +
-        " · #" + E(String(x.id).slice(0, 8)) + '</span><div class="seller-actions">' + act + "</div></div>";
+        " · #" + E(String(x.id).slice(0, 8)) + '</span><div class="seller-actions">' + act + "</div>" + extra + "</div>";
     }).join("");
     el.innerHTML = pick + '<div id="do-pickform"></div><h3>Delivery orders</h3>' + (list || '<p class="muted">No delivery orders yet.</p>');
   }
