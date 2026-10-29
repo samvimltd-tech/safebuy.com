@@ -464,6 +464,21 @@
     body.querySelector("#dp-dec").addEventListener("click", function () { answer(false); });
   }
 
+  function digits(v) {
+    var d = String(v || "").replace(/\D/g, "");
+    if (d.indexOf("234") === 0) return d;
+    if (d.charAt(0) === "0") return "234" + d.slice(1);
+    return d.length === 10 ? "234" + d : "";
+  }
+  // Call + WhatsApp + Map buttons for one person (seller or buyer).
+  function reach(num, who, place, hello) {
+    var wa = digits(num), out = "";
+    if (wa) out += '<a class="button button-outline" href="tel:+' + wa + '">📞 Call ' + who + '</a>' +
+      '<a class="button button-outline" target="_blank" rel="noopener" href="https://wa.me/' + wa + "?text=" + encodeURIComponent(hello) + '">💬 WhatsApp</a>';
+    if (place) out += '<a class="button button-outline" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(place) + '">🗺️ Map</a>';
+    return out ? '<div class="dp-row" style="flex-wrap:wrap;gap:8px;margin:6px 0 10px">' + out + "</div>" : "";
+  }
+
   function drawJob() {
     var box = body.querySelector("#dp-job");
     if (!box) return;
@@ -472,16 +487,17 @@
     if (key === lastJobKey) return;       // do not wipe the code field while the partner is typing
     lastJobKey = key;
     if (!j) { box.innerHTML = ""; return; }
+    var order = "order " + String(j.order_id || j.job_id).slice(0, 8);
     box.innerHTML =
-      '<div class="dp-card"><strong>' + (j.status === "assigned" ? "Go to pickup" : "Deliver to buyer") + "</strong>" +
-      "<p><strong>Pickup:</strong> " + esc(j.pickup_address) + ", " + esc(j.pickup_city) +
-      (j.pickup_phone ? ' · <a href="tel:' + esc(j.pickup_phone) + '">' + esc(j.pickup_phone) + "</a>" : "") +
-      "<br><strong>Drop-off:</strong> " + esc(j.dropoff_address) + ", " + esc(j.dropoff_city) +
-      (j.dropoff_name ? "<br>" + esc(j.dropoff_name) : "") +
-      (j.dropoff_phone ? ' · <a href="tel:' + esc(j.dropoff_phone) + '">' + esc(j.dropoff_phone) + "</a>" : "") +
-      "<br>You earn <strong>" + naira(j.earnings_kobo) + "</strong></p>" +
+      '<div class="dp-card"><strong>' + (j.status === "assigned" ? "1. Go to the seller" : "2. Deliver to the buyer") + "</strong>" +
+      '<p style="margin:8px 0"><strong>Pickup:</strong> ' + esc(j.pickup_address) + ", " + esc(j.pickup_city) + "</p>" +
+      reach(j.pickup_phone, "seller", [j.pickup_address, j.pickup_city].join(", "), "Hello, I am the SafeBuy NG rider for " + order + ". I am coming to collect it.") +
+      '<p style="margin:8px 0"><strong>Drop-off:</strong> ' + esc(j.dropoff_address) + ", " + esc(j.dropoff_city) + (j.dropoff_name ? "<br>" + esc(j.dropoff_name) : "") + "</p>" +
+      reach(j.dropoff_phone, "buyer", [j.dropoff_address, j.dropoff_city].join(", "), "Hello, I am your SafeBuy NG rider for " + order + ". I will bring it to you.") +
+      "<p>You earn <strong>" + naira(j.earnings_kobo) + "</strong></p>" +
       (j.status === "assigned"
-        ? '<div class="dp-row"><button class="button button-primary" type="button" id="dp-picked">Picked up</button>' +
+        ? '<label for="dp-pcode">Seller\'s 4-digit pickup code</label><input id="dp-pcode" inputmode="numeric" maxlength="4" placeholder="Ask the seller for it">' +
+          '<div class="dp-row"><button class="button button-primary" type="button" id="dp-picked">Picked up</button>' +
           '<button class="button button-outline" type="button" id="dp-release">Give back job</button></div>'
         : '<label for="dp-dcode">Buyer\'s 4-digit delivery code</label><input id="dp-dcode" inputmode="numeric" maxlength="4">' +
           '<button class="button button-primary" type="button" id="dp-done">Mark delivered</button>') +
@@ -489,7 +505,14 @@
 
     async function run(fn) { try { await fn(); } catch (err) { toast(err.message); } await poll(); }
     var pk = box.querySelector("#dp-picked"), rl = box.querySelector("#dp-release"), dn = box.querySelector("#dp-done");
-    if (pk) pk.addEventListener("click", function () { run(function () { return rpc("partner_update_job", { p_job: j.job_id, p_status: "picked_up" }); }); });
+    if (pk) pk.addEventListener("click", function () {
+      run(async function () {
+        var r = await rpc("partner_update_job", { p_job: j.job_id, p_status: "picked_up", p_code: box.querySelector("#dp-pcode").value.trim() });
+        if (r === "wrong_code") toast("That pickup code is not correct. Ask the seller to check the code in their app.");
+        else if (r === "locked") toast("Too many wrong codes. Contact SafeBuy NG.");
+        else toast("Picked up. Now deliver to the buyer.");
+      });
+    });
     if (rl) rl.addEventListener("click", function () {
       if (confirm("Give this job back? It will be offered to another rider.")) run(function () { return rpc("partner_release_job", { p_job: j.job_id }); });
     });
