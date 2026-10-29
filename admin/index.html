@@ -1,5 +1,1193 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="robots" content="noindex, nofollow">
-<meta http-equiv="refresh" content="0; url=./admin/"><title>SafeBuy NG Admin</title></head>
-<body><p>The admin app has moved: <a href="./admin/">open SafeBuy NG Admin</a>.</p>
-<script>location.replace("./admin/");</script></body></html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#12372a">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SafeBuy Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SafeBuy NG Admin</title>
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7;--red:#8a1f1f;--amber:#7a4a05}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{width:min(920px,100% - 28px);margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom))}
+.narrow{width:min(420px,100% - 28px);padding-top:12vh}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
+h1{margin:0 0 4px;font-size:24px}
+.muted{color:var(--muted);font-size:13px}
+label{display:block;margin:14px 0 5px;font-size:13px;font-weight:700}
+input,select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;color:var(--ink)}
+input:focus,select:focus,button:focus-visible{border-color:var(--green);outline:2px solid #087f5b55;outline-offset:1px}
+.button{border:0;border-radius:12px;padding:11px 16px;font-weight:700;background:var(--green);color:#fff}
+.button:hover{background:var(--green-dark)}
+.button:disabled{opacity:.6;cursor:default}
+.button.light{background:var(--green-light);color:var(--green-dark)}
+.button.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.button.danger{background:#fdeaea;color:var(--red)}
+.full{width:100%;margin-top:18px}
+.msg{min-height:20px;margin:12px 0 0;font-size:13px}
+.msg.err{color:var(--red)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.top-actions{display:flex;align-items:center;gap:8px}
+.top-actions .button{padding:9px 13px;font-size:13px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;background:#c9a24a}
+.dot.on{background:#1fae6f}
+.dot.off{background:#c0392b}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;color:var(--ink)}
+.stat b{display:block;font-size:24px;line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.alert{background:#fff8e8;border-color:#f1d69a}
+.stat.alert b{color:var(--amber)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:#fff;border-radius:30px;padding:9px 16px;font-size:13px;font-weight:700;color:#52645a}
+.tab.active{background:var(--green);border-color:var(--green);color:#fff}
+.count{display:inline-block;min-width:20px;margin-left:5px;padding:0 6px;border-radius:20px;background:#0000001a;font-size:11px;text-align:center}
+.tab:not(.active) .count{background:var(--green-light);color:var(--green-dark)}
+.tab .count.hot{background:#ffb454;color:#4a2c00}
+.tools{display:flex;gap:8px;margin-bottom:12px}
+.tools input{flex:1;min-width:0}
+.tools select{width:auto}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;font-size:14px}
+.item.fresh{animation:fresh 2.4s ease-out}
+@keyframes fresh{0%{background:#d8f5e3;border-color:var(--green)}100%{background:#fff;border-color:var(--line)}}
+.item .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.item .actions .button{padding:9px 14px;font-size:13px}
+.pill{display:inline-block;padding:4px 10px;border-radius:30px;font-size:11px;font-weight:800;background:#fff3e0;color:var(--amber);text-transform:uppercase}
+.pill.approved,.pill.published{background:var(--green-light);color:var(--green-dark)}
+.pill.rejected,.pill.hidden{background:#fdeaea;color:var(--red)}
+.row{display:flex;gap:12px;align-items:flex-start}
+.thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:#edf6ef;flex-shrink:0}
+.grow{flex:1;min-width:0}
+.empty{padding:28px 14px;text-align:center;border:1px dashed #cbd9ce;border-radius:14px;background:#fff}
+.leads-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:#f3f7f4;font-size:12px;color:var(--muted)}
+tbody tr:last-child td{border-bottom:0}
+tr.fresh td{animation:fresh 2.4s ease-out}
+td .button{padding:6px 11px;font-size:12px}
+.doc{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.doc .button{padding:6px 11px;font-size:12px}
+.cap{text-transform:capitalize}
+.hint{padding:11px 14px;margin-bottom:12px;border:1px solid #f1d69a;background:#fff8e8;border-radius:12px;color:#79551b;font-size:13px}
+@media (max-width:600px){
+.stats{grid-template-columns:repeat(2,1fr)}
+.tools{flex-wrap:wrap}
+.tools select{width:100%}
+}
+@media (prefers-reduced-motion:reduce){.item.fresh{animation:none}}
+</style>
+</head>
+<body>
+
+<main class="wrap narrow card" id="login-view" hidden>
+  <h1>SafeBuy NG Admin</h1>
+  <p class="muted">Authorised staff only.</p>
+  <p class="muted" id="ios-tip" hidden>To install on iPhone: tap Share, then “Add to Home Screen”.</p>
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="button full" type="submit" id="login-btn">Sign in</button>
+  </form>
+  <p class="msg" id="login-msg" role="status" aria-live="polite"></p>
+</main>
+
+<main class="wrap" id="dash-view" hidden>
+  <div class="topbar">
+    <div>
+      <h1>SafeBuy NG Admin</h1>
+      <span class="muted" id="who"></span>
+    </div>
+    <div class="top-actions">
+      <span class="live" id="live" title="Live updates"><span class="dot" id="live-dot"></span><span id="live-text">Connecting…</span></span>
+      <button class="button" type="button" id="install-btn" hidden>Install app</button>
+      <button class="button outline" type="button" id="refresh-btn">Refresh</button>
+      <button class="button outline" type="button" id="logout-btn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs" id="main-tabs">
+    <button class="tab active" type="button" data-tab="applications">Sellers <span class="count" id="c-sellers">0</span></button>
+    <button class="tab" type="button" data-tab="products">Products <span class="count" id="c-products">0</span></button>
+    <button class="tab" type="button" data-tab="leads">Lead generation <span class="count" id="c-leads">0</span></button>
+    <button class="tab" type="button" data-tab="verify">Verification <span class="count" id="c-verify">0</span></button>
+    <button class="tab" type="button" data-tab="delivery">Delivery <span class="count" id="c-delivery">0</span></button>
+  </div>
+
+  <div class="tabs" id="filter-tabs"></div>
+
+  <div class="tools" id="tools">
+    <input id="search" type="search" placeholder="Search…" aria-label="Search">
+    <select id="sort" aria-label="Sort by">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="name">Name A–Z</option>
+    </select>
+  </div>
+
+  <p class="muted">Suspending a shop hides all of its listings from shoppers. The Verified badge and badge number are only issued from the Verification tab, after the subscription payment is confirmed. Use “Edit category” to fix typos or merge duplicate categories (for example “phones” and “Phone”). Delivery partners are approved only after their documents are approved, and delivery works only in areas switched on under Delivery › Coverage.</p>
+  <p class="msg" id="dash-msg" role="status" aria-live="polite"></p>
+  <div id="list"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.SAFEbuySupabaseConfig;
+  var loginView = document.getElementById("login-view");
+  var dashView = document.getElementById("dash-view");
+  var loginMsg = document.getElementById("login-msg");
+  var dashMsg = document.getElementById("dash-msg");
+  var list = document.getElementById("list");
+  var statsBox = document.getElementById("stats");
+  var filterTabs = document.getElementById("filter-tabs");
+  var searchBox = document.getElementById("search");
+  var sortBox = document.getElementById("sort");
+  var liveDot = document.getElementById("live-dot");
+  var liveText = document.getElementById("live-text");
+  var client = null;
+
+  var apps = [], prods = [], leadRows = [], leadsErr = "", vrRows = [], vrErr = "";
+  // delivery data
+  var dPartners = [], dDocs = [], dJobs = [], dPays = [], dAreas = [], dSettings = null, dOrders = [], dErr = "";
+  var settingsDirty = false;   // true while the admin has unsaved edits in the settings form
+  var known = null;           // ids already seen, to highlight new arrivals
+  var channel = null, pollTimer = null, refreshTimer = null;
+  var lastUpdated = null, realtimeOk = false;
+
+  var saved = {};
+  try { saved = JSON.parse(sessionStorage.getItem("safebuy-admin-view") || "{}"); } catch (e) {}
+  var TABS = ["applications", "products", "leads", "verify", "delivery"];
+  var tab = TABS.indexOf(saved.tab) > -1 ? saved.tab : "applications";
+  var filters = { applications: saved.fa || "pending", products: saved.fp || "all", leads: "all", verify: "open", delivery: saved.fd || "partners" };
+
+  // Set to true after Paystack and the backend functions are set up (see SETUP.md).
+  var AUTO_PAYOUTS = false;
+
+  var STATUS_LABEL = { pending: "No badge", approved: "Verified", rejected: "Suspended", published: "Live", hidden: "Hidden" };
+  var BUILTIN_CATS = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
+  // Same spelling as the dropdown in the shop app, so coverage always matches what buyers send.
+  var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
+
+  var FILTERS = {
+    applications: [["pending", "Without badge"], ["approved", "With badge"], ["rejected", "Suspended"], ["all", "All"]],
+    products: [["all", "All"], ["published", "Live"], ["hidden", "Hidden"], ["soldout", "Sold out"]],
+    leads: [["all", "All"], ["email", "With email"], ["phone", "With phone"]],
+    verify: [["open", "Needs review"], ["approved", "Approved"], ["rejected", "Rejected"], ["expired", "Expired"], ["all", "All"]],
+    delivery: [["partners", "Partners"], ["orders", "Delivery orders"], ["jobs", "Jobs"], ["payouts", "Payouts"], ["coverage", "Coverage"], ["settings", "Settings"]]
+  };
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function money(kobo) { return "₦" + (Number(kobo || 0) / 100).toLocaleString("en-NG"); }
+  function when(d) { return new Date(d).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }); }
+  function saveView() {
+    try {
+      sessionStorage.setItem("safebuy-admin-view", JSON.stringify({ tab: tab, fa: filters.applications, fp: filters.products, fd: filters.delivery }));
+    } catch (e) {}
+  }
+  async function rpc(name, args) {
+    var r = await client.rpc(name, args || {});
+    if (r.error) throw r.error;
+    return r.data;
+  }
+
+  function normCat(t) {
+    t = String(t || "").replace(/\s+/g, " ").trim().toLowerCase()
+      .replace(/(^|[\s&\/-])([a-z])/g, function (m, a, b) { return a + b.toUpperCase(); });
+    for (var i = 0; i < BUILTIN_CATS.length; i++) {
+      if (BUILTIN_CATS[i].toLowerCase() === t.toLowerCase()) return BUILTIN_CATS[i];
+    }
+    if (t.toLowerCase() === "home & living") return "Home";
+    return t;
+  }
+
+  function showLogin(message) {
+    dashView.hidden = true;
+    loginView.hidden = false;
+    loginMsg.className = "msg" + (message ? " err" : "");
+    loginMsg.textContent = message || "";
+  }
+  function showDash() { loginView.hidden = true; dashView.hidden = false; }
+  function note(text, isError) {
+    dashMsg.className = "msg" + (isError ? " err" : "");
+    dashMsg.textContent = text || "";
+  }
+
+  if (!window.supabase || !cfg || !cfg.url || !cfg.publishableKey) {
+    showLogin("Admin is unavailable: the Supabase settings did not load.");
+    return;
+  }
+
+  client = window.supabase.createClient(cfg.url, cfg.publishableKey, {
+    auth: { storageKey: "safebuy-admin-auth" }
+  });
+
+  /* ---------- Sign in ---------- */
+  async function enter() {
+    var r = await client.rpc("is_admin");
+    if (r.error) {
+      await client.auth.signOut();
+      showLogin("Admin check failed: " + r.error.message + " (run schema.sql in Supabase first).");
+      return;
+    }
+    if (r.data !== true) {
+      await client.auth.signOut();
+      showLogin("This account does not have admin access.");
+      return;
+    }
+    var u = await client.auth.getUser();
+    document.getElementById("who").textContent = u.data && u.data.user ? u.data.user.email : "";
+    showDash();
+    syncTabs();
+    startLive();
+    client.rpc("expire_verifications").then(function () { fetchAll(); }, function () { fetchAll(); });
+  }
+
+  document.getElementById("login-form").addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var btn = document.getElementById("login-btn");
+    btn.disabled = true;
+    loginMsg.className = "msg";
+    loginMsg.textContent = "Signing in…";
+    var res = await client.auth.signInWithPassword({
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value
+    });
+    btn.disabled = false;
+    if (res.error) { showLogin("Incorrect email or password."); return; }
+    document.getElementById("password").value = "";
+    await enter();
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", async function () {
+    stopLive();
+    await client.auth.signOut();
+    apps = []; prods = []; known = null;
+    dPartners = []; dDocs = []; dJobs = []; dPays = []; dAreas = []; dOrders = []; dSettings = null;
+    list.innerHTML = "";
+    showLogin("");
+  });
+
+  document.getElementById("refresh-btn").addEventListener("click", function () { fetchAll(true); });
+
+  /* ---------- Live updates ---------- */
+  function setLive(state, text) {
+    liveDot.className = "dot " + state;
+    liveText.textContent = text;
+  }
+
+  function scheduleRefresh() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(function () { fetchAll(); }, 500);
+  }
+
+  function startLive() {
+    stopLive();
+    setLive("", "Connecting…");
+    try {
+      channel = client.channel("admin-live");
+      ["seller_applications", "seller_products", "leads", "verification_requests",
+       "delivery_partners", "delivery_documents", "delivery_jobs", "delivery_payouts"].forEach(function (t) {
+        channel = channel.on("postgres_changes", { event: "*", schema: "public", table: t }, scheduleRefresh);
+      });
+      channel.subscribe(function (status) {
+        realtimeOk = status === "SUBSCRIBED";
+        if (realtimeOk) setLive("on", "Live");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setLive("off", "Auto-refresh");
+      });
+    } catch (e) {
+      setLive("off", "Auto-refresh");
+    }
+    // Safety net: refresh every 30 s while the tab is visible, even if realtime is off.
+    pollTimer = setInterval(function () {
+      if (!document.hidden) fetchAll();
+    }, 30000);
+  }
+
+  function stopLive() {
+    clearInterval(pollTimer);
+    clearTimeout(refreshTimer);
+    pollTimer = null;
+    if (channel) { try { client.removeChannel(channel); } catch (e) {} channel = null; }
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && !dashView.hidden) fetchAll();
+  });
+
+  /* ---------- Data ---------- */
+  async function fetchAll(manual) {
+    if (manual) { liveText.textContent = "Refreshing…"; }
+    var results = await Promise.all([
+      client.from("seller_applications").select("*").order("created_at", { ascending: false }),
+      client.from("seller_products").select("*").order("created_at", { ascending: false }),
+      client.from("leads").select("*").order("created_at", { ascending: false }),
+      client.from("verification_requests").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_partners").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_documents").select("*").order("created_at", { ascending: false }),
+      client.from("delivery_jobs").select("*").order("created_at", { ascending: false }).limit(150),
+      client.from("delivery_payouts").select("*").order("created_at", { ascending: false }).limit(200),
+      client.from("delivery_supported_areas").select("*").order("state").order("city"),
+      client.from("delivery_settings").select("*").eq("id", 1).maybeSingle(),
+      client.rpc("admin_delivery_orders")
+    ]);
+    var ar = results[0], pr = results[1], lr = results[2], vr = results[3];
+    if (ar.error || pr.error) {
+      note((ar.error || pr.error).message, true);
+      setLive("off", "Update failed");
+      return;
+    }
+
+    var dRes = results.slice(4);
+    var dBad = dRes.filter(function (x) { return x.error; })[0];
+    dErr = dBad ? dBad.error.message : "";
+    dPartners = dErr ? [] : dRes[0].data || [];
+    dDocs = dErr ? [] : dRes[1].data || [];
+    dJobs = dErr ? [] : dRes[2].data || [];
+    dPays = dErr ? [] : dRes[3].data || [];
+    dAreas = dErr ? [] : dRes[4].data || [];
+    dSettings = dErr ? null : dRes[5].data || null;
+    dOrders = dErr ? [] : dRes[6].data || [];
+
+    // mark rows that were not here on the previous fetch
+    var fresh = {};
+    var now = {};
+    ar.data.forEach(function (a) { now["a" + a.id] = 1; });
+    pr.data.forEach(function (p) { now["p" + p.id] = 1; });
+    (lr.error ? [] : lr.data).forEach(function (l) { now["l" + l.id] = 1; });
+    (vr.error ? [] : vr.data).forEach(function (v) { now["v" + v.id] = 1; });
+    dPartners.forEach(function (p) { now["d" + p.id] = 1; });
+    dJobs.forEach(function (j) { now["j" + j.id] = 1; });
+    dOrders.forEach(function (o) { now["o" + o.order_id] = 1; });
+    if (known) { Object.keys(now).forEach(function (k) { if (!known[k]) fresh[k] = 1; }); }
+    known = now;
+
+    apps = ar.data;
+    prods = pr.data;
+    leadRows = lr.error ? [] : lr.data;
+    leadsErr = lr.error ? lr.error.message : "";
+    vrRows = vr.error ? [] : vr.data;
+    vrErr = vr.error ? vr.error.message : "";
+    lastUpdated = new Date();
+    if (realtimeOk) setLive("on", "Live · " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
+    else setLive("off", "Updated " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
+
+    renderAll(fresh);
+  }
+
+  /* ---------- Rendering ---------- */
+  function shopMap() {
+    var m = {};
+    apps.forEach(function (a) { m[a.id] = a.shop_name; });
+    return m;
+  }
+
+  function appCounts() {
+    var c = { pending: 0, approved: 0, rejected: 0, all: apps.length };
+    apps.forEach(function (a) { if (c[a.verification_status] != null) c[a.verification_status]++; });
+    return c;
+  }
+  function prodCounts() {
+    var c = { all: prods.length, published: 0, hidden: 0, soldout: 0 };
+    prods.forEach(function (p) {
+      if (p.status === "published") c.published++;
+      if (p.status === "hidden") c.hidden++;
+      if (p.in_stock === false) c.soldout++;
+    });
+    return c;
+  }
+
+  function leadCounts() {
+    var c = { all: leadRows.length, email: 0, phone: 0 };
+    leadRows.forEach(function (l) { if (l.email) c.email++; if (l.phone) c.phone++; });
+    return c;
+  }
+
+  function dCounts() {
+    var c = { partners: 0, orders: 0, jobs: 0, payouts: 0, coverage: 0, settings: 0, active: 0 };
+    dPartners.forEach(function (p) { if (p.status === "pending") c.partners++; });
+    dOrders.forEach(function (o) { if (o.delivery_status === "requested") c.orders++; });
+    dJobs.forEach(function (j) {
+      if (j.status === "unassigned") c.jobs++;
+      if (["searching", "offered", "assigned", "picked_up"].indexOf(j.status) > -1) c.active++;
+    });
+    dPays.forEach(function (p) { if (p.status === "pending") c.payouts++; });
+    dAreas.forEach(function (a) { if (a.is_active) c.coverage++; });
+    c.attention = c.partners + c.orders + c.jobs;
+    return c;
+  }
+
+  function renderStats() {
+    var a = appCounts(), p = prodCounts(), d = dCounts();
+    var cards = [
+      { label: "Shops", value: a.all, go: ["applications", "all"] },
+      { label: "Verified shops", value: a.approved, go: ["applications", "approved"] },
+      { label: "Live products", value: p.published, go: ["products", "published"] },
+      { label: "Sold out", value: p.soldout, go: ["products", "soldout"] },
+      { label: "Leads", value: leadRows.length, go: ["leads", "all"] },
+      { label: "Verification requests", value: vCounts().open, go: ["verify", "open"], alert: vCounts().open > 0 },
+      { label: "Delivery partners to review", value: d.partners, go: ["delivery", "partners"], alert: d.partners > 0 },
+      { label: "Delivery fees to confirm", value: d.orders, go: ["delivery", "orders"], alert: d.orders > 0 },
+      { label: "Active deliveries", value: d.active, go: ["delivery", "jobs"] },
+      { label: "Unassigned jobs", value: d.jobs, go: ["delivery", "jobs"], alert: d.jobs > 0 }
+    ];
+    statsBox.innerHTML = cards.map(function (c) {
+      return '<button type="button" class="stat' + (c.alert ? " alert" : "") + '" data-go="' + c.go.join("|") + '">' +
+        "<b>" + c.value + "</b><span>" + esc(c.label) + "</span></button>";
+    }).join("");
+  }
+
+  function renderTabs() {
+    var a = appCounts(), p = prodCounts(), d = dCounts();
+    var cs = document.getElementById("c-sellers");
+    cs.textContent = a.all;
+    cs.className = "count";
+    document.getElementById("c-products").textContent = p.all;
+    document.getElementById("c-leads").textContent = leadRows.length;
+    var cv = document.getElementById("c-verify");
+    cv.textContent = vCounts().open;
+    cv.className = "count" + (vCounts().open > 0 ? " hot" : "");
+    var cd = document.getElementById("c-delivery");
+    cd.textContent = d.attention;
+    cd.className = "count" + (d.attention > 0 ? " hot" : "");
+
+    var counts = tab === "applications" ? a : tab === "leads" ? leadCounts() : tab === "verify" ? vCounts() : tab === "delivery" ? d : p;
+    var hotKeys = { partners: 1, orders: 1, jobs: 1 };
+    filterTabs.innerHTML = FILTERS[tab].map(function (f) {
+      var on = filters[tab] === f[0];
+      var n = counts[f[0]] || 0;
+      var hot = tab === "delivery" && hotKeys[f[0]] && n > 0;
+      return '<button class="tab' + (on ? " active" : "") + '" type="button" data-filter="' + f[0] + '">' +
+        esc(f[1]) + (f[0] === "settings" ? "" : ' <span class="count' + (hot ? " hot" : "") + '">' + n + "</span>") + "</button>";
+    }).join("");
+  }
+
+  function syncTabs() {
+    document.querySelectorAll("[data-tab]").forEach(function (x) {
+      x.classList.toggle("active", x.dataset.tab === tab);
+    });
+    searchBox.placeholder = tab === "applications" ? "Search shops by name, phone, state…"
+      : tab === "leads" ? "Search leads by email or phone…"
+      : tab === "verify" ? "Search by shop, RC/TIN, payment reference or badge…"
+      : tab === "delivery" ? "Search partners, orders, jobs, payouts…" : "Search products by name, category, shop…";
+  }
+
+  function sortRows(rows, nameKey) {
+    var mode = sortBox.value;
+    var out = rows.slice();
+    if (mode === "oldest") out.sort(function (x, y) { return new Date(x.created_at) - new Date(y.created_at); });
+    else if (mode === "name") out.sort(function (x, y) { return String(x[nameKey] || "").localeCompare(String(y[nameKey] || "")); });
+    else out.sort(function (x, y) { return new Date(y.created_at) - new Date(x.created_at); });
+    return out;
+  }
+
+  function renderAll(fresh) {
+    renderStats();
+    renderTabs();
+    // Do not wipe a form the admin is typing in during a background refresh.
+    if (tab === "delivery" && filters.delivery === "settings" && settingsDirty) return;
+    if (tab === "delivery" && (filters.delivery === "settings" || filters.delivery === "coverage") &&
+        list.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+    if (tab === "applications") renderApplications(fresh || {});
+    else if (tab === "leads") renderLeads(fresh || {});
+    else if (tab === "verify") renderVerify(fresh || {});
+    else if (tab === "delivery") renderDelivery(fresh || {});
+    else renderProducts(fresh || {});
+  }
+
+  function renderApplications(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var f = filters.applications;
+    var rows = apps.filter(function (a) {
+      if (f !== "all" && a.verification_status !== f) return false;
+      if (!term) return true;
+      return [a.shop_name, a.slug, a.phone, a.state, a.main_category, a.instagram_handle]
+        .join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "shop_name");
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">' + (term ? "No shops match your search." : "No shops in this view.") + "</div>";
+      return;
+    }
+
+    var listed = {};
+    prods.forEach(function (p) {
+      var o = listed[p.seller_application_id] || (listed[p.seller_application_id] = { total: 0, live: 0 });
+      o.total++;
+      if (p.status === "published") o.live++;
+    });
+
+    list.innerHTML = rows.map(function (a) {
+      var s = a.verification_status;
+      var n = listed[a.id] || { total: 0, live: 0 };
+      return '<div class="item' + (fresh["a" + a.id] ? " fresh" : "") + '">' +
+        '<span class="pill ' + esc(s) + '">' + esc(STATUS_LABEL[s] || s) + "</span> " +
+        "<strong>" + esc(a.shop_name) + "</strong> <span class=\"muted\">(" + esc(a.slug) + ")</span><br>" +
+        "Phone: " + esc(a.phone) + " · State: " + esc(a.state || "-") + "<br>" +
+        "Category: " + esc(a.main_category || "-") + " · Instagram: " + esc(a.instagram_handle || "-") + "<br>" +
+        "Address: " + esc(a.business_address || a.pickup_address || "-") + "<br>" +
+        "Delivery pickup: " + (a.dp_address ? esc(a.dp_address + ", " + (a.dp_city || "") + ", " + (a.dp_state || "")) : "not set") + "<br>" +
+        "Products: " + n.total + " (" + n.live + " live)<br>" +
+        (a.badge_number ? "Badge number: <strong>" + esc(a.badge_number) + "</strong>" + (a.verified_until ? " · Valid until " + esc(new Date(a.verified_until).toLocaleDateString("en-NG")) : "") + "<br>" : "") +
+        '<span class="muted">Applied ' + esc(new Date(a.created_at).toLocaleString("en-NG")) + "</span>" +
+        '<div class="actions">' +
+        (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Suspend shop</button>' : "") +
+        (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">' + (s === "rejected" ? "Reinstate (unverified)" : "Remove verification") + "</button>" : "") +
+        '<button class="button outline" type="button" data-acat="1" data-id="' + esc(a.id) + '" data-cat="' + esc(a.main_category || "") + '">Edit category</button>' +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderProducts(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var f = filters.products;
+    var shops = shopMap();
+    var rows = prods.filter(function (p) {
+      if (f === "published" && p.status !== "published") return false;
+      if (f === "hidden" && p.status !== "hidden") return false;
+      if (f === "soldout" && p.in_stock !== false) return false;
+      if (!term) return true;
+      return [p.name, p.category, shops[p.seller_application_id]].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "name");
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">' + (term ? "No products match your search." : "No products in this view.") + "</div>";
+      return;
+    }
+
+    list.innerHTML = rows.map(function (p) {
+      var live = p.status === "published";
+      return '<div class="item' + (fresh["p" + p.id] ? " fresh" : "") + '"><div class="row">' +
+        (p.image_url && /^https:\/\//.test(p.image_url) ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">' : '<div class="thumb"></div>') +
+        '<div class="grow"><span class="pill ' + esc(p.status) + '">' + esc(STATUS_LABEL[p.status] || p.status) + "</span>" + (p.in_stock === false ? ' <span class="pill">Sold out</span>' : "") + " " +
+        "<strong>" + esc(p.name) + "</strong><br>" +
+        money(p.price_kobo) + " · " + esc(p.category) + "<br>" +
+        '<span class="muted">Shop: ' + esc(shops[p.seller_application_id] || "unknown") + "</span>" +
+        '<div class="actions">' +
+        '<button class="button ' + (live ? "outline" : "") + '" type="button" data-pstatus="' + (live ? "hidden" : "published") + '" data-id="' + esc(p.id) + '">' + (live ? "Unpublish" : "Publish") + "</button>" +
+        '<button class="button outline" type="button" data-pcat="1" data-id="' + esc(p.id) + '" data-cat="' + esc(p.category || "") + '">Edit category</button>' +
+        '<button class="button danger" type="button" data-pdel="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
+        "</div></div></div></div>";
+    }).join("");
+  }
+
+  /* ---------- Lead generation ---------- */
+  function visibleLeads() {
+    var term = searchBox.value.trim().toLowerCase();
+    var f = filters.leads;
+    var rows = leadRows.filter(function (l) {
+      if (f === "email" && !l.email) return false;
+      if (f === "phone" && !l.phone) return false;
+      if (!term) return true;
+      return [l.email, l.phone, l.source].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    return sortRows(rows, "email");
+  }
+
+  function renderLeads(fresh) {
+    if (leadsErr) {
+      list.innerHTML = '<div class="empty">Could not load leads: ' + esc(leadsErr) + "<br>Run leads.sql in Supabase first.</div>";
+      return;
+    }
+    var rows = visibleLeads();
+    var bar = '<div class="leads-bar"><span class="muted">' + rows.length + " lead" + (rows.length === 1 ? "" : "s") +
+      '</span><button class="button light" type="button" data-export="1"' + (rows.length ? "" : " disabled") + ">Export CSV</button></div>";
+    if (!rows.length) {
+      list.innerHTML = bar + '<div class="empty">' + (searchBox.value.trim() ? "No leads match your search." : "No leads yet. They appear here when visitors sign up on the shop.") + "</div>";
+      return;
+    }
+    list.innerHTML = bar + '<div class="table-wrap"><table><thead><tr><th>#</th><th>Email</th><th>Phone</th><th>Source</th><th>Date</th><th></th></tr></thead><tbody>' +
+      rows.map(function (l, i) {
+        return '<tr class="' + (fresh["l" + l.id] ? "fresh" : "") + '"><td>' + (i + 1) + "</td>" +
+          "<td>" + esc(l.email || "-") + "</td><td>" + esc(l.phone || "-") + "</td><td>" + esc(l.source || "-") + "</td>" +
+          "<td>" + esc(new Date(l.created_at).toLocaleString("en-NG")) + "</td>" +
+          '<td><button class="button danger" type="button" data-ldel="' + esc(l.id) + '">Delete</button></td></tr>';
+      }).join("") + "</tbody></table></div>";
+  }
+
+  function csvCell(v) {
+    v = String(v == null ? "" : v);
+    if (/^[=\-@]/.test(v) || (/^\+/.test(v) && !/^\+[0-9]+$/.test(v))) v = "'" + v;
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+
+  function exportLeads() {
+    var rows = visibleLeads();
+    var lines = [["Email", "Phone", "Source", "Date"].map(csvCell).join(",")];
+    rows.forEach(function (l) {
+      lines.push([l.email, l.phone, l.source, new Date(l.created_at).toISOString()].map(csvCell).join(","));
+    });
+    var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "safebuy-leads-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  /* ---------- Verification requests ---------- */
+  var V_LABEL = { submitted: "Awaiting payment check", paid: "Paid · ready to review", approved: "Approved", rejected: "Rejected", expired: "Expired" };
+  var V_PILL = { submitted: "", paid: "", approved: "approved", rejected: "rejected", expired: "hidden" };
+
+  function vCounts() {
+    var c = { open: 0, approved: 0, rejected: 0, expired: 0, all: vrRows.length };
+    vrRows.forEach(function (v) {
+      if (v.status === "submitted" || v.status === "paid") c.open++;
+      else if (c[v.status] != null) c[v.status]++;
+    });
+    return c;
+  }
+
+  function renderVerify(fresh) {
+    if (vrErr) {
+      list.innerHTML = '<div class="empty">Could not load verification requests: ' + esc(vrErr) + "<br>Run verification.sql in Supabase first.</div>";
+      return;
+    }
+    var term = searchBox.value.trim().toLowerCase();
+    var f = filters.verify;
+    var shops = shopMap();
+    var rows = vrRows.filter(function (v) {
+      if (f === "open" && v.status !== "submitted" && v.status !== "paid") return false;
+      if (f !== "open" && f !== "all" && v.status !== f) return false;
+      if (!term) return true;
+      return [shops[v.seller_application_id], v.id_number, v.payment_reference, v.badge_number]
+        .join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "id_number");
+
+    if (!rows.length) {
+      list.innerHTML = '<div class="empty">' + (term ? "No requests match your search." : "No requests in this view.") + "</div>";
+      return;
+    }
+
+    list.innerHTML = rows.map(function (v) {
+      var open = v.status === "submitted" || v.status === "paid";
+      return '<div class="item' + (fresh["v" + v.id] ? " fresh" : "") + '">' +
+        '<span class="pill ' + V_PILL[v.status] + '">' + esc(V_LABEL[v.status] || v.status) + "</span> " +
+        "<strong>" + esc(shops[v.seller_application_id] || "Unknown shop") + "</strong><br>" +
+        esc(v.id_type) + " number: <strong>" + esc(v.id_number) + "</strong><br>" +
+        "Payment: " + money(v.amount_kobo) + " · Reference: " + esc(v.payment_reference) + "<br>" +
+        (v.badge_number ? "Badge number: <strong>" + esc(v.badge_number) + "</strong>" +
+          (v.expires_at ? " · Valid until " + esc(new Date(v.expires_at).toLocaleDateString("en-NG")) : "") + "<br>" : "") +
+        (v.admin_note ? "Note: " + esc(v.admin_note) + "<br>" : "") +
+        '<span class="muted">Submitted ' + esc(new Date(v.created_at).toLocaleString("en-NG")) + "</span>" +
+        (open ? '<div class="actions">' +
+          (v.status === "submitted" ? '<button class="button" type="button" data-vpay="' + esc(v.id) + '">Confirm payment received</button>' : "") +
+          (v.status === "paid" ? '<button class="button" type="button" data-vapprove="' + esc(v.id) + '">Approve and issue badge</button>' : "") +
+          '<button class="button danger" type="button" data-vreject="' + esc(v.id) + '">Reject</button></div>' : "") +
+        "</div>";
+    }).join("");
+  }
+
+  /* ---------- Delivery ---------- */
+  var DOC_LABEL = { id_card: "Government ID", selfie: "Selfie", vehicle_doc: "Vehicle papers", cac_certificate: "CAC certificate" };
+  var ORDER_LABEL = { requested: "Waiting for fee payment", fee_paid: "Fee confirmed", dispatched: "Dispatched", cancelled: "Cancelled" };
+
+  function pMap() { var m = {}; dPartners.forEach(function (p) { m[p.id] = p; }); return m; }
+  function pName(p) { return p ? (p.partner_type === "company" && p.company_name ? p.company_name : p.full_name) : "Unknown"; }
+  function dEmpty(text) { list.innerHTML = '<div class="empty">' + esc(text) + "</div>"; }
+
+  function renderDelivery(fresh) {
+    if (dErr) {
+      list.innerHTML = '<div class="empty">Could not load delivery data: ' + esc(dErr) + "<br>Run delivery.sql and delivery_v2.sql in Supabase first.</div>";
+      return;
+    }
+    var v = filters.delivery;
+    if (v === "partners") renderPartners(fresh);
+    else if (v === "orders") renderDOrders(fresh);
+    else if (v === "jobs") renderJobs(fresh);
+    else if (v === "payouts") renderPayouts();
+    else if (v === "coverage") renderCoverage();
+    else renderSettings();
+  }
+
+  function renderPartners(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var byPartner = {};
+    dDocs.forEach(function (d) { (byPartner[d.partner_id] = byPartner[d.partner_id] || []).push(d); });
+    var rows = dPartners.filter(function (p) {
+      return !term || [p.full_name, p.company_name, p.phone, p.state, p.partner_type, p.status].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "full_name").sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1); });
+    if (!rows.length) { dEmpty(term ? "No partners match your search." : "No delivery partners yet."); return; }
+
+    list.innerHTML = rows.map(function (p) {
+      var seen = {};
+      var docs = (byPartner[p.id] || []).filter(function (d) { return seen[d.doc_type] ? false : (seen[d.doc_type] = 1); });
+      var dhtml = docs.length ? docs.map(function (d) {
+        return '<div class="doc"><div class="grow">' + esc(DOC_LABEL[d.doc_type] || d.doc_type) +
+          ' <span class="pill ' + (d.status === "approved" ? "approved" : d.status === "rejected" ? "rejected" : "") + '">' + esc(d.status) + "</span>" +
+          (d.admin_note ? ' <span class="muted">' + esc(d.admin_note) + "</span>" : "") + "</div>" +
+          '<button class="button outline" type="button" data-dview="' + esc(d.storage_path) + '">View</button>' +
+          (d.status !== "approved" ? '<button class="button" type="button" data-ddoc="approved" data-id="' + esc(d.id) + '">Approve</button>' : "") +
+          (d.status !== "rejected" ? '<button class="button danger" type="button" data-ddoc="rejected" data-id="' + esc(d.id) + '">Reject</button>' : "") + "</div>";
+      }).join("") : '<div class="doc muted">No documents uploaded yet.</div>';
+      var parent = p.company_id && pm[p.company_id] ? " · rides for " + esc(pName(pm[p.company_id])) : "";
+      return '<div class="item' + (fresh["d" + p.id] ? " fresh" : "") + '">' +
+        '<span class="pill ' + (p.status === "approved" ? "approved" : p.status === "pending" ? "" : "rejected") + '">' + esc(p.status) + "</span> " +
+        "<strong>" + esc(pName(p)) + "</strong> <span class=\"muted\">(" + esc(p.partner_type) + (p.vehicle_type ? ", " + esc(p.vehicle_type) : "") + ")</span><br>" +
+        (p.paystack_recipient_code ? "Bank: " + esc(p.bank_name || "") + " ••••" + esc(p.bank_last4 || "") + " (" + esc(p.bank_account_name || "") + ")<br>" : "") + "Contact: " + esc(p.full_name) + " · " + esc(p.phone) + " · State: <span class=\"cap\">" + esc(p.state) + "</span>" + parent +
+        (p.company_reg_no ? " · CAC: " + esc(p.company_reg_no) : "") + (p.invite_code ? " · Code: <strong>" + esc(p.invite_code) + "</strong>" : "") + "<br>" +
+        '<span class="muted">Applied ' + esc(when(p.created_at)) + (p.is_online ? " · online now" : "") +
+        (p.last_seen_at ? " · last seen " + esc(when(p.last_seen_at)) : "") + "</span>" + dhtml +
+        '<div class="actions">' +
+        (p.status !== "approved" ? '<button class="button" type="button" data-dpst="approved" data-id="' + esc(p.id) + '">Approve partner</button>' : "") +
+        (p.status === "pending" ? '<button class="button danger" type="button" data-dpst="rejected" data-id="' + esc(p.id) + '">Reject</button>' : "") +
+        (p.status === "approved" ? '<button class="button danger" type="button" data-dpst="suspended" data-id="' + esc(p.id) + '">Suspend</button>' : "") +
+        (p.status === "suspended" || p.status === "rejected" ? '<button class="button outline" type="button" data-dpst="pending" data-id="' + esc(p.id) + '">Move to pending</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderDOrders(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var rows = dOrders.filter(function (o) {
+      return !term || [o.product_name, o.shop_name, o.buyer_name, o.address, o.city, o.state, o.order_id].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    if (!rows.length) { dEmpty(term ? "No delivery orders match your search." : "No delivery requests yet."); return; }
+    list.innerHTML = rows.map(function (o) {
+      return '<div class="item' + (fresh["o" + o.order_id] ? " fresh" : "") + '"><span class="pill ' + (o.delivery_status === "requested" ? "" : o.delivery_status === "cancelled" ? "rejected" : "approved") + '">' +
+        esc(ORDER_LABEL[o.delivery_status] || o.delivery_status) + "</span> " +
+        "<strong>" + esc(o.product_name || "Product") + "</strong> · " + esc(o.shop_name || "") + "<br>" +
+        "Buyer: " + esc(o.buyer_name || "-") + " · To: " + esc(o.address) + ", <span class=\"cap\">" + esc(o.city) + ", " + esc(o.state) + "</span><br>" +
+        "Delivery fee: <strong>" + money(o.fee_kobo) + "</strong> · Order ref <strong>#" + esc(String(o.order_id).slice(0, 8)) + "</strong> · Order status: " + esc(o.order_status) + "<br>" +
+        '<span class="muted">' + esc(when(o.created_at)) + "</span>" +
+        (o.delivery_status === "requested" ? '<div class="actions"><button class="button" type="button" data-dfee="' + esc(o.order_id) + '">Confirm fee received</button></div>' : "") +
+        "</div>";
+    }).join("");
+  }
+
+  function renderJobs(fresh) {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var rows = dJobs.filter(function (j) {
+      var rider = j.partner_id ? pName(pm[j.partner_id]) : "";
+      return !term || [j.status, j.pickup_city, j.dropoff_city, rider, j.order_id].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    rows = sortRows(rows, "pickup_city");
+    if (!rows.length) { dEmpty(term ? "No jobs match your search." : "No delivery jobs yet."); return; }
+    list.innerHTML = rows.map(function (j) {
+      var bad = j.status === "unassigned" || j.status === "cancelled";
+      return '<div class="item' + (fresh["j" + j.id] ? " fresh" : "") + '"><span class="pill ' + (j.status === "delivered" ? "approved" : bad ? "rejected" : "") + '">' + esc(j.status.replace("_", " ")) + "</span> " +
+        '<span class="cap">' + esc(j.pickup_city) + " → " + esc(j.dropoff_city) + "</span> · " + money(j.delivery_fee_kobo) + (j.fee_collected ? "" : " · <strong>fee NOT collected</strong>") + "<br>" +
+        "Rider: " + esc(j.partner_id ? pName(pm[j.partner_id]) : j.offered_to ? "offer sent to " + pName(pm[j.offered_to]) : "none") + " · Offers sent: " + j.attempts + "<br>" +
+        '<span class="muted">' + esc(when(j.created_at)) + (j.order_id ? " · order #" + esc(String(j.order_id).slice(0, 8)) : "") +
+        (j.delivered_at ? " · delivered " + esc(when(j.delivered_at)) : "") + "</span>" +
+        '<div class="actions">' +
+        (j.status === "unassigned" || j.status === "searching" ? '<button class="button" type="button" data-drequeue="' + esc(j.id) + '">Search again</button>' : "") +
+        (!j.fee_collected ? '<button class="button outline" type="button" data-dcollected="' + esc(j.id) + '">Mark fee collected</button>' : "") +
+        "</div></div>";
+    }).join("");
+  }
+
+  function renderPayouts() {
+    var term = searchBox.value.trim().toLowerCase();
+    var pm = pMap();
+    var rows = dPays.filter(function (r) {
+      var p = pm[r.payee_partner_id];
+      return !term || [pName(p), p && p.phone, r.reference, r.status].join(" ").toLowerCase().indexOf(term) !== -1;
+    });
+    var owed = dPays.filter(function (r) { return r.status === "pending"; }).reduce(function (s, r) { return s + Number(r.amount_kobo); }, 0);
+    var head = '<div class="hint"><strong>Owed to partners: ' + money(owed) + "</strong>. Payouts are created after a delivery is confirmed with the buyer's code. Pay the rider, then tap Mark paid manually.</div>" +
+      (AUTO_PAYOUTS ? '<div class="item"><div class="actions" style="margin:0"><button class="button" type="button" data-dpayall="1">Pay all pending now</button></div></div>' : "");
+    if (!rows.length) { list.innerHTML = head + '<div class="empty">No payouts yet.</div>'; return; }
+    list.innerHTML = head + rows.map(function (r) {
+      var p = pm[r.payee_partner_id];
+      var inflight = r.status === "pending" && r.transfer_ref && !r.payout_blocked;
+      var state = r.status === "paid" ? "paid" : r.payout_blocked ? "needs attention" : inflight ? "sending" : "pending";
+      var bank = p && p.paystack_recipient_code ? esc(p.bank_name || "Bank") + " ••••" + esc(p.bank_last4 || "") : "<strong>no bank account yet</strong>";
+      return '<div class="item"><span class="pill ' + (r.status === "paid" ? "approved" : r.payout_blocked ? "rejected" : "") + '">' + esc(state) + "</span> <strong>" + money(r.amount_kobo) + "</strong> to " + esc(pName(p)) +
+        (p ? " · " + esc(p.phone) : "") + "<br>Bank: " + bank +
+        (r.payout_error ? '<br><span class="muted">' + esc(r.payout_error) + "</span>" : "") +
+        '<br><span class="muted">' + esc(when(r.created_at)) + (r.reference ? " · ref " + esc(r.reference) : "") + "</span>" +
+        (r.status === "pending" ? '<div class="actions">' +
+          (!AUTO_PAYOUTS ? "" : r.payout_blocked ? '<button class="button" type="button" data-dretry="' + esc(r.id) + '">Retry</button>' : inflight ? '<button class="button outline" type="button" data-dpayrun="' + esc(r.id) + '">Check status</button>' : '<button class="button" type="button" data-dpayrun="' + esc(r.id) + '">Pay now</button>') +
+          '<button class="button outline" type="button" data-dpay="' + esc(r.id) + '">Mark paid manually</button></div>' : "") + "</div>";
+    }).join("");
+  }
+
+  function renderCoverage() {
+    var term = searchBox.value.trim().toLowerCase();
+    var rows = dAreas.filter(function (a) { return !term || (a.state + " " + a.city).indexOf(term) !== -1; });
+    list.innerHTML =
+      '<div class="hint">Delivery works only where an area is switched on. Leave City blank to cover a whole state. Switch an area on only when you have verified, approved riders there.</div>' +
+      '<div class="item"><div class="actions" style="margin:0"><button class="button" type="button" data-dcovall="on">Switch on all</button><button class="button danger" type="button" data-dcovall="off">Switch off all</button></div></div>' +
+      '<div class="item"><div class="tools" style="margin:0"><select id="cv-state" aria-label="State">' + STATES.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("") + '</select><input id="cv-city" placeholder="City (optional)" maxlength="40"><button class="button" type="button" id="cv-add">Switch on</button></div></div>' +
+      (rows.length ? rows.map(function (a) {
+        return '<div class="item"><span class="pill ' + (a.is_active ? "approved" : "hidden") + '">' + (a.is_active ? "on" : "off") + '</span> <strong class="cap">' +
+          esc(a.city ? a.city + ", " + a.state : "All of " + a.state) + '</strong><div class="actions"><button class="button outline" type="button" data-dcov="' + (a.is_active ? "off" : "on") +
+          '" data-dstate="' + esc(a.state) + '" data-dcity="' + esc(a.city) + '">' + (a.is_active ? "Switch off" : "Switch on") + "</button></div></div>";
+      }).join("") : '<div class="empty">No areas yet. Delivery is off everywhere.</div>');
+  }
+
+  function renderSettings() {
+    var s = dSettings;
+    if (!s) { dEmpty("Delivery settings row is missing. Run delivery.sql again."); return; }
+    function f(id, label, val, step) {
+      return '<label for="' + id + '">' + label + '</label><input id="' + id + '" type="number" step="' + (step || 1) + '" value="' + esc(val) + '" required>';
+    }
+    list.innerHTML = '<div class="hint">Fees and shares are placeholders until you set your own. The partner share is the percentage of each delivery fee SafeBuy NG pays out to the rider (or their company).</div>' +
+      '<div class="item"><form id="st-form">' +
+      f("st-city", "Fee: same city (₦)", s.fee_same_city_kobo / 100, "0.01") +
+      f("st-state", "Fee: same state (₦)", s.fee_same_state_kobo / 100, "0.01") +
+      f("st-inter", "Fee: different states (₦)", s.fee_interstate_kobo / 100, "0.01") +
+      f("st-share", "Partner share of the fee (%)", s.partner_share_pct) +
+      f("st-offer", "Seconds a rider has to respond", s.offer_seconds) +
+      f("st-att", "Most riders offered per job", s.max_attempts) +
+      f("st-fresh", "A rider's location counts as fresh for (seconds)", s.ping_fresh_seconds) +
+      f("st-win", "Give up searching after (seconds)", s.search_window_seconds) +
+      '<label for="st-ins">How buyers pay the delivery fee (shown to buyers)</label><input id="st-ins" maxlength="500" value="' + esc(s.fee_payment_instructions) + '">' +
+      '<button class="button full" type="submit" id="st-save">Save delivery settings</button><p class="msg" id="st-msg" role="status" aria-live="polite"></p></form></div>';
+  }
+
+  list.addEventListener("input", function (event) {
+    if (event.target.closest("#st-form")) settingsDirty = true;
+  });
+
+  list.addEventListener("submit", async function (event) {
+    if (event.target.id !== "st-form") return;
+    event.preventDefault();
+    var say = function (text, bad) {
+      var m = document.getElementById("st-msg");
+      if (m) { m.textContent = text; m.className = "msg" + (bad ? " err" : ""); }
+    };
+    var val = function (id) { return Number(document.getElementById(id).value); };
+    var want = {
+      fee_same_city_kobo: Math.round(val("st-city") * 100),
+      fee_same_state_kobo: Math.round(val("st-state") * 100),
+      fee_interstate_kobo: Math.round(val("st-inter") * 100)
+    };
+    var save = document.getElementById("st-save");
+    save.disabled = true;
+    say("Saving…");
+    try {
+      await rpc("admin_update_settings", {
+        p_offer: val("st-offer"), p_attempts: val("st-att"), p_fresh: val("st-fresh"), p_window: val("st-win"), p_share: val("st-share"),
+        p_same_city: want.fee_same_city_kobo, p_same_state: want.fee_same_state_kobo, p_interstate: want.fee_interstate_kobo,
+        p_instructions: document.getElementById("st-ins").value
+      });
+      settingsDirty = false;
+      document.activeElement.blur();
+      await fetchAll();
+      var kept = dSettings && dSettings.fee_same_city_kobo === want.fee_same_city_kobo &&
+        dSettings.fee_same_state_kobo === want.fee_same_state_kobo && dSettings.fee_interstate_kobo === want.fee_interstate_kobo;
+      if (kept) { say("Saved. Buyers will now be charged these fees."); note("Delivery settings saved."); }
+      else say("The server accepted the request but kept the old fees. The database rule behind admin_update_settings is rejecting the change. Send this to your developer or to Claude.", true);
+    } catch (err) {
+      say("Not saved: " + (err.message || err), true);
+      save.disabled = false;
+    }
+  });
+
+  /* ---------- Navigation: tabs, filters, search, sort, stat cards ---------- */
+  function switchTab(next, filter) {
+    settingsDirty = false;
+    tab = next;
+    if (filter) filters[tab] = filter;
+    searchBox.value = "";
+    note("");
+    saveView();
+    syncTabs();
+    renderAll();
+  }
+
+  document.getElementById("main-tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]");
+    if (b) switchTab(b.dataset.tab);
+  });
+  filterTabs.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-filter]");
+    if (!b) return;
+    settingsDirty = false;
+    filters[tab] = b.dataset.filter;
+    saveView();
+    renderAll();
+  });
+  statsBox.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-go]");
+    if (!b) return;
+    var p = b.dataset.go.split("|");
+    switchTab(p[0], p[1]);
+  });
+  searchBox.addEventListener("input", function () { renderAll(); });
+  sortBox.addEventListener("change", function () { renderAll(); });
+
+  /* ---------- Actions ---------- */
+  list.addEventListener("click", async function (event) {
+    var b = event.target.closest("button");
+    if (!b) return;
+    var d = b.dataset;
+
+    /* delivery actions */
+    if (d.dview || d.ddoc || d.dpst || d.dfee || d.drequeue || d.dcollected || d.dpay || d.dpayrun || d.dpayall || d.dretry || d.dcov || d.dcovall || b.id === "cv-add") {
+      note("");
+      try {
+        if (d.dview) {
+          var w = window.open("about:blank", "_blank");
+          var su = await client.storage.from("delivery-docs").createSignedUrl(d.dview, 120);
+          if (su.error) { if (w) w.close(); throw su.error; }
+          if (w) w.location.href = su.data.signedUrl; else window.location.href = su.data.signedUrl;
+          return;
+        }
+        if (d.ddoc) {
+          var reason = "";
+          if (d.ddoc === "rejected") {
+            reason = window.prompt("Reason for rejecting (the partner will see this):", "");
+            if (reason === null) return;
+          }
+          b.disabled = true;
+          await rpc("admin_set_doc_status", { p_doc: d.id, p_status: d.ddoc, p_note: reason });
+        } else if (d.dpst) {
+          if (d.dpst === "approved" && !window.confirm("Approve this partner? Make sure the documents match the person.")) return;
+          if (d.dpst === "suspended" && !window.confirm("Suspend this partner? They go offline immediately.")) return;
+          b.disabled = true;
+          await rpc("admin_set_partner_status", { p_partner: d.id, p_status: d.dpst });
+        } else if (d.dfee) {
+          if (!window.confirm("Confirm SafeBuy NG has received this delivery fee?")) return;
+          b.disabled = true;
+          await rpc("admin_confirm_delivery_fee", { p_order: d.dfee });
+        } else if (d.drequeue) {
+          b.disabled = true;
+          await rpc("admin_requeue_job", { p_job: d.drequeue });
+          note("Searching for a rider again.");
+        } else if (d.dcollected) {
+          if (!window.confirm("Mark this job's delivery fee as collected?")) return;
+          b.disabled = true;
+          await rpc("admin_mark_fee_collected", { p_job: d.dcollected });
+        } else if (d.dpayrun || d.dpayall) {
+          b.disabled = true;
+          note("Sending…");
+          var pr = await client.functions.invoke("payout-run", { body: d.dpayrun ? { payout_id: d.dpayrun } : {} });
+          if (pr.error) {
+            var em = pr.error.message;
+            try { var ej = await pr.error.context.json(); if (ej && ej.error) em = ej.error; } catch (x) {}
+            throw new Error(em);
+          }
+          var o = pr.data || {};
+          note("Paid " + o.paid + " · sent " + o.sent + " · waiting " + (o.waiting + o.skipped) + " · failed " + o.failed + (o.notes && o.notes.length ? ". " + o.notes.join(" ") : ""), o.failed > 0);
+          await fetchAll();
+          return;
+        } else if (d.dretry) {
+          b.disabled = true;
+          await rpc("admin_retry_payout", { p_payout: d.dretry });
+        } else if (d.dpay) {
+          var ref = window.prompt("Transfer reference (for your records):", "");
+          if (ref === null) return;
+          b.disabled = true;
+          await rpc("admin_mark_payout_paid", { p_payout: d.dpay, p_reference: ref });
+        } else if (d.dcovall) {
+          var turnOn = d.dcovall === "on";
+          var todo = dAreas.filter(function (a) { return !!a.is_active !== turnOn; });
+          if (turnOn) {
+            // Also add a whole-state row for every Nigerian state that has none yet.
+            var have = {};
+            dAreas.forEach(function (a) { if (!a.city) have[String(a.state).trim().toLowerCase()] = 1; });
+            STATES.forEach(function (s) {
+              var k = s.toLowerCase();
+              if (!have[k]) { todo.push({ state: s, city: "" }); have[k] = 1; }
+            });
+          }
+          if (!todo.length) { note("Everything is already " + (turnOn ? "on." : "off.")); return; }
+          if (!window.confirm((turnOn ? "Switch ON " : "Switch OFF ") + todo.length + " areas? A state with no city covers all of its cities.")) return;
+          b.disabled = true;
+          for (var i = 0; i < todo.length; i++) {
+            await rpc("admin_set_coverage", { p_state: todo[i].state, p_city: todo[i].city || "", p_active: turnOn });
+          }
+          note(todo.length + " areas switched " + (turnOn ? "on." : "off."));
+        } else if (d.dcov) {
+          b.disabled = true;
+          await rpc("admin_set_coverage", { p_state: d.dstate, p_city: d.dcity, p_active: d.dcov === "on" });
+        } else {
+          var st = document.getElementById("cv-state").value.trim();
+          if (!st) { note("Enter a state.", true); return; }
+          b.disabled = true;
+          await rpc("admin_set_coverage", { p_state: st, p_city: document.getElementById("cv-city").value, p_active: true });
+          document.activeElement.blur();
+        }
+        fetchAll();
+      } catch (err) {
+        note(err.message, true);
+        b.disabled = false;
+      }
+      return;
+    }
+
+    b.disabled = true;
+    note("");
+
+    if (d.export) { exportLeads(); b.disabled = false; return; }
+
+    if (d.vpay) {
+      var vp = await client.from("verification_requests")
+        .update({ status: "paid", paid_at: new Date().toISOString() })
+        .eq("id", d.vpay).eq("status", "submitted").select("id");
+      if (vp.error || !vp.data || !vp.data.length) {
+        note(vp.error ? vp.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (d.vapprove) {
+      if (!window.confirm("Check the number on the official register first. Approve and issue the badge?")) { b.disabled = false; return; }
+      var ap = await client.rpc("admin_approve_verification", { p_request: d.vapprove });
+      if (ap.error) { note(ap.error.message, true); b.disabled = false; return; }
+      await fetchAll();
+      note("Verified. Badge number " + ap.data + " issued.");
+      return;
+    }
+
+    if (d.vreject) {
+      var why = window.prompt("Reason for rejecting (the seller will see this):", "");
+      if (why === null) { b.disabled = false; return; }
+      var rj = await client.from("verification_requests")
+        .update({ status: "rejected", admin_note: why.trim() || null, reviewed_at: new Date().toISOString() })
+        .eq("id", d.vreject).in("status", ["submitted", "paid"]).select("id");
+      if (rj.error || !rj.data || !rj.data.length) {
+        note(rj.error ? rj.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (d.ldel) {
+      if (!window.confirm("Delete this lead permanently?")) { b.disabled = false; return; }
+      var ld = await client.from("leads").delete().eq("id", d.ldel).select("id");
+      if (ld.error || !ld.data || !ld.data.length) {
+        note(ld.error ? ld.error.message : "The lead was not deleted.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (d.acat || d.pcat) {
+      var isShop = !!d.acat;
+      var entered = window.prompt(
+        "New category (2 to 40 letters or numbers). Built-in: " + BUILTIN_CATS.join(", "),
+        d.cat || ""
+      );
+      if (entered === null) { b.disabled = false; return; }
+      var cat = normCat(entered);
+      if (!/^[A-Za-z0-9][A-Za-z0-9 &\/-]{1,39}$/.test(cat)) {
+        note("Invalid category. Use 2 to 40 letters or numbers (spaces, &, / and - are allowed).", true);
+        b.disabled = false;
+        return;
+      }
+      var cu = isShop
+        ? await client.from("seller_applications").update({ main_category: cat, updated_at: new Date().toISOString() }).eq("id", d.id).select("id")
+        : await client.from("seller_products").update({ category: cat, updated_at: new Date().toISOString() }).eq("id", d.id).select("id");
+      if (cu.error || !cu.data || !cu.data.length) {
+        note(cu.error ? cu.error.message : "The change was not saved. Run admin_patch.sql first.", true);
+        b.disabled = false;
+        return;
+      }
+      await fetchAll();
+      note("Category changed to “" + cat + "”.");
+      return;
+    }
+
+    if (d.review) {
+      var u = await client.from("seller_applications")
+        .update({ verification_status: d.review, updated_at: new Date().toISOString() })
+        .eq("id", d.id).select("id");
+      if (u.error || !u.data || !u.data.length) {
+        note(u.error ? u.error.message : "The change was not saved.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (d.pstatus) {
+      var s = await client.from("seller_products")
+        .update({ status: d.pstatus }).eq("id", d.id).select("id");
+      if (s.error || !s.data || !s.data.length) {
+        note(s.error ? s.error.message : "The change was not saved. Run admin_patch.sql first.", true);
+        b.disabled = false;
+        return;
+      }
+      fetchAll();
+      return;
+    }
+
+    if (d.pdel) {
+      if (!window.confirm("Delete this product permanently?")) { b.disabled = false; return; }
+      var del = await client.from("seller_products").delete().eq("id", d.pdel).select("id");
+      if (del.error || !del.data || !del.data.length) {
+        note(del.error ? del.error.message : "The product was not deleted.", true);
+        b.disabled = false;
+        return;
+      }
+      if (d.path) await client.storage.from("product-images").remove([d.path]);
+      fetchAll();
+    }
+  });
+
+  /* ---------- Start ---------- */
+  client.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) enter(); else showLogin("");
+  });
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  /* ---------- Installable app (PWA) ---------- */
+  var installEvt = null, installBtn = document.getElementById("install-btn");
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); installEvt = e;
+    if (!standalone) installBtn.hidden = false;
+  });
+  installBtn.addEventListener("click", async function () {
+    if (!installEvt) return;
+    installEvt.prompt();
+    await installEvt.userChoice.catch(function () {});
+    installEvt = null; installBtn.hidden = true;
+  });
+  window.addEventListener("appinstalled", function () { installBtn.hidden = true; });
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) document.getElementById("ios-tip").hidden = false;
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
+  }
+
+})();
+</script>
+</body>
+  </html>
