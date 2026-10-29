@@ -968,6 +968,37 @@ updateCartCount();
     { name: "Other states", status: "soon" }
   ];
 
+  /* ---- Live coverage: the areas switched on in admin (Delivery > Coverage) decide what shows as Available ---- */
+  var ALL_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
+  var AREA_LABEL = { fct: "Abuja (FCT)", rivers: "Rivers (Port Harcourt)", oyo: "Oyo (Ibadan)" };
+  function stateKey(t) { return String(t || "").trim().toLowerCase().replace(/\s+state$/, ""); }
+  function applyCoverage(rows) {
+    var on = {};
+    rows.forEach(function (r) {
+      var k = stateKey(r.state), city = String(r.city || "").trim();
+      if (!k) return;
+      var o = on[k] || (on[k] = { whole: false, cities: [] });
+      if (!city) o.whole = true; else o.cities.push(city);
+    });
+    DELIVERY_AREAS = ALL_STATES.map(function (st) {
+      var k = st.toLowerCase(), o = on[k], label = AREA_LABEL[k] || st;
+      if (o && !o.whole && o.cities.length) label += " (" + o.cities.map(function (t) { return t.replace(/\b\w/g, function (m) { return m.toUpperCase(); }); }).join(", ") + " only)";
+      return { name: label, status: o ? "available" : "soon" };
+    }).sort(function (a, b) { return (a.status === "available" ? 0 : 1) - (b.status === "available" ? 0 : 1); });
+  }
+  function loadCoverage(tries) {
+    if (window.SAFEBUY_DELIVERY_AREAS) return;
+    var c = window.safeBuySupabase;
+    if (!c) { if (tries < 40) setTimeout(function () { loadCoverage(tries + 1); }, 250); return; }
+    c.rpc("list_delivery_coverage").then(function (r) {
+      if (r.error || !Array.isArray(r.data)) return;       // keep the built-in list if coverage cannot be read
+      applyCoverage(r.data);
+      renderDeliveryBar();
+      if ($("delivery-backdrop").classList.contains("open")) renderAreas();
+    });
+  }
+  loadCoverage(0);
+
   var $ = function (id) { return document.getElementById(id); };
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 
@@ -1885,4 +1916,4 @@ document.addEventListener("click", function (e) {
 <script src="./theme.js"></script>
 <script src="./admin-plus.js"></script>
 </body>
-        </html>
+  </html>
