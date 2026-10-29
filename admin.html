@@ -27,6 +27,11 @@ input:focus,select:focus,button:focus-visible{border-color:var(--green);outline:
 .button.outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
 .button.danger{background:#fdeaea;color:var(--red)}
 .full{width:100%;margin-top:18px}
+.button.busy{position:relative;color:transparent!important;pointer-events:none}
+.button.busy::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2.5px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.button.outline.busy::after,.button.light.busy::after,.button.danger.busy::after{border-color:rgba(0,0,0,.18);border-top-color:var(--green)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.button.busy::after{animation-duration:2.4s}}
 .msg{min-height:20px;margin:12px 0 0;font-size:13px}
 .msg.err{color:var(--red)}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
@@ -199,6 +204,8 @@ td .button{padding:6px 11px;font-size:12px}
       sessionStorage.setItem("safebuy-admin-view", JSON.stringify({ tab: tab, fa: filters.applications, fp: filters.products, fd: filters.delivery }));
     } catch (e) {}
   }
+  // Disable a button and show a spinner on it while it works.
+  function busy(el, on) { if (!el) return; el.disabled = !!on; el.classList.toggle("busy", !!on); }
   async function rpc(name, args) {
     var r = await client.rpc(name, args || {});
     if (r.error) throw r.error;
@@ -254,20 +261,21 @@ td .button{padding:6px 11px;font-size:12px}
     showDash();
     syncTabs();
     startLive();
-    client.rpc("expire_verifications").then(function () { fetchAll(); }, function () { fetchAll(); });
+    fetchAll();
+    client.rpc("expire_verifications").then(function () { fetchAll(false, ["vr", "apps"]); }, function () {});
   }
 
   document.getElementById("login-form").addEventListener("submit", async function (event) {
     event.preventDefault();
     var btn = document.getElementById("login-btn");
-    btn.disabled = true;
+    busy(btn, true);
     loginMsg.className = "msg";
     loginMsg.textContent = "Signing in…";
     var res = await client.auth.signInWithPassword({
       email: document.getElementById("email").value.trim(),
       password: document.getElementById("password").value
     });
-    btn.disabled = false;
+    busy(btn, false);
     if (res.error) { showLogin("Incorrect email or password."); return; }
     document.getElementById("password").value = "";
     await enter();
@@ -330,63 +338,78 @@ td .button{padding:6px 11px;font-size:12px}
   });
 
   /* ---------- Data ---------- */
-  async function fetchAll(manual) {
-    if (manual) { liveText.textContent = "Refreshing…"; }
-    var results = await Promise.all([
-      client.from("seller_applications").select("*").order("created_at", { ascending: false }),
-      client.from("seller_products").select("*").order("created_at", { ascending: false }),
-      client.from("leads").select("*").order("created_at", { ascending: false }),
-      client.from("verification_requests").select("*").order("created_at", { ascending: false }),
-      client.from("delivery_partners").select("*").order("created_at", { ascending: false }),
-      client.from("delivery_documents").select("*").order("created_at", { ascending: false }),
-      client.from("delivery_jobs").select("*").order("created_at", { ascending: false }).limit(150),
-      client.from("delivery_payouts").select("*").order("created_at", { ascending: false }).limit(200),
-      client.from("delivery_supported_areas").select("*").order("state").order("city"),
-      client.from("delivery_settings").select("*").eq("id", 1).maybeSingle(),
-      client.rpc("admin_delivery_orders")
-    ]);
-    var ar = results[0], pr = results[1], lr = results[2], vr = results[3];
-    if (ar.error || pr.error) {
-      note((ar.error || pr.error).message, true);
-      setLive("off", "Update failed");
-      return;
+  var FETCHERS = {
+    apps:     function () { return client.from("seller_applications").select("*").order("created_at", { ascending: false }); },
+    prods:    function () { return client.from("seller_products").select("*").order("created_at", { ascending: false }); },
+    leads:    function () { return client.from("leads").select("*").order("created_at", { ascending: false }); },
+    vr:       function () { return client.from("verification_requests").select("*").order("created_at", { ascending: false }); },
+    partners: function () { return client.from("delivery_partners").select("*").order("created_at", { ascending: false }); },
+    docs:     function () { return client.from("delivery_documents").select("*").order("created_at", { ascending: false }); },
+    jobs:     function () { return client.from("delivery_jobs").select("*").order("created_at", { ascending: false }).limit(150); },
+    pays:     function () { return client.from("delivery_payouts").select("*").order("created_at", { ascending: false }).limit(200); },
+    areas:    function () { return client.from("delivery_supported_areas").select("*").order("state").order("city"); },
+    settings: function () { return client.from("delivery_settings").select("*").eq("id", 1).maybeSingle(); },
+    orders:   function () { return client.rpc("admin_delivery_orders"); }
+  };
+  var ALL_KEYS = Object.keys(FETCHERS);
+  var D_KEYS = ["partners", "docs", "jobs", "pays", "areas", "settings", "orders"];
+
+  // fetchAll()                -> reload everything
+  // fetchAll(false, ["jobs"]) -> reload only those lists (much faster after a single action)
+  async function fetchAll(manual, only) {
+    var keys = only && only.length && !dErr ? only : ALL_KEYS;
+    var rb = document.getElementById("refresh-btn");
+    if (manual) { liveText.textContent = "Refreshing…"; busy(rb, true); }
+    try {
+      var results = await Promise.all(keys.map(function (k) { return FETCHERS[k](); }));
+      var R = {};
+      keys.forEach(function (k, i) { R[k] = results[i]; });
+
+      if ((R.apps && R.apps.error) || (R.prods && R.prods.error)) {
+        note((R.apps && R.apps.error ? R.apps.error : R.prods.error).message, true);
+        setLive("off", "Update failed");
+        return;
+      }
+      if (R.apps) apps = R.apps.data || [];
+      if (R.prods) prods = R.prods.data || [];
+      if (R.leads) { leadRows = R.leads.error ? [] : R.leads.data || []; leadsErr = R.leads.error ? R.leads.error.message : ""; }
+      if (R.vr) { vrRows = R.vr.error ? [] : R.vr.data || []; vrErr = R.vr.error ? R.vr.error.message : ""; }
+
+      if (D_KEYS.some(function (k) { return R[k]; })) {
+        var dBad = D_KEYS.map(function (k) { return R[k]; }).filter(function (x) { return x && x.error; })[0];
+        dErr = dBad ? dBad.error.message : "";
+        if (dErr) { dPartners = []; dDocs = []; dJobs = []; dPays = []; dAreas = []; dSettings = null; dOrders = []; }
+        else {
+          if (R.partners) dPartners = R.partners.data || [];
+          if (R.docs) dDocs = R.docs.data || [];
+          if (R.jobs) dJobs = R.jobs.data || [];
+          if (R.pays) dPays = R.pays.data || [];
+          if (R.areas) dAreas = R.areas.data || [];
+          if (R.settings) dSettings = R.settings.data || null;
+          if (R.orders) dOrders = R.orders.data || [];
+        }
+      }
+
+      // mark rows that were not here on the previous fetch
+      var fresh = {}, now = {};
+      apps.forEach(function (a) { now["a" + a.id] = 1; });
+      prods.forEach(function (p) { now["p" + p.id] = 1; });
+      leadRows.forEach(function (l) { now["l" + l.id] = 1; });
+      vrRows.forEach(function (v) { now["v" + v.id] = 1; });
+      dPartners.forEach(function (p) { now["d" + p.id] = 1; });
+      dJobs.forEach(function (j) { now["j" + j.id] = 1; });
+      dOrders.forEach(function (o) { now["o" + o.order_id] = 1; });
+      if (known) { Object.keys(now).forEach(function (k) { if (!known[k]) fresh[k] = 1; }); }
+      known = now;
+
+      lastUpdated = new Date();
+      var hm = lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" });
+      if (realtimeOk) setLive("on", "Live · " + hm); else setLive("off", "Updated " + hm);
+
+      renderAll(fresh);
+    } finally {
+      if (manual) busy(rb, false);
     }
-
-    var dRes = results.slice(4);
-    var dBad = dRes.filter(function (x) { return x.error; })[0];
-    dErr = dBad ? dBad.error.message : "";
-    dPartners = dErr ? [] : dRes[0].data || [];
-    dDocs = dErr ? [] : dRes[1].data || [];
-    dJobs = dErr ? [] : dRes[2].data || [];
-    dPays = dErr ? [] : dRes[3].data || [];
-    dAreas = dErr ? [] : dRes[4].data || [];
-    dSettings = dErr ? null : dRes[5].data || null;
-    dOrders = dErr ? [] : dRes[6].data || [];
-
-    // mark rows that were not here on the previous fetch
-    var fresh = {};
-    var now = {};
-    ar.data.forEach(function (a) { now["a" + a.id] = 1; });
-    pr.data.forEach(function (p) { now["p" + p.id] = 1; });
-    (lr.error ? [] : lr.data).forEach(function (l) { now["l" + l.id] = 1; });
-    (vr.error ? [] : vr.data).forEach(function (v) { now["v" + v.id] = 1; });
-    dPartners.forEach(function (p) { now["d" + p.id] = 1; });
-    dJobs.forEach(function (j) { now["j" + j.id] = 1; });
-    dOrders.forEach(function (o) { now["o" + o.order_id] = 1; });
-    if (known) { Object.keys(now).forEach(function (k) { if (!known[k]) fresh[k] = 1; }); }
-    known = now;
-
-    apps = ar.data;
-    prods = pr.data;
-    leadRows = lr.error ? [] : lr.data;
-    leadsErr = lr.error ? lr.error.message : "";
-    vrRows = vr.error ? [] : vr.data;
-    vrErr = vr.error ? vr.error.message : "";
-    lastUpdated = new Date();
-    if (realtimeOk) setLive("on", "Live · " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
-    else setLive("off", "Updated " + lastUpdated.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" }));
-
-    renderAll(fresh);
   }
 
   /* ---------- Rendering ---------- */
@@ -877,7 +900,7 @@ td .button{padding:6px 11px;font-size:12px}
       fee_interstate_kobo: Math.round(val("st-inter") * 100)
     };
     var save = document.getElementById("st-save");
-    save.disabled = true;
+    busy(save, true);
     say("Saving…");
     try {
       await rpc("admin_save_settings", {
@@ -887,7 +910,7 @@ td .button{padding:6px 11px;font-size:12px}
       });
       settingsDirty = false;
       document.activeElement.blur();
-      await fetchAll();
+      await fetchAll(false, ["settings"]);
       var kept = dSettings && dSettings.fee_same_city_kobo === want.fee_same_city_kobo &&
         dSettings.fee_same_state_kobo === want.fee_same_state_kobo && dSettings.fee_interstate_kobo === want.fee_interstate_kobo;
       if (kept) { say("Saved. Buyers will now be charged these fees."); note("Delivery settings saved."); }
@@ -895,7 +918,7 @@ td .button{padding:6px 11px;font-size:12px}
     } catch (err) {
       var em = String(err.message || err);
       say("Not saved: " + (/could not find the function|schema cache/i.test(em) ? "run the admin_save_settings SQL in Supabase first." : em), true);
-      save.disabled = false;
+      busy(save, false);
     }
   });
 
@@ -935,7 +958,7 @@ td .button{padding:6px 11px;font-size:12px}
   /* ---------- Actions ---------- */
   list.addEventListener("click", async function (event) {
     var b = event.target.closest("button");
-    if (!b) return;
+    if (!b || b.type === "submit") return;   // form buttons are handled by their form's submit handler
     var d = b.dataset;
 
     /* delivery actions */
@@ -955,27 +978,27 @@ td .button{padding:6px 11px;font-size:12px}
             reason = window.prompt("Reason for rejecting (the partner will see this):", "");
             if (reason === null) return;
           }
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_set_doc_status", { p_doc: d.id, p_status: d.ddoc, p_note: reason });
         } else if (d.dpst) {
           if (d.dpst === "approved" && !window.confirm("Approve this partner? Make sure the documents match the person.")) return;
           if (d.dpst === "suspended" && !window.confirm("Suspend this partner? They go offline immediately.")) return;
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_set_partner_status", { p_partner: d.id, p_status: d.dpst });
         } else if (d.dfee) {
           if (!window.confirm("Confirm SafeBuy NG has received this delivery fee?")) return;
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_confirm_delivery_fee", { p_order: d.dfee });
         } else if (d.drequeue) {
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_requeue_job", { p_job: d.drequeue });
           note("Searching for a rider again.");
         } else if (d.dcollected) {
           if (!window.confirm("Mark this job's delivery fee as collected?")) return;
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_mark_fee_collected", { p_job: d.dcollected });
         } else if (d.dpayrun || d.dpayall) {
-          b.disabled = true;
+          busy(b, true);
           note("Sending…");
           var pr = await client.functions.invoke("payout-run", { body: d.dpayrun ? { payout_id: d.dpayrun } : {} });
           if (pr.error) {
@@ -985,15 +1008,15 @@ td .button{padding:6px 11px;font-size:12px}
           }
           var o = pr.data || {};
           note("Paid " + o.paid + " · sent " + o.sent + " · waiting " + (o.waiting + o.skipped) + " · failed " + o.failed + (o.notes && o.notes.length ? ". " + o.notes.join(" ") : ""), o.failed > 0);
-          await fetchAll();
+          await fetchAll(false, ["pays", "jobs"]);
           return;
         } else if (d.dretry) {
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_retry_payout", { p_payout: d.dretry });
         } else if (d.dpay) {
           var ref = window.prompt("Transfer reference (for your records):", "");
           if (ref === null) return;
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_mark_payout_paid", { p_payout: d.dpay, p_reference: ref });
         } else if (d.dcovall) {
           var turnOn = d.dcovall === "on";
@@ -1009,33 +1032,36 @@ td .button{padding:6px 11px;font-size:12px}
           }
           if (!todo.length) { note("Everything is already " + (turnOn ? "on." : "off.")); return; }
           if (!window.confirm((turnOn ? "Switch ON " : "Switch OFF ") + todo.length + " areas? A state with no city covers all of its cities.")) return;
-          b.disabled = true;
-          for (var i = 0; i < todo.length; i++) {
-            await rpc("admin_set_coverage", { p_state: todo[i].state, p_city: todo[i].city || "", p_active: turnOn });
+          busy(b, true);
+          for (var i = 0; i < todo.length; i += 8) {
+            await Promise.all(todo.slice(i, i + 8).map(function (t) {
+              return rpc("admin_set_coverage", { p_state: t.state, p_city: t.city || "", p_active: turnOn });
+            }));
           }
           note(todo.length + " areas switched " + (turnOn ? "on." : "off."));
         } else if (d.dcov) {
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_set_coverage", { p_state: d.dstate, p_city: d.dcity, p_active: d.dcov === "on" });
         } else {
           var st = document.getElementById("cv-state").value.trim();
           if (!st) { note("Enter a state.", true); return; }
-          b.disabled = true;
+          busy(b, true);
           await rpc("admin_set_coverage", { p_state: st, p_city: document.getElementById("cv-city").value, p_active: true });
           document.activeElement.blur();
         }
-        fetchAll();
+        fetchAll(false, d.ddoc ? ["docs", "partners"] : d.dpst ? ["partners", "docs"] : d.dfee ? ["orders", "jobs"] :
+          (d.drequeue || d.dcollected) ? ["jobs", "pays"] : (d.dpay || d.dretry) ? ["pays"] : ["areas"]);
       } catch (err) {
         note(err.message, true);
-        b.disabled = false;
+        busy(b, false);
       }
       return;
     }
 
-    b.disabled = true;
+    busy(b, true);
     note("");
 
-    if (d.export) { exportLeads(); b.disabled = false; return; }
+    if (d.export) { exportLeads(); busy(b, false); return; }
 
     if (d.vpay) {
       var vp = await client.from("verification_requests")
@@ -1043,46 +1069,46 @@ td .button{padding:6px 11px;font-size:12px}
         .eq("id", d.vpay).eq("status", "submitted").select("id");
       if (vp.error || !vp.data || !vp.data.length) {
         note(vp.error ? vp.error.message : "The change was not saved.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      fetchAll();
+      fetchAll(false, ["vr"]);
       return;
     }
 
     if (d.vapprove) {
-      if (!window.confirm("Check the number on the official register first. Approve and issue the badge?")) { b.disabled = false; return; }
+      if (!window.confirm("Check the number on the official register first. Approve and issue the badge?")) { busy(b, false); return; }
       var ap = await client.rpc("admin_approve_verification", { p_request: d.vapprove });
-      if (ap.error) { note(ap.error.message, true); b.disabled = false; return; }
-      await fetchAll();
+      if (ap.error) { note(ap.error.message, true); busy(b, false); return; }
+      await fetchAll(false, ["vr", "apps"]);
       note("Verified. Badge number " + ap.data + " issued.");
       return;
     }
 
     if (d.vreject) {
       var why = window.prompt("Reason for rejecting (the seller will see this):", "");
-      if (why === null) { b.disabled = false; return; }
+      if (why === null) { busy(b, false); return; }
       var rj = await client.from("verification_requests")
         .update({ status: "rejected", admin_note: why.trim() || null, reviewed_at: new Date().toISOString() })
         .eq("id", d.vreject).in("status", ["submitted", "paid"]).select("id");
       if (rj.error || !rj.data || !rj.data.length) {
         note(rj.error ? rj.error.message : "The change was not saved.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      fetchAll();
+      fetchAll(false, ["vr"]);
       return;
     }
 
     if (d.ldel) {
-      if (!window.confirm("Delete this lead permanently?")) { b.disabled = false; return; }
+      if (!window.confirm("Delete this lead permanently?")) { busy(b, false); return; }
       var ld = await client.from("leads").delete().eq("id", d.ldel).select("id");
       if (ld.error || !ld.data || !ld.data.length) {
         note(ld.error ? ld.error.message : "The lead was not deleted.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      fetchAll();
+      fetchAll(false, ["leads"]);
       return;
     }
 
@@ -1092,11 +1118,11 @@ td .button{padding:6px 11px;font-size:12px}
         "New category (2 to 40 letters or numbers). Built-in: " + BUILTIN_CATS.join(", "),
         d.cat || ""
       );
-      if (entered === null) { b.disabled = false; return; }
+      if (entered === null) { busy(b, false); return; }
       var cat = normCat(entered);
       if (!/^[A-Za-z0-9][A-Za-z0-9 &\/-]{1,39}$/.test(cat)) {
         note("Invalid category. Use 2 to 40 letters or numbers (spaces, &, / and - are allowed).", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
       var cu = isShop
@@ -1104,10 +1130,10 @@ td .button{padding:6px 11px;font-size:12px}
         : await client.from("seller_products").update({ category: cat, updated_at: new Date().toISOString() }).eq("id", d.id).select("id");
       if (cu.error || !cu.data || !cu.data.length) {
         note(cu.error ? cu.error.message : "The change was not saved. Run admin_patch.sql first.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      await fetchAll();
+      await fetchAll(false, ["apps", "prods"]);
       note("Category changed to “" + cat + "”.");
       return;
     }
@@ -1118,10 +1144,10 @@ td .button{padding:6px 11px;font-size:12px}
         .eq("id", d.id).select("id");
       if (u.error || !u.data || !u.data.length) {
         note(u.error ? u.error.message : "The change was not saved.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      fetchAll();
+      fetchAll(false, ["apps"]);
       return;
     }
 
@@ -1130,23 +1156,23 @@ td .button{padding:6px 11px;font-size:12px}
         .update({ status: d.pstatus }).eq("id", d.id).select("id");
       if (s.error || !s.data || !s.data.length) {
         note(s.error ? s.error.message : "The change was not saved. Run admin_patch.sql first.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
-      fetchAll();
+      fetchAll(false, ["prods"]);
       return;
     }
 
     if (d.pdel) {
-      if (!window.confirm("Delete this product permanently?")) { b.disabled = false; return; }
+      if (!window.confirm("Delete this product permanently?")) { busy(b, false); return; }
       var del = await client.from("seller_products").delete().eq("id", d.pdel).select("id");
       if (del.error || !del.data || !del.data.length) {
         note(del.error ? del.error.message : "The product was not deleted.", true);
-        b.disabled = false;
+        busy(b, false);
         return;
       }
       if (d.path) await client.storage.from("product-images").remove([d.path]);
-      fetchAll();
+      fetchAll(false, ["prods"]);
     }
   });
 
