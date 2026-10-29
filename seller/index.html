@@ -1,0 +1,2141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#b45309">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
+<!-- seo:start -->
+<link rel="canonical" href="https://samvimltd-tech.github.io/safebuy.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SafeBuy NG">
+<meta property="og:title" content="SafeBuy NG | Shop with Confidence">
+<meta property="og:description" content="Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.">
+<meta property="og:url" content="https://samvimltd-tech.github.io/safebuy.com/">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"SafeBuy NG","url":"https://samvimltd-tech.github.io/safebuy.com/","description":"Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly."}</script>
+<!-- seo:end -->
+<title>SafeBuy Seller</title>
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--background:#f7f9f7;--white:#fff;--orange:#ffb454;--radius:18px;--header-h:68px}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--background);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5;overflow-x:hidden}
+body.locked{overflow:hidden}
+button,input,select,textarea{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid #78d3ad;outline-offset:2px}
+.announcement{padding:8px 16px;text-align:center;background:var(--green-dark);color:#fff;font-size:12px}
+.container{width:min(1160px,100% - 36px);margin:auto}
+
+/* ---------- Header ---------- */
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.header-row{min-height:var(--header-h);display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:#fff;background:var(--green);font-size:22px;font-weight:800}
+.brand-name{font-size:22px;font-weight:800;letter-spacing:-.8px}
+.brand-name span{color:var(--green)}
+.desktop-nav{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700}
+.nav-link,.dd>button.dd-toggle{display:inline-flex;align-items:center;gap:5px;padding:9px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);font-weight:700;font-size:14px;white-space:nowrap}
+.nav-link:hover,.dd>button.dd-toggle:hover,.dd.open>button.dd-toggle{background:var(--green-light);color:var(--green-dark)}
+.nav-link.active{color:var(--green)}
+.caret{font-size:10px;transition:transform .15s}
+.dd.open .caret{transform:rotate(180deg)}
+.dd{position:relative}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:230px;padding:8px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px #173b2822;display:none;z-index:50}
+.dd.right .dd-menu{left:auto;right:0}
+.dd.open .dd-menu{display:block}
+.dd-menu a,.dd-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);font-size:14px;font-weight:600;text-align:left}
+.dd-menu a:hover,.dd-menu button:hover{background:var(--green-light);color:var(--green-dark)}
+.dd-menu .ico{width:22px;text-align:center}
+.dd-menu hr{border:0;border-top:1px solid var(--line);margin:6px 4px}
+.dd-menu .dd-label{padding:6px 12px 4px;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.dd-menu .dd-user{padding:8px 12px;font-size:13px;color:var(--muted);word-break:break-all}
+.header-actions{display:flex;align-items:center;gap:8px}
+.button{border:0;border-radius:12px;padding:12px 17px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.button-primary{background:var(--green);color:#fff}
+.button-primary:hover{background:var(--green-dark)}
+.button-light{background:var(--green-light);color:var(--green-dark)}
+.button-outline{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.button[disabled]{opacity:.55;cursor:not-allowed}
+.header-actions .button{padding:10px 14px;font-size:14px}
+.cart-button{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;font-weight:700;white-space:nowrap;font-size:14px}
+.cart-count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;margin-left:4px;background:var(--green);color:#fff;border-radius:20px;font-size:12px}
+.menu-toggle{display:none;border:1px solid var(--line);background:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;line-height:1}
+
+/* ---------- Delivery bar ---------- */
+.delivery-bar{background:#fff8e8;border-bottom:1px solid #f1d69a;color:#79551b;font-size:13px}
+.delivery-bar.ok{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark)}
+.delivery-bar .container{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;padding:8px 0;text-align:center}
+.delivery-bar button{border:0;background:transparent;color:inherit;font-weight:800;text-decoration:underline;padding:2px 4px;font-size:13px}
+
+/* ---------- Mobile drawer ---------- */
+.drawer-backdrop{position:fixed;inset:0;z-index:45;background:#10271d99;display:none}
+.drawer-backdrop.open{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:46;width:min(340px,88vw);background:#fff;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px #0002}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.drawer-body{flex:1;overflow-y:auto;padding:8px 10px 24px;-webkit-overflow-scrolling:touch}
+.drawer details{border-bottom:1px solid var(--line)}
+.drawer summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:14px 8px;font-weight:800;font-size:15px;cursor:pointer}
+.drawer summary::-webkit-details-marker{display:none}
+.drawer summary::after{content:"▾";font-size:12px;color:var(--muted);transition:transform .15s}
+.drawer details[open] summary::after{transform:rotate(180deg)}
+.drawer .d-links{padding:0 0 10px}
+.drawer .d-links a,.drawer .d-links button,.drawer .d-single{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px;border:0;background:transparent;border-radius:10px;font-size:15px;font-weight:600;color:var(--ink);text-align:left}
+.drawer .d-links a:active,.drawer .d-links button:active,.drawer .d-single:active{background:var(--green-light)}
+.drawer .d-single{font-weight:800;border-bottom:1px solid var(--line);border-radius:0;padding:14px 8px}
+.drawer .d-user{padding:10px 8px;color:var(--muted);font-size:13px;word-break:break-all}
+
+/* ---------- Hero ---------- */
+.hero{padding:30px 0 24px}
+.hero-panel{display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:28px;min-height:320px;padding:clamp(25px,5vw,55px);border-radius:28px;overflow:hidden;background:radial-gradient(circle at 85% 20%,#d5f2df 0,transparent 32%),linear-gradient(120deg,#eaf8ef,#f6fbf6)}
+.eyebrow{display:inline-block;padding:7px 11px;border-radius:30px;background:#fff;color:var(--green-dark);font-size:12px;font-weight:800;letter-spacing:.4px}
+.hero h1{margin:17px 0 13px;max-width:620px;font-size:clamp(34px,5.5vw,56px);line-height:1.08;letter-spacing:-1.8px}
+.hero h1 span{color:var(--green)}
+.hero p{max-width:520px;color:#52675c;font-size:16px;line-height:1.8}
+.hero-buttons{display:flex;flex-wrap:wrap;gap:11px;margin-top:22px}
+.hero-art{min-height:220px;display:grid;place-items:center;position:relative}
+.art-circle{width:min(240px,100%);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:#c7ecd4;font-size:clamp(80px,12vw,130px);box-shadow:0 20px 50px #087f5b18}
+.floating-note{position:absolute;bottom:5px;right:0;background:#fff;padding:12px 15px;border-radius:14px;box-shadow:0 8px 25px #173b2812;font-size:13px;font-weight:700}
+.quick-links{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 22px}
+.quick-link{display:flex;align-items:center;gap:11px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px;text-align:left;color:var(--ink);font-weight:700;font-size:14px}
+.quick-link:hover{border-color:var(--green);background:var(--green-light)}
+.quick-link .ql-ico{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:11px;background:var(--green-light);font-size:19px}
+.quick-link small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.prototype-notice{margin:0 auto 20px;padding:13px 16px;border:1px solid #f1d69a;background:#fff8e8;border-radius:13px;color:#79551b;font-size:13px}
+.prototype-notice strong{color:#66440c}
+
+/* ---------- Sections / shop ---------- */
+.section{padding:22px 0;scroll-margin-top:calc(var(--header-h) + 16px)}
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:18px}
+.section-heading h2{margin:0;font-size:clamp(24px,4vw,31px);letter-spacing:-.7px}
+.section-heading p{margin:5px 0 0;color:var(--muted);font-size:14px}
+.search-wrap{margin-bottom:14px}
+.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce5de;border-radius:15px;padding:5px 6px 5px 16px;box-shadow:0 5px 20px #173b2806}
+.search-icon{color:var(--green);font-size:22px}
+.search-box input{width:100%;min-width:0;border:0;outline:none;background:transparent;padding:12px 0;color:var(--ink);font-size:16px}
+.search-box input::placeholder{color:#98a39c}
+.search-box button{flex-shrink:0}
+.categories{display:flex;gap:9px;overflow-x:auto;padding:2px 0 8px;margin-bottom:8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.category-button{flex-shrink:0;border:1px solid var(--line);background:#fff;border-radius:30px;padding:10px 17px;color:#52645a;font-size:13px;font-weight:700}
+.category-button.active,.category-button:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.results-line{margin:0;color:var(--muted);font-size:13px}
+.sort-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sort-row select{width:auto;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:inherit}
+.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.product-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px #173b2810}
+.product-art{position:relative;min-height:175px;aspect-ratio:1.15/1;display:grid;place-items:center;font-size:75px;background:#edf6ef;cursor:pointer}
+.product-art .tag{position:absolute;top:11px;left:11px;z-index:1;padding:5px 8px;border-radius:8px;background:#fff;color:var(--green-dark);font-size:10px;font-weight:800}
+.product-info{padding:14px}
+.product-category{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.product-info h3{margin:7px 0 8px;font-size:15px;line-height:1.4;min-height:42px;overflow-wrap:anywhere}
+.seller-name{margin:0 0 10px;color:var(--muted);font-size:12px}
+.product-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.price{color:var(--ink);font-size:17px;font-weight:800}
+.product-bottom .rating{color:#a66a0b;font-size:11px;white-space:nowrap}
+.product-actions{display:grid;grid-template-columns:1fr auto;gap:7px}
+.product-actions .button{padding:10px 9px;font-size:12px}
+.icon-button{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px;color:var(--green);font-size:17px}
+a.icon-button{display:inline-grid;place-items:center;text-decoration:none}
+.product-info h3 a{color:inherit}
+.product-info h3 a:hover{color:var(--green)}
+.empty-state{grid-column:1/-1;padding:40px 18px;border:1px dashed #cbd9ce;border-radius:18px;text-align:center;background:#fff}
+.empty-state p{color:var(--muted)}
+.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.trust-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+.trust-icon{display:grid;place-items:center;width:43px;height:43px;background:var(--green-light);border-radius:13px;font-size:22px}
+.trust-card h3{margin:13px 0 7px;font-size:16px}
+.trust-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.sell-panel{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:clamp(24px,4vw,38px);border-radius:22px;background:#173b2c;color:#fff}
+.sell-panel h2{margin:0 0 9px;font-size:clamp(24px,4vw,32px)}
+.sell-panel p{max-width:580px;margin:0;color:#d4e6dc;font-size:14px;line-height:1.8}
+.sell-panel .button{flex-shrink:0;background:#d8f5e3;color:#145338}
+footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid var(--line)}
+.footer-row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.footer-row p{color:var(--muted);font-size:13px;max-width:420px}
+.footer-cols{display:flex;gap:40px;flex-wrap:wrap}
+.footer-col h4{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.footer-col a,.footer-col button{display:block;padding:4px 0;border:0;background:transparent;font-size:14px;font-weight:600;color:var(--ink);text-align:left}
+.footer-col a:hover,.footer-col button:hover{color:var(--green)}
+.mobile-nav{display:none}
+.toast{position:fixed;left:50%;bottom:85px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:13px 18px;border-radius:13px;background:#173b2c;color:#fff;font-size:14px;box-shadow:0 8px 30px #0002;z-index:80;display:none}
+.toast.show{display:block}
+
+/* ---------- Modals ---------- */
+.modal-backdrop{position:fixed;inset:0;z-index:60;padding:20px;background:#10271dcc;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{width:min(450px,100%);max-height:88vh;max-height:88dvh;overflow-y:auto;padding:24px;background:#fff;border-radius:22px;-webkit-overflow-scrolling:touch}
+.modal-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.modal h2{margin:0 0 12px}
+.modal-art{display:grid;place-items:center;min-height:180px;margin:14px 0;border-radius:16px;background:#edf6ef;font-size:90px}
+.modal p{color:var(--muted);line-height:1.7}
+.modal .button{width:100%;margin-top:12px}
+.modal label{display:block;margin:12px 0 5px;font-size:13px;font-weight:700}
+.modal input{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;font-size:16px}
+.modal input:focus{border-color:var(--green)}
+.source-banner{margin:0 0 14px;padding:11px 14px;border-radius:12px;font-size:13px;border:1px solid var(--line);background:#fff}
+.source-banner.supabase{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark);font-weight:700}
+.source-banner.sample{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
+.source-banner.loading{color:var(--muted)}
+.product-art img,.modal-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.modal-art{position:relative;overflow:hidden}
+.modal textarea,.modal select{width:100%;padding:12px 13px;border:1px solid #dce5de;border-radius:12px;outline:none;background:#fff;font:inherit;font-size:16px;color:var(--ink)}
+.modal textarea{min-height:84px;resize:vertical}
+.modal textarea:focus,.modal select:focus{border-color:var(--green)}
+.modal h3{margin:20px 0 8px;font-size:16px}
+.modal .muted{color:var(--muted);font-size:13px}
+.status-pill{display:inline-block;margin:0 0 6px;padding:5px 11px;border-radius:30px;font-size:12px;font-weight:800;background:#fff3e0;color:#7a4a05}
+.status-pill.ok{background:var(--green-light);color:var(--green-dark)}
+.status-pill.bad{background:#fdeaea;color:#8a1f1f}
+.seller-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:14px}
+.seller-row .button{width:auto;margin:0;padding:8px 12px;font-size:12px}
+.review-card{padding:14px;margin:10px 0;border:1px solid var(--line);border-radius:14px;font-size:13px;line-height:1.6}
+.review-card .button{width:auto;margin:8px 8px 0 0;padding:9px 14px;font-size:13px}
+.form-message{min-height:20px;margin:10px 0 0;font-size:13px}
+.modal label.check{display:flex;align-items:flex-start;gap:9px;margin:14px 0 4px;font-weight:400;font-size:13px;line-height:1.5}
+.modal label.check input{width:auto;margin-top:3px}
+.modal .button-outline{margin-top:10px}
+.badge{display:inline-block;margin-left:5px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;background:#fff3e0;color:#7a4a05;vertical-align:1px}
+.badge.ok{background:var(--green-light);color:var(--green-dark)}
+.seller-item{padding:12px 0;border-top:1px solid var(--line)}
+.seller-item-top{display:flex;gap:12px;align-items:center}
+.seller-item .thumb{width:54px;height:54px;border-radius:10px;object-fit:cover;background:#edf6ef;flex-shrink:0}
+.seller-item .grow{flex:1;min-width:0;font-size:14px}
+.seller-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.seller-actions .button{width:auto;margin:0;padding:8px 11px;font-size:12px}
+.modal-note{padding:11px 13px;border-radius:12px;background:#fff8e8;border:1px solid #f1d69a;color:#79551b!important;font-size:13px;line-height:1.6}
+/* delivery areas */
+.area-list{margin:10px 0 0;padding:0;list-style:none;max-height:42vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.area-list li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line);font-size:14px}
+.area-list li:last-child{border-bottom:0}
+.area-list li button{width:auto;margin:0;padding:6px 11px;font-size:12px}
+.chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:800;background:#fff3e0;color:#7a4a05;white-space:nowrap}
+.chip.ok{background:var(--green-light);color:var(--green-dark)}
+.area-group{margin:16px 0 4px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+
+.header-actions>#mp-orders-btn,.header-actions>#mp-shop-btn,.header-actions>#do-btn,.header-actions>#sb-myshop,.header-actions>#role-pill{display:none!important}
+body.sb-in .signin-btn,body.sb-in .buyer-header{display:none!important}
+body:not(.sb-in) .dd-account{display:none!important}
+body.sb-seller .cart-button,body.sb-seller .mobile-nav [data-action=cart]{display:none!important}
+.footer-col.footer-links{display:block}
+.mode-chip{display:inline-block;margin-left:6px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;background:var(--green-light);color:var(--green-dark)}
+body.sb-seller .mode-chip{background:#fff3e0;color:#7a4a05}
+@media (max-width:1000px){
+.nav-link,.dd>button.dd-toggle{padding:9px 9px}
+.header-actions .sell-header{display:none}
+.quick-links{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:900px){
+.product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.hero-panel{grid-template-columns:1.15fr .85fr}
+.desktop-nav,.header-actions .dd-account,.header-actions .delivery-btn,.header-actions .buyer-header{display:none!important}
+.menu-toggle{display:inline-grid;place-items:center}
+}
+@media (max-width:650px){
+:root{--header-h:60px}
+body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
+.container{width:calc(100% - 26px)}
+.announcement{font-size:11px}
+.header-row{gap:8px}
+.brand-mark{width:36px;height:36px;font-size:20px}
+.brand-name{font-size:19px}
+.cart-button{display:none}
+.delivery-bar .container{justify-content:flex-start;text-align:left;font-size:12px;padding:7px 0}
+.hero{padding-top:16px}
+.hero-panel{grid-template-columns:1fr;gap:8px;padding:27px 22px;min-height:auto;border-radius:22px}
+.hero h1{font-size:37px;letter-spacing:-1.2px}
+.hero p{font-size:14px}
+.hero-art{min-height:140px}
+.art-circle{width:130px;font-size:68px}
+.floating-note{right:2px;bottom:0;font-size:11px}
+.quick-links{gap:9px}
+.quick-link{padding:11px;font-size:13px;gap:9px}
+.quick-link small{display:none}
+.section{padding:18px 0}
+.section-heading{align-items:start}
+.section-heading h2{font-size:25px}
+.search-box{padding-left:12px}
+.search-box .button{padding:11px}
+.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.product-art{min-height:135px;font-size:58px}
+.product-info{padding:11px}
+.product-info h3{font-size:14px;min-height:40px}
+.product-bottom{align-items:start;flex-direction:column;gap:3px}
+.price{font-size:16px}
+.product-actions{grid-template-columns:1fr}
+.product-actions .icon-button{display:none}
+.product-actions .button{width:100%}
+.trust-grid{grid-template-columns:1fr}
+.trust-card{padding:18px}
+.sell-panel{align-items:start;flex-direction:column}
+.sell-panel .button{width:100%}
+.footer-row{flex-direction:column}
+.modal-backdrop{padding:0;align-items:flex-end}
+.modal{width:100%;max-height:92dvh;border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+.mobile-nav{position:fixed;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;left:0;right:0;bottom:0;z-index:35;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 20px #173b2808}
+.mobile-nav a,.mobile-nav button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;color:#65756b;font-size:11px;font-weight:700;padding:4px 0;min-height:48px}
+.mobile-nav .nav-icon{font-size:20px;line-height:1.1}
+.mobile-nav .current{color:var(--green)}
+.mobile-nav .cart-count{position:absolute;top:0;right:22%;margin:0;min-width:18px;height:18px;font-size:10px}
+.toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+}
+@media (prefers-reduced-motion:reduce){
+html{scroll-behavior:auto}
+*,*::before,*::after{transition:none!important}
+}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
+.path{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);text-align:left;text-decoration:none;font:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(8,127,91,.07)}
+.path:active{transform:scale(.98)}
+.path-ico{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:var(--green-light);font-size:22px}
+.path img{flex:0 0 46px;width:46px;height:46px;border-radius:12px;object-fit:cover;object-position:50% 20%;background:var(--green-light)}
+.path-t{flex:1;min-width:0}.path-t strong{display:block;font-size:16px;line-height:1.2}
+.path-t small{display:block;margin-top:2px;font-size:12px;color:var(--muted);line-height:1.25}
+.path-go{color:var(--green-dark);font-weight:800}
+.path-buy{background:linear-gradient(135deg,var(--green),var(--green-dark));border-color:transparent;color:#fff}
+.path-buy .path-ico{background:rgba(255,255,255,.2)}.path-buy small,.path-buy .path-go{color:#e6f8ee}
+@media(max-width:650px){.path{padding:10px;gap:8px}.path-ico{flex-basis:38px;height:38px;font-size:20px}.path img{flex-basis:42px;width:42px;height:42px}.path-t strong{font-size:14px}.path-t small{font-size:11px}.path-go{display:none}}
+/* Delivery partner banner */
+.rider-banner{margin:18px 0 6px;padding:18px 16px 20px;border:1px solid #bfe6d1;border-radius:22px;background:linear-gradient(180deg,#fff,var(--green-light));text-align:center;box-shadow:0 10px 26px rgba(8,127,91,.10)}
+.rider-banner img{mix-blend-mode:multiply;display:block;width:min(300px,78%);height:auto;margin:0 auto 6px}
+.rider-banner h2{margin:0;font-size:24px;color:var(--ink);line-height:1.2}
+.rider-banner p{margin:6px auto 14px;max-width:380px;font-size:14px;color:var(--muted)}
+.rider-banner .button{min-width:220px;font-size:16px;padding:14px 22px}
+@media(min-width:760px){.rider-banner{display:grid;grid-template-columns:260px 1fr;align-items:center;gap:24px;text-align:left;padding:20px 28px}.rider-banner img{width:100%;margin:0}.rider-banner p{margin-left:0}}
+/* Marketplace pulse card (inside the Shop menu) */
+.pulse-card{margin:2px 0 8px;padding:12px;border:1px solid #bfe6d1;border-radius:14px;background:linear-gradient(180deg,var(--green-light),#fff);text-align:left}
+.pulse-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.pulse-head strong{display:block;font-size:14px;color:var(--ink);line-height:1.25}
+.pulse-head span.sub{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted);line-height:1.3}
+.pulse-live{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:3px 9px;border-radius:30px;background:#fff;border:1px solid #bfe6d1;color:var(--green-dark);font-size:11px;font-weight:800}
+.pulse-live i{width:7px;height:7px;border-radius:50%;background:#1fae6f;box-shadow:0 0 0 0 #1fae6f88;animation:pulse-dot 1.8s infinite}
+@keyframes pulse-dot{70%{box-shadow:0 0 0 6px #1fae6f00}100%{box-shadow:0 0 0 0 #1fae6f00}}
+.pulse-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.pulse-stat{padding:8px 4px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center}
+.pulse-stat .pi{display:block;font-size:16px;line-height:1.1}
+.pulse-stat b{display:block;margin-top:3px;font-size:14px;color:var(--ink);line-height:1.2;word-break:break-word}
+.pulse-stat span.pl{display:block;font-size:10.5px;font-weight:600;color:var(--muted);line-height:1.2}
+.pulse-more{margin-top:8px}
+.pulse-more>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:800;color:var(--ink);cursor:pointer;list-style:none}
+.pulse-more>summary::-webkit-details-marker{display:none}
+.pulse-more>summary .chev{transition:transform .18s;color:var(--green-dark)}
+.pulse-more[open]>summary .chev{transform:rotate(180deg)}
+.pulse-cats{margin-top:6px;display:grid;gap:2px}
+.pulse-cats button{display:flex!important;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:8px 10px!important;border:0;border-radius:8px!important;background:transparent;color:var(--ink);font-size:13px!important;font-weight:600;text-align:left}
+.pulse-cats button:hover{background:var(--green-light)}
+.pulse-cats button b{min-width:24px;padding:1px 7px;border-radius:20px;background:var(--green-light);color:var(--green-dark);text-align:center;font-size:12px}
+/* spinner shown on any button while it waits for the network (see the script below) */
+button.busy{color:transparent!important;pointer-events:none}
+button.busy>*{visibility:hidden}
+button.busy::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2.5px solid rgba(8,127,91,.25);border-top-color:var(--green);border-radius:50%;animation:sb-spin .7s linear infinite}
+button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(255,255,255,.4);border-top-color:#fff}
+@keyframes sb-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){button.busy::after{animation-duration:2.4s}}
+</style>
+<script>
+/* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
+   after a button is tapped puts a spinner on that button until the request finishes. */
+(function () {
+  "use strict";
+  var orig = window.fetch, last = null;
+  if (typeof orig !== "function") return;
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("button") : null;
+    last = b && !b.disabled && !b.hasAttribute("data-no-spinner") ? { b: b, t: Date.now() } : null;
+  }, true);
+  function track(b, p) {
+    if (!b.__sbN) {
+      b.__sbN = 0; b.__sbT = Date.now();
+      if (getComputedStyle(b).position === "static") { b.style.position = "relative"; b.__sbPos = true; }
+      if (/(^|\s)button-primary(\s|$)/.test(b.className) === false && getComputedStyle(b).backgroundColor === "rgb(8, 127, 91)") b.classList.add("sb-dark");
+      b.classList.add("busy"); b.setAttribute("aria-busy", "true");
+      b.__sbKill = setTimeout(function () { b.__sbN = 0; clear(b); }, 25000);   // never leave a button stuck
+    }
+    b.__sbN++;
+    var done = function () {
+      if (--b.__sbN > 0) return;
+      setTimeout(function () { if (!b.__sbN) clear(b); }, Math.max(0, 350 - (Date.now() - b.__sbT)));   // no flicker
+    };
+    p.then(done, done);
+  }
+  function clear(b) {
+    clearTimeout(b.__sbKill);
+    b.classList.remove("busy", "sb-dark"); b.removeAttribute("aria-busy");
+    if (b.__sbPos) { b.style.position = ""; b.__sbPos = false; }
+    b.__sbN = 0;
+  }
+  window.fetch = function () {
+    var p = orig.apply(this, arguments), L = last;
+    if (L && Date.now() - L.t < 800 && L.b.isConnected) track(L.b, p);
+    return p;
+  };
+})();
+</script>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////w3c7Edz20UwmGl+YyAAACC0lEQVR42u2YO04DMRCGf0MeSBRJAxLZSHADuAHLDagooKChSihyAzhCCuhSEhoKaqrkCHS0KbK8RJECCVjQmiLsI1l7ZyxBgTSuLPnL2DOe+T0bpeEwFiC00EILLbTQQgstNJ/WlzsLe+2hCdf50QUAlK/yKwZ6HBs6YNCRn+x7SNPj9JS1+bW8l72CmKj5XjP7+9qEimDoFO9HJ3pUeJnzbvsoiMm8lzNBIr3UTln1CQBoDcI+59yvAOBprfWTz7lLAEcAsHpD254AUHHGkLYnGV+8LmV7BKCqbcNku/RPFeLLif50oqNTp3P3uHQdAIJjZu38FFrbfJemrAKAfRb9Gu+5ysmTJEeePYaX5WR236GVLbOZikjbKtUTvUXfTkZ97mityirbgFT79wy9TipEJTN/Ic+tbtP5G/k2IKzaY5jP2EqqInpIv64f6eI2rYOV8Yy6ULXjXdhoGPO4b3lKzLQOpvQyR7+BxthJqxo+6+WOR9AEUH1n0tGigbaqpnLSWOX/oX672y4R9EMyGzJshx2X/mRUiRs9U1bl+6pmpr+qk14GnYL+Ki8+6jrpODeJ/B4BUK1BeAYAOGHQdmkrpjWvdiwhKKTLTvSSE73hRHeZb/FU4sj3cs0yt4Q0SCtzwPgmCaxfJEYdfJpWZEOzaB2e72KlZRJTJf9/Cy200EILLbTQQv8K/Q1+aubmT9k2pAAAAABJRU5ErkJggg==">
+</head>
+<body>
+<div class="announcement">Made for Nigerian shoppers and sellers · NGN prices</div>
+
+<header>
+  <div class="container header-row">
+    <a class="brand" href="#home" aria-label="SafeBuy NG home">
+      <span class="brand-mark">S</span>
+      <span class="brand-name">SafeBuy <span>NG</span></span>
+    </a>
+
+    <nav class="desktop-nav" id="desktop-nav" aria-label="Main navigation">
+      <a class="nav-link" href="#home" data-spy="home">Home</a>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="shop">Shop <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <div class="dd-label">Categories</div>
+          <button type="button" data-goto-category="All"><span class="ico">🛍️</span>All products</button>
+          <button type="button" data-goto-category="Electronics"><span class="ico">🎧</span>Electronics</button>
+          <button type="button" data-goto-category="Fashion"><span class="ico">👟</span>Fashion</button>
+          <button type="button" data-goto-category="Home"><span class="ico">🏠</span>Home &amp; living</button>
+          <button type="button" data-goto-category="Beauty"><span class="ico">🧴</span>Beauty</button>
+          <button type="button" data-goto-category="Groceries"><span class="ico">🍚</span>Groceries</button>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="sell">Sell <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <button type="button" data-action="sell"><span class="ico">🏪</span>Start selling / My shop</button>
+          <button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>
+          <a href="#sell"><span class="ico">ℹ️</span>Why sell with us</a>
+        </div>
+      </div>
+
+      <div class="dd">
+        <button class="dd-toggle" type="button" aria-haspopup="true" aria-expanded="false" data-spy="how-it-works">Help <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu">
+          <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
+          <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
+          <button type="button" data-action="deliver"><span class="ico">🏍️</span>Deliver with us</button>
+          <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="header-actions">
+      <button class="button button-outline delivery-btn" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
+      <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
+
+      <button class="button button-primary signin-btn" type="button" data-action="account">Sign in</button>
+
+      <div class="dd right dd-account" id="account-dd">
+        <button class="button button-outline dd-toggle-btn" type="button" id="account-dd-toggle" aria-haspopup="true" aria-expanded="false">👤 <span id="account-dd-label">Sign in</span> <span class="caret">▼</span></button>
+        <div class="dd-menu" role="menu" id="account-dd-menu"></div>
+      </div>
+
+      <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
+        🛒 Cart <span class="cart-count" id="cart-count">0</span>
+      </button>
+      <button class="menu-toggle" type="button" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">☰</button>
+    </div>
+  </div>
+</header>
+
+<div class="delivery-bar" id="delivery-bar" role="status">
+  <div class="container">
+    <span id="delivery-bar-text">🚚 Delivery is not available in your area yet.</span>
+    <button type="button" data-action="delivery">Show areas available</button>
+  </div>
+</div>
+
+<!-- Mobile drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="drawer-head">
+    <a class="brand" href="#home"><span class="brand-mark">S</span><span class="brand-name">SafeBuy <span>NG</span></span></a>
+    <button class="icon-button" type="button" id="drawer-close" aria-label="Close menu">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <a class="d-single" href="#home">🏠 Home</a>
+    <details>
+      <summary>🛍️ Shop by category</summary>
+      <div class="d-links">
+        <button type="button" data-goto-category="All">All products</button>
+        <button type="button" data-goto-category="Electronics">🎧 Electronics</button>
+        <button type="button" data-goto-category="Fashion">👟 Fashion</button>
+        <button type="button" data-goto-category="Home">🏠 Home &amp; living</button>
+        <button type="button" data-goto-category="Beauty">🧴 Beauty</button>
+        <button type="button" data-goto-category="Groceries">🍚 Groceries</button>
+      </div>
+    </details>
+    <details>
+      <summary>🏪 Sell</summary>
+      <div class="d-links">
+        <button type="button" data-action="sell">Start selling / My shop</button>
+        <button type="button" data-feature="verify">✅ Get verified</button>
+        <a href="#sell">Why sell with us</a>
+      </div>
+    </details>
+    <details>
+      <summary>📦 Orders &amp; delivery</summary>
+      <div class="d-links">
+        <button type="button" data-feature="orders"><span class="lbl">📦 My orders</span></button>
+        <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
+        <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
+        <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
+        <button type="button" data-action="delivery">📍 Delivery areas</button>
+        <button type="button" data-action="deliver">🏍️ Deliver with us</button>
+      </div>
+    </details>
+    <details>
+      <summary>👤 Account</summary>
+      <div class="d-links" id="drawer-account"></div>
+    </details>
+    <details>
+      <summary>❓ Help</summary>
+      <div class="d-links">
+        <a href="#how-it-works">How it works</a>
+        <button type="button" data-action="safety">🛡️ Safety tips</button>
+      </div>
+    </details>
+    <button class="d-single" type="button" data-action="cart">🛒 Demo cart (<span class="cart-count-inline">0</span>)</button>
+  </div>
+</aside>
+
+<main id="home">
+  <section class="hero">
+    <div class="container">
+      <div class="hero-panel">
+        <div>
+          <span class="eyebrow">YOUR EVERYDAY MARKETPLACE</span>
+          <h1>Good finds.<br><span>Better shopping.</span></h1>
+          <p>Discover fashion, electronics, home essentials and more from one simple marketplace made for Nigeria.</p>
+          <div class="hero-buttons">
+            <a class="button button-primary" href="#shop">Explore products →</a>
+            <a class="button button-outline" href="#how-it-works">How it works</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="art-circle">🛍️</div>
+          <div class="floating-note">✨ Discover something good</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="quick-links" aria-label="Quick links">
+      <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
+      <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
+      <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
+      <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
+    </div>
+    <div class="paths" aria-label="Sell or deliver with SafeBuy NG">
+      <button class="path path-sell" type="button" data-action="sell"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></button>
+      <button class="path path-ride" type="button" data-action="deliver"><img src="../rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></button>
+    </div>
+    <div class="prototype-notice">
+      <strong>Prototype notice:</strong>
+      This is a demonstration. Payments, escrow, delivery protection and real orders are not active. Do not send money based on this demo.
+    </div>
+  </div>
+
+  <section class="section" id="shop">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Find your next favourite</h2>
+          <p id="shop-subtitle">Explore products across popular categories.</p>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <form class="search-box" id="search-form" role="search">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" placeholder="Search phones, fashion, groceries..." aria-label="Search products">
+          <button class="button button-primary" type="submit">Search</button>
+        </form>
+      </div>
+
+      <div class="categories" id="categories" aria-label="Product categories">
+        <button class="category-button active" type="button" data-category="All">All products</button>
+        <button class="category-button" type="button" data-category="Electronics">Electronics</button>
+        <button class="category-button" type="button" data-category="Fashion">Fashion</button>
+        <button class="category-button" type="button" data-category="Home">Home &amp; living</button>
+        <button class="category-button" type="button" data-category="Beauty">Beauty</button>
+        <button class="category-button" type="button" data-category="Groceries">Groceries</button>
+      </div>
+
+      <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
+
+      <div class="toolbar">
+        <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
+        <div class="sort-row">
+          <label for="sort-select">Sort by</label>
+          <select id="sort-select">
+            <option value="newest">Newest first</option>
+            <option value="low">Price: low to high</option>
+            <option value="high">Price: high to low</option>
+          </select>
+        </div>
+      </div>
+      <div class="product-grid" id="product-grid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Shopping should feel simple</h2>
+          <p>Our planned marketplace is being built around clearer information.</p>
+        </div>
+      </div>
+      <div class="trust-grid">
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🔎</div>
+          <h3>Discover products</h3>
+          <p>Compare product details and prices before deciding what to buy.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">👤</div>
+          <h3>Know the seller</h3>
+          <p>Every shop shows a clear Verified or Unverified label. Verification is added by SafeBuy NG, and shops that break the rules can be suspended. Detailed identity checks and reviews are limited in this demo.</p>
+        </article>
+        <article class="trust-card">
+          <div class="trust-icon" aria-hidden="true">🧾</div>
+          <h3>Clear order records</h3>
+          <p>The future service will need real order tracking, payment confirmation and a documented process for resolving problems.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="sell">
+    <div class="container">
+      <div class="sell-panel">
+        <div>
+          <h2>Have products to sell?</h2>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Create a shop in one step and list products with photos straight away. Shoppers contact you directly on WhatsApp.</p>
+        </div>
+        <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-row">
+    <div>
+      <a class="brand" href="#home">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">SafeBuy <span>NG</span></span>
+      </a>
+      <p>A Nigerian marketplace prototype in development. No real payments or buyer-protection services are currently active.</p>
+      <p>© <span id="year">2026</span> SafeBuy NG</p>
+    </div>
+    <nav class="footer-cols" aria-label="Footer navigation">
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#shop">All products</a>
+        <button type="button" data-goto-category="Electronics">Electronics</button>
+        <button type="button" data-goto-category="Fashion">Fashion</button>
+        <button type="button" data-goto-category="Groceries">Groceries</button>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <button type="button" data-feature="orders">My orders</button>
+        <button type="button" data-feature="messages">Messages</button>
+        <button type="button" data-feature="settings">Account settings</button>
+        <button type="button" data-feature="mode" hidden><span class="lbl">Switch mode</span></button>
+        <button type="button" data-action="sell">Sell with us</button>
+      </div>
+      <div class="footer-col footer-links">
+        <h4>Help</h4>
+        <a href="#how-it-works">How it works</a>
+        <button type="button" data-action="delivery">Delivery areas</button>
+        <button type="button" data-action="safety">Safety tips</button>
+        <a href="#home">Back to top ↑</a>
+      </div>
+    </nav>
+  </div>
+</footer>
+
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+  <a class="current" href="#home" data-spy="home"><span class="nav-icon">⌂</span><span>Home</span></a>
+  <a href="#shop" data-spy="shop"><span class="nav-icon">⌕</span><span>Shop</span></a>
+  <button type="button" data-action="sell"><span class="nav-icon">＋</span><span>Sell</span></button>
+  <button type="button" data-action="cart"><span class="nav-icon">🛒</span><span>Cart</span><span class="cart-count cart-count-mobile">0</span></button>
+  <button type="button" id="mobile-menu-btn"><span class="nav-icon">☰</span><span>Menu</span></button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Product modal -->
+<div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="modal-title"></h2>
+      <button class="icon-button" type="button" id="close-modal" aria-label="Close">✕</button>
+    </div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- Account modal -->
+<div class="modal-backdrop" id="account-backdrop" role="dialog" aria-modal="true" aria-labelledby="account-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="account-title">Welcome to SafeBuy NG</h2>
+      <button class="icon-button" type="button" id="account-close" aria-label="Close">✕</button>
+    </div>
+    <form id="account-form">
+      <label for="account-name" id="account-name-label">Full name</label>
+      <input id="account-name" type="text" autocomplete="name" placeholder="Your full name">
+
+      <label for="account-email">Email address</label>
+      <input id="account-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+
+      <label for="account-password">Password</label>
+      <input id="account-password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required>
+
+      <button class="button button-primary" type="submit" id="account-submit">Sign in</button>
+    </form>
+    <p id="account-message" role="status" aria-live="polite"></p>
+    <button class="button button-outline" type="button" id="account-toggle">Need an account? Sign up</button>
+    <button class="button button-outline" type="button" id="account-reset">Forgot password?</button>
+    <button class="button button-outline" type="button" id="account-logout" hidden>Sign out</button>
+  </div>
+</div>
+
+<!-- Seller modal -->
+<div class="modal-backdrop" id="seller-backdrop" role="dialog" aria-modal="true" aria-labelledby="seller-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="seller-title">Sell on SafeBuy NG</h2>
+      <button class="icon-button" type="button" id="seller-close" aria-label="Close">✕</button>
+    </div>
+    <div id="seller-body"></div>
+  </div>
+</div>
+
+<!-- Delivery areas modal -->
+<div class="modal-backdrop" id="delivery-backdrop" role="dialog" aria-modal="true" aria-labelledby="delivery-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="delivery-title">Delivery areas</h2>
+      <button class="icon-button" type="button" id="delivery-close" aria-label="Close">✕</button>
+    </div>
+    <p class="muted" style="margin-top:0">Find out where delivery is available. Search for your state, then tap “Use this area”.</p>
+    <label for="area-search">Search your state or city</label>
+    <input id="area-search" type="search" placeholder="e.g. Lagos, Abuja, Rivers" autocomplete="off">
+    <div id="area-results" aria-live="polite"></div>
+    <p class="modal-note" style="margin-top:14px">Delivery is not fully active in this prototype. Until delivery is available in your area, agree pickup or delivery details directly with the seller.</p>
+  </div>
+</div>
+
+<!-- Safety tips modal -->
+<div class="modal-backdrop" id="safety-backdrop" role="dialog" aria-modal="true" aria-labelledby="safety-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="safety-title">Safety tips</h2>
+      <button class="icon-button" type="button" id="safety-close" aria-label="Close">✕</button>
+    </div>
+    <ul style="color:var(--muted);line-height:1.8;padding-left:20px">
+      <li>SafeBuy NG does not handle payments or delivery yet.</li>
+      <li>Meet in a public place and inspect the item before you pay.</li>
+      <li>Prefer sellers with the ✓ Verified label.</li>
+      <li>Never send money to someone you have not met or cannot trace.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const sampleProducts = [
+  {id:1,name:"Wireless headphones",category:"Electronics",price:18500,seller:"Demo Gadgets",emoji:"🎧",background:"#e9eaff",tag:"Popular",description:"Sample wireless headphones for everyday listening."},
+  {id:2,name:"Classic wristwatch",category:"Fashion",price:12500,seller:"Demo Style Store",emoji:"⌚",background:"#f8e8d5",tag:"Everyday pick",description:"A sample classic-style wristwatch."},
+  {id:3,name:"Quality rice, 5kg",category:"Groceries",price:10500,seller:"Demo Food Mart",emoji:"🍚",background:"#fff0cc",tag:"Home essential",description:"A sample five-kilogram rice listing. The price is illustrative."},
+  {id:4,name:"Kitchen blender",category:"Home",price:28500,seller:"Demo Home Store",emoji:"🥤",background:"#dff4ec",tag:"Useful find",description:"A sample kitchen blender listing."},
+  {id:5,name:"Everyday sneakers",category:"Fashion",price:22000,seller:"Demo Style Store",emoji:"👟",background:"#e7f0ff",tag:"New",description:"Sample casual sneakers for everyday wear."},
+  {id:6,name:"Smartphone",category:"Electronics",price:145000,seller:"Demo Gadgets",emoji:"📱",background:"#e7eefa",tag:"Tech pick",description:"A sample smartphone listing. No device is actually for sale."},
+  {id:7,name:"Skincare essentials",category:"Beauty",price:9500,seller:"Demo Beauty Shop",emoji:"🧴",background:"#ffe8ef",tag:"Self-care",description:"A sample skincare product listing."},
+  {id:8,name:"Decorative table lamp",category:"Home",price:16500,seller:"Demo Home Store",emoji:"💡",background:"#fff1d7",tag:"Home style",description:"A sample decorative lamp listing."},
+  {id:9,name:"Ankara fabric",category:"Fashion",price:18500,seller:"Demo Fabrics",emoji:"🧵",background:"#ffebd9",tag:"Made for style",description:"A sample Ankara fabric listing."},
+  {id:10,name:"Fresh fruit basket",category:"Groceries",price:8000,seller:"Demo Food Mart",emoji:"🍍",background:"#eaf6d9",tag:"Fresh pick",description:"A sample fruit basket listing."},
+  {id:11,name:"Everyday backpack",category:"Fashion",price:17000,seller:"Demo Style Store",emoji:"🎒",background:"#eee7ff",tag:"Daily essential",description:"A sample everyday backpack listing."},
+  {id:12,name:"Electric kettle",category:"Home",price:14500,seller:"Demo Home Store",emoji:"🫖",background:"#e0f3f7",tag:"Kitchen pick",description:"A sample electric kettle listing."}
+];
+
+let products = [];
+let productSource = "loading"; // loading | supabase | sample
+let sourceMessage = "";
+
+let selectedCategory = "All";
+let sortMode = "newest";
+let searchTerm = "";
+let cart = [];
+let toastTimer;
+
+const productGrid = document.getElementById("product-grid");
+const searchInput = document.getElementById("search-input");
+const resultsLine = document.getElementById("results-line");
+const toast = document.getElementById("toast");
+const modalBackdrop = document.getElementById("modal-backdrop");
+const modalContent = document.getElementById("modal-content");
+const accountBackdrop = document.getElementById("account-backdrop");
+
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+function money(amount) {
+  return "₦" + Number(amount || 0).toLocaleString("en-NG");
+}
+
+function normalizeProduct(p, i) {
+  return {
+    id: p.id != null ? p.id : i + 1,
+    name: p.name || "Unnamed product",
+    category: p.category || "Other",
+    price: Number(p.price) || 0,
+    seller: p.seller || "Seller not listed",
+    emoji: p.emoji || "🛍️",
+    image: typeof p.image === "string" && /^https:\/\//.test(p.image) ? p.image : "",
+    background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
+    tag: p.tag || "",
+    description: p.description || "",
+    verified: !!p.verified,
+    inStock: p.inStock !== false,
+    slug: /^[a-z0-9][a-z0-9-]{0,99}$/.test(p.slug || "") ? p.slug : "",
+    condition: p.condition || "new"
+  };
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3200);
+}
+
+function getVisibleProducts() {
+  const term = searchTerm.toLowerCase();
+  const list = products.filter(function (product) {
+    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const text = (product.name + " " + product.category + " " + product.seller + " " + product.description).toLowerCase();
+    return matchesCategory && text.includes(term);
+  });
+  if (sortMode === "low") list.sort(function (a, b) { return a.price - b.price; });
+  if (sortMode === "high") list.sort(function (a, b) { return b.price - a.price; });
+  return list;
+}
+
+function renderProducts() {
+  if (productSource === "loading") {
+    resultsLine.textContent = "Loading products…";
+    productGrid.innerHTML = "";
+    return;
+  }
+
+  const visible = getVisibleProducts();
+  const label = productSource === "supabase" ? "Supabase" : "sample";
+  resultsLine.textContent = "Showing " + visible.length + " " + label + " product" + (visible.length === 1 ? "" : "s");
+
+  if (visible.length === 0) {
+    if (products.length === 0 && productSource === "supabase") {
+      productGrid.innerHTML =
+        '<div class="empty-state"><h3>No products yet</h3>' +
+        '<p>No approved seller has published a listing yet. Check back soon.</p></div>';
+    } else {
+      productGrid.innerHTML =
+        '<div class="empty-state"><h3>No matching products found</h3>' +
+        '<p>Try another search or choose a different category.</p>' +
+        '<button class="button button-light" type="button" data-action="clear-search">Clear search</button></div>';
+    }
+    return;
+  }
+
+  productGrid.innerHTML = visible.map(function (p) {
+    return `
+      <article class="product-card">
+        <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
+          ${!p.inStock ? '<span class="tag">Sold out</span>' : p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
+          ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" decoding="async">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
+        </div>
+        <div class="product-info">
+          <div class="product-category">${esc(p.category)}</div>
+          <h3>${p.slug ? `<a href="p/${esc(p.slug)}/">${esc(p.name)}</a>` : esc(p.name)}</h3>
+          <p class="seller-name">Sold by ${esc(p.seller)}${productSource === "supabase" ? (p.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
+          <div class="product-bottom">
+            <span class="price">${money(p.price)}</span>
+            ${productSource === "sample" ? '<span class="rating">★ Sample</span>' : ""}
+          </div>
+          <div class="product-actions">
+            ${productSource === "supabase"
+              ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(p.id)}"${p.inStock ? "" : " disabled"}>${p.inStock ? "Chat seller" : "Sold out"}</button>`
+              : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(p.id)}">Add to cart</button>`}
+            ${p.slug
+              ? `<a class="icon-button" href="p/${esc(p.slug)}/" aria-label="View ${esc(p.name)}">↗</a>`
+              : `<button class="icon-button" type="button" data-action="view" data-id="${esc(p.id)}" aria-label="View ${esc(p.name)}">↗</button>`}
+          </div>
+        </div>
+      </article>`;
+  }).join("");
+}
+
+function updateCartCount() {
+  var n = cart.reduce(function (total, item) { return total + item.quantity; }, 0);
+  document.querySelectorAll(".cart-count,.cart-count-inline").forEach(function (el) { el.textContent = n; });
+}
+
+function findProduct(id) {
+  return products.find(function (item) { return String(item.id) === String(id); });
+}
+
+function addToCart(id) {
+  const product = findProduct(id);
+  if (!product) return;
+
+  const existing = cart.find(function (item) { return String(item.id) === String(id); });
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1 });
+  }
+  updateCartCount();
+  showToast(product.name + " added to your demo cart.");
+}
+
+function openProduct(id) {
+  const product = findProduct(id);
+  if (!product) return;
+
+  document.getElementById("modal-title").textContent = product.name;
+  modalContent.innerHTML = `
+    <div class="modal-art" style="background:${esc(product.background)}">${product.image ? `<img src="${esc(product.image)}" alt="${esc(product.name)}">` : esc(product.emoji)}</div>
+    <p><strong>${money(product.price)}</strong></p>
+    <p>Category: ${esc(product.category)}</p>
+    <p>${productSource === "sample" ? "Sample seller" : "Seller"}: ${esc(product.seller)}${productSource === "supabase" ? (product.verified ? ' <span class="badge ok">✓ Verified</span>' : ' <span class="badge">Unverified</span>') : ""}</p>
+    <p>${esc(product.description)}</p>
+    ${productSource === "sample"
+      ? '<p class="modal-note"><strong>Sample product:</strong> the database is unavailable, so this is placeholder content.</p>'
+      : '<p class="modal-note"><strong>Stay safe:</strong> SafeBuy NG does not handle payments or delivery yet. Agree details with the seller, meet in a public place, and inspect the item before you pay.</p>'}
+    ${productSource === "supabase"
+      ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(product.id)}"${product.inStock ? "" : " disabled"}>${product.inStock ? "Chat seller on WhatsApp" : "Sold out"}</button>`
+      : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`}`;
+
+  modalBackdrop.classList.add("open");
+  document.getElementById("close-modal").focus();
+}
+
+function closeModal() {
+  modalBackdrop.classList.remove("open");
+}
+
+function showCart() {
+  if (cart.length === 0) {
+    showToast(productSource === "supabase"
+      ? "The cart is for demo products only. Tap “Chat seller” on a listing to buy."
+      : "Your demo cart is empty. Add a sample product first.");
+    return;
+  }
+  const total = cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
+  const summary = cart.map(function (item) { return item.quantity + " × " + item.name; }).join("; ");
+  showToast("Demo cart: " + summary + ". Total: " + money(total) + ". Checkout is not connected.");
+}
+
+function chooseCategory(category) {
+  selectedCategory = category;
+  document.querySelectorAll(".category-button[data-category]").forEach(function (button) {
+    const active = button.dataset.category === category;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+    if (active && button.scrollIntoView) button.scrollIntoView({ block: "nearest", inline: "center" });
+  });
+  renderProducts();
+}
+
+document.getElementById("sort-select").addEventListener("change", function (event) {
+  sortMode = event.target.value;
+  renderProducts();
+});
+
+document.getElementById("categories").addEventListener("click", function (event) {
+  const button = event.target.closest("[data-category]");
+  if (button) chooseCategory(button.dataset.category);
+});
+
+searchInput.addEventListener("input", function () {
+  searchTerm = searchInput.value.trim();
+  renderProducts();
+});
+
+document.getElementById("search-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  searchTerm = searchInput.value.trim();
+  renderProducts();
+  document.getElementById("shop").scrollIntoView({ behavior: "smooth" });
+});
+
+document.addEventListener("click", function (event) {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+
+  if (action === "add") addToCart(id);
+  if (action === "view") openProduct(id);
+  if (action === "cart") { closeDrawer(); showCart(); }
+  if (action === "clear-search") {
+    searchInput.value = "";
+    searchTerm = "";
+    chooseCategory("All");
+  }
+});
+
+document.getElementById("close-modal").addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", function (event) {
+  if (event.target === modalBackdrop) closeModal();
+});
+
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function renderSource() {
+  const banner = document.getElementById("source-banner");
+  const sub = document.getElementById("shop-subtitle");
+  banner.className = "source-banner " + productSource;
+
+  if (productSource === "supabase") {
+    banner.textContent = "✓ Supabase products — loaded live from the database.";
+    sub.textContent = "Browse products from our database.";
+  } else if (productSource === "sample") {
+    banner.innerHTML = "<strong>⚠ Database unavailable.</strong> These are sample products, not real listings. " + esc(sourceMessage);
+    sub.textContent = "Showing sample products only.";
+  } else {
+    banner.textContent = "Connecting to Supabase…";
+    sub.textContent = "Explore products across popular categories.";
+  }
+}
+
+function setProducts(list, source, message) {
+  products = list;
+  productSource = source;
+  sourceMessage = message || "";
+  renderSource();
+  renderProducts();
+}
+
+renderSource();
+renderProducts();
+updateCartCount();
+</script>
+
+<!-- ============ Navigation, dropdowns, drawer, delivery areas ============ -->
+<script>
+(function () {
+  "use strict";
+
+  /* ---- Delivery areas: edit this list, or set window.SAFEBUY_DELIVERY_AREAS before this script ---- */
+  var DELIVERY_AREAS = window.SAFEBUY_DELIVERY_AREAS || [
+    { name: "Lagos", status: "available" },
+    { name: "Abuja (FCT)", status: "available" },
+    { name: "Rivers (Port Harcourt)", status: "soon" },
+    { name: "Oyo (Ibadan)", status: "soon" },
+    { name: "Kano", status: "soon" },
+    { name: "Anambra", status: "soon" },
+    { name: "Enugu", status: "soon" },
+    { name: "Kaduna", status: "soon" },
+    { name: "Delta", status: "soon" },
+    { name: "Ogun", status: "soon" },
+    { name: "Edo", status: "soon" },
+    { name: "Other states", status: "soon" }
+  ];
+
+  /* ---- Live coverage: the areas switched on in admin (Delivery > Coverage) decide what shows as Available ---- */
+  var ALL_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
+  var AREA_LABEL = { fct: "Abuja (FCT)", rivers: "Rivers (Port Harcourt)", oyo: "Oyo (Ibadan)" };
+  function stateKey(t) { return String(t || "").trim().toLowerCase().replace(/\s+state$/, ""); }
+  function applyCoverage(rows) {
+    var on = {};
+    rows.forEach(function (r) {
+      var k = stateKey(r.state), city = String(r.city || "").trim();
+      if (!k) return;
+      var o = on[k] || (on[k] = { whole: false, cities: [] });
+      if (!city) o.whole = true; else o.cities.push(city);
+    });
+    DELIVERY_AREAS = ALL_STATES.map(function (st) {
+      var k = st.toLowerCase(), o = on[k], label = AREA_LABEL[k] || st;
+      if (o && !o.whole && o.cities.length) label += " (" + o.cities.map(function (t) { return t.replace(/\b\w/g, function (m) { return m.toUpperCase(); }); }).join(", ") + " only)";
+      return { name: label, status: o ? "available" : "soon" };
+    }).sort(function (a, b) { return (a.status === "available" ? 0 : 1) - (b.status === "available" ? 0 : 1); });
+  }
+  function loadCoverage(tries) {
+    if (window.SAFEBUY_DELIVERY_AREAS) return;
+    var c = window.safeBuySupabase;
+    if (!c) { if (tries < 40) setTimeout(function () { loadCoverage(tries + 1); }, 250); return; }
+    c.rpc("list_delivery_coverage").then(function (r) {
+      if (r.error || !Array.isArray(r.data)) return;       // keep the built-in list if coverage cannot be read
+      applyCoverage(r.data);
+      renderDeliveryBar();
+      if ($("delivery-backdrop").classList.contains("open")) renderAreas();
+    });
+  }
+  loadCoverage(0);
+
+  var $ = function (id) { return document.getElementById(id); };
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  /* ---- Body scroll lock when any overlay is open ---- */
+  function syncLock() {
+    var open = document.querySelector(".modal-backdrop.open") || $("drawer").classList.contains("open");
+    document.body.classList.toggle("locked", !!open);
+  }
+  new MutationObserver(syncLock).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class"] });
+
+  /* ---- Dropdowns ---- */
+  function closeDropdowns(except) {
+    document.querySelectorAll(".dd.open").forEach(function (d) {
+      if (d === except) return;
+      d.classList.remove("open");
+      var t = d.querySelector("[aria-expanded]");
+      if (t) t.setAttribute("aria-expanded", "false");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var toggle = e.target.closest(".dd > button");
+    if (toggle) {
+      var dd = toggle.parentElement;
+      var willOpen = !dd.classList.contains("open");
+      closeDropdowns(willOpen ? dd : null);
+      dd.classList.toggle("open", willOpen);
+      toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+      return;
+    }
+    if (!e.target.closest(".dd")) closeDropdowns();
+    else if (e.target.closest(".dd-menu a, .dd-menu button")) closeDropdowns();
+  });
+
+  /* ---- Drawer ---- */
+  var drawer = $("drawer"), dBackdrop = $("drawer-backdrop"), menuBtn = $("menu-toggle");
+  function openDrawer() {
+    drawer.classList.add("open"); dBackdrop.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false"); menuBtn.setAttribute("aria-expanded", "true");
+    syncLock();
+  }
+  window.closeDrawer = function () {
+    drawer.classList.remove("open"); dBackdrop.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true"); menuBtn.setAttribute("aria-expanded", "false");
+    syncLock();
+  };
+  menuBtn.addEventListener("click", openDrawer);
+  $("mobile-menu-btn").addEventListener("click", openDrawer);
+  $("drawer-close").addEventListener("click", window.closeDrawer);
+  dBackdrop.addEventListener("click", window.closeDrawer);
+  $("drawer-body").addEventListener("click", function (e) {
+    if (e.target.closest("a[href], button")) window.closeDrawer();
+  });
+
+  /* ---- Single Escape handler ---- */
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    closeDropdowns();
+    window.closeDrawer();
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+  });
+
+  /* ---- Close a modal by tapping its backdrop / close button (new modals) ---- */
+  ["delivery", "safety"].forEach(function (name) {
+    var b = $(name + "-backdrop");
+    $(name + "-close").addEventListener("click", function () { b.classList.remove("open"); });
+    b.addEventListener("click", function (e) { if (e.target === b) b.classList.remove("open"); });
+  });
+
+  /* ---- Jump to a category from menus ---- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-goto-category]");
+    if (!b) return;
+    chooseCategory(b.dataset.gotoCategory);
+    $("shop").scrollIntoView({ behavior: "smooth" });
+  });
+
+  /* ---- Delivery areas ---- */
+  function chosenArea() { return store("safebuy_area"); }
+  function areaStatus(name) {
+    var a = DELIVERY_AREAS.filter(function (x) { return x.name === name; })[0];
+    return a ? a.status : null;
+  }
+  function renderDeliveryBar() {
+    var bar = $("delivery-bar"), txt = $("delivery-bar-text"), area = chosenArea();
+    var status = area ? areaStatus(area) : null;
+    if (status === "available") {
+      bar.classList.add("ok");
+      txt.textContent = "✓ Delivery is available in " + area + ".";
+    } else {
+      bar.classList.remove("ok");
+      txt.textContent = area
+        ? "🚚 Delivery is not available in " + area + " yet."
+        : "🚚 Delivery is not available in your area yet.";
+    }
+  }
+  function renderAreas() {
+    var q = $("area-search").value.trim().toLowerCase();
+    var list = DELIVERY_AREAS.filter(function (a) { return !q || a.name.toLowerCase().indexOf(q) !== -1; });
+    var avail = list.filter(function (a) { return a.status === "available"; });
+    var soon = list.filter(function (a) { return a.status !== "available"; });
+    var cur = chosenArea();
+
+    function row(a) {
+      return '<li><span>' + esc(a.name) + ' <span class="chip' + (a.status === "available" ? " ok\">Available" : "\">Coming soon") + '</span></span>' +
+        '<button class="button ' + (cur === a.name ? "button-primary" : "button-outline") + '" type="button" data-area="' + esc(a.name) + '">' +
+        (cur === a.name ? "Selected" : "Use this area") + '</button></li>';
+    }
+    var html = "";
+    if (avail.length) html += '<div class="area-group">Delivery available</div><ul class="area-list">' + avail.map(row).join("") + "</ul>";
+    if (soon.length) html += '<div class="area-group">Coming soon</div><ul class="area-list">' + soon.map(row).join("") + "</ul>";
+    if (!list.length) html = '<p class="muted">No match. Delivery is not available in that area yet.</p>';
+    $("area-results").innerHTML = html;
+  }
+  function openDelivery() {
+    $("area-search").value = "";
+    renderAreas();
+    $("delivery-backdrop").classList.add("open");
+  }
+  $("area-search").addEventListener("input", renderAreas);
+  $("area-results").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-area]");
+    if (!b) return;
+    store("safebuy_area", b.dataset.area);
+    renderDeliveryBar(); renderAreas();
+    showToast(areaStatus(b.dataset.area) === "available"
+      ? "Delivery is available in " + b.dataset.area + "."
+      : "Delivery is not available in " + b.dataset.area + " yet.");
+  });
+  renderDeliveryBar();
+
+  /* ---- Generic actions: delivery + safety ---- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-action]");
+    if (!b) return;
+    if (b.dataset.action === "delivery") { e.stopPropagation(); openDelivery(); }
+    if (b.dataset.action === "safety") $("safety-backdrop").classList.add("open");
+  }, true);
+
+  /* ---- Bridge to feature scripts ----
+     Those scripts create real buttons (orders.js, delivery-orders.js, account-settings.js,
+     messages.js). Menu items click those buttons, so behaviour stays identical to the originals. */
+  var FEATURE_BTN = {
+    orders: "mp-orders-btn", "delivery-orders": "do-btn", neworders: "mp-shop-btn",
+    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab"
+  };
+  function signedIn() { return document.body.classList.contains("sb-in"); }
+  function sellerMode() { return document.body.classList.contains("sb-seller"); }
+
+  function triggerFeature(name) {
+    if (name === "verify") {
+      var sell = document.querySelector('[data-action="sell"]');
+      if (sell) sell.click();
+      setTimeout(function () { var v = $("vf-box"); if (v && v.scrollIntoView) v.scrollIntoView({ behavior: "smooth", block: "start" }); }, 1200);
+      return;
+    }
+    var btn = $(FEATURE_BTN[name]);
+    if (name === "messages") { if (btn) btn.click(); else showToast("Messages are loading. Try again in a moment."); return; }
+    if (!signedIn() && name !== "mode") { window.openAccount(); window.say("Sign in to use this feature."); return; }
+    if (sellerMode() && (name === "orders" || name === "delivery-orders")) {
+      showToast("You are in seller mode. Switch to buyer mode to see your purchases.");
+      return;
+    }
+    if (!btn) { showToast("This section is still loading. Please try again in a moment."); return; }
+    btn.click();
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-feature]");
+    if (!b) return;
+    e.preventDefault();
+    triggerFeature(b.dataset.feature);
+  });
+
+  /* Keep menu items in step with the real buttons (visibility, labels, buyer/seller mode) */
+  var syncQueued = false;
+  function syncFeatures() {
+    syncQueued = false;
+    var signed = signedIn(), seller = sellerMode();
+    document.querySelectorAll("[data-feature]").forEach(function (el) {
+      var n = el.dataset.feature, real = $(FEATURE_BTN[n]), hide = false;
+      if (n === "neworders" || n === "mode") hide = !signed || !real || real.hidden;
+      else if (signed && (n === "orders" || n === "delivery-orders")) hide = seller || (!!real && real.hidden);
+      if (el.hidden !== hide) el.hidden = hide;
+      var lbl = el.querySelector(".lbl");
+      if (lbl && real && (n === "neworders" || n === "mode")) {
+        var t = (n === "mode" ? "🔄 " : "") + real.textContent.trim();
+        if (lbl.textContent !== t) lbl.textContent = t;
+      }
+    });
+    document.querySelectorAll("[data-mode-chip]").forEach(function (c) {
+      var t = seller ? "Seller mode" : "Buyer mode";
+      if (c.textContent !== t) c.textContent = t;
+    });
+  }
+  function queueSync() { if (!syncQueued) { syncQueued = true; requestAnimationFrame(syncFeatures); } }
+  window.__sbSync = queueSync;
+  new MutationObserver(queueSync).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["hidden", "class"] });
+  setTimeout(queueSync, 1500);
+
+  /* ---- Scroll spy (desktop + mobile nav) ---- */
+  var spyIds = ["home", "shop", "how-it-works", "sell"];
+  function spy() {
+    var y = window.scrollY + 120, cur = "home";
+    spyIds.forEach(function (id) {
+      var el = $(id);
+      if (el && el.getBoundingClientRect().top + window.scrollY <= y) cur = id;
+    });
+    document.querySelectorAll("[data-spy]").forEach(function (el) {
+      var on = el.dataset.spy === cur;
+      el.classList.toggle("active", on);
+      if (el.closest(".mobile-nav")) el.classList.toggle("current", on);
+    });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+
+  /* ---- Mirror the cart number (shop-extras.js only updates #cart-count) ---- */
+  var cartMaster = $("cart-count");
+  function mirrorCart() {
+    var n = cartMaster ? cartMaster.textContent.trim() : "0";
+    document.querySelectorAll(".cart-count-mobile,.cart-count-inline").forEach(function (el) {
+      if (el.textContent !== n) el.textContent = n;
+      var none = !n || n === "0";
+      if (el.classList.contains("cart-count-mobile") && el.hidden !== none) el.hidden = none;
+    });
+  }
+  if (cartMaster) new MutationObserver(mirrorCart).observe(cartMaster, { childList: true, characterData: true, subtree: true });
+  mirrorCart();
+
+  /* expose for the account script */
+  window.__sbNav = { openDelivery: openDelivery };
+})();
+</script>
+
+<script>
+/* Marketplace pulse: one card in the Shop menu, built from the products currently on the page. */
+(function () {
+  "use strict";
+  var LABEL = { Home: "Home & living" };
+  function build() {
+    var list = (typeof products !== "undefined" && products) ? products : [];
+    if (!list.length) {
+      return '<div class="pulse-card"><div class="pulse-head"><div><strong>Marketplace pulse</strong><span class="sub">See what is on sale, by category</span></div><span class="pulse-live"><i></i>Live</span></div>' +
+             '<p class="sub" style="margin:10px 0 0;font-size:12px;color:var(--muted)">Loading products…</p></div>';
+    }
+    var sellers = {}, total = 0, sum = 0, cats = {}, order = [];
+    list.forEach(function (p) {
+      sellers[p.seller] = 1; total++; sum += Number(p.price) || 0;
+      if (!cats[p.category]) { cats[p.category] = 0; order.push(p.category); }
+      cats[p.category]++;
+    });
+    var names = order.slice().sort(function (a, b) { return cats[b] - cats[a] || order.indexOf(a) - order.indexOf(b); });
+    var avg = total ? Math.round(sum / total) : 0;
+    return '<div class="pulse-card">' +
+      '<div class="pulse-head"><div><strong>Marketplace pulse</strong><span class="sub">See what is on sale, by category</span></div><span class="pulse-live"><i></i>Live</span></div>' +
+      '<div class="pulse-stats">' +
+        '<div class="pulse-stat"><span class="pi">🏪</span><b>' + Object.keys(sellers).length + '</b><span class="pl">Active sellers</span></div>' +
+        '<div class="pulse-stat"><span class="pi">💰</span><b>' + esc(money(avg)) + '</b><span class="pl">Average price</span></div>' +
+        '<div class="pulse-stat"><span class="pi">⚡</span><b>' + names.length + '</b><span class="pl">Categories stocked</span></div>' +
+      '</div>' +
+      '<details class="pulse-more"><summary><span>' + total + ' product' + (total === 1 ? "" : "s") + ' · by category</span><span class="chev" aria-hidden="true">⌄</span></summary>' +
+      '<div class="pulse-cats">' + names.map(function (c) {
+        return '<button type="button" data-goto-category="' + esc(c) + '"><span>' + esc(LABEL[c] || c) + '</span><b>' + cats[c] + '</b></button>';
+      }).join("") + '</div></details></div>';
+  }
+  function render() {
+    var open = {};
+    document.querySelectorAll(".pulse-slot").forEach(function (slot, i) {
+      var d = slot.querySelector(".pulse-more");
+      open[i] = d && d.open;                       // keep a section open across refreshes
+      slot.innerHTML = build();
+      if (open[i]) slot.querySelector(".pulse-more").open = true;
+    });
+  }
+  window.renderPulse = render;
+  if (typeof setProducts === "function") {
+    var original = setProducts;
+    setProducts = function () { var r = original.apply(this, arguments); try { render(); } catch (e) {} return r; };
+  }
+  /* Merge the old on-page stats row + pulse block (drawn by shop-extras.js) into this one card. */
+  function adopt() {
+    if (document.querySelector("#pulse-main")) return true;
+    var a = null, b = null;
+    document.querySelectorAll("main *, body > *:not(script) *").forEach(function (el) {
+      if (el.children.length || el.closest(".dd-menu,#drawer,.pulse-card")) return;
+      var t = (el.textContent || "").trim();
+      if (!a && t === "Active sellers") a = el;
+      if (!b && t === "Marketplace pulse") b = el;
+    });
+    if (!a || !b) return false;
+    var anc = a; while (anc && !anc.contains(b)) anc = anc.parentElement;
+    if (!anc) return false;
+    var kids = Array.prototype.filter.call(anc.children, function (k) { return k.contains(a) || k.contains(b); });
+    if (!kids.length || kids.length > 3) return false;
+    var slot = document.createElement("div");
+    slot.id = "pulse-main"; slot.className = "pulse-slot";
+    anc.insertBefore(slot, kids[0]);
+    kids.forEach(function (k) { k.style.display = "none"; });
+    render();
+    return true;
+  }
+  var tries = 0, iv = setInterval(function () { if (adopt() || ++tries > 60) clearInterval(iv); }, 250);
+  render();
+})();
+</script>
+
+<script src="../supabase-config.js"></script>
+<script>
+/* Start downloading the products now, while the Supabase library below is still loading. */
+(function () {
+  var c = window.SAFEbuySupabaseConfig;
+  if (!c || !c.url || !c.publishableKey) return;
+  var base = String(c.url).replace(/\/+$/, "");
+  try { var l = document.createElement("link"); l.rel = "preconnect"; l.href = base; l.crossOrigin = ""; document.head.appendChild(l); } catch (e) {}
+  window.__earlyProducts = fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+    headers: { apikey: c.publishableKey, Accept: "application/json" }
+  }).then(function (r) {
+    return r.ok ? r.json().then(function (d) { return { data: d, error: null }; })
+                : r.text().then(function (t) { return { data: null, error: { message: "HTTP " + r.status + " " + t.slice(0, 120) } }; });
+  }).catch(function (e) { return { data: null, error: { message: e.message } }; })
+  .then(function (res) {
+    // Show the products right away; do not wait for the Supabase library.
+    if (!res.error && Array.isArray(res.data) && typeof setProducts === "function" && typeof normalizeProduct === "function") {
+      try {
+        setProducts(res.data.map(function (r, i) {
+          return normalizeProduct({
+            id: r.id, name: r.name, category: r.category, price: Number(r.price_kobo) / 100, seller: r.shop_name,
+            image: r.image_url, description: r.description, verified: r.verified, inStock: r.in_stock, slug: r.slug, condition: r.condition
+          }, i);
+        }), "supabase");
+        window.__earlyRendered = true;
+      } catch (e) { window.__earlyRendered = false; }
+    }
+    return res;
+  });
+})();
+</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.SAFEbuySupabaseConfig;
+  var client = null;
+  var failReason = "";
+
+  if (!window.supabase) {
+    failReason = "The Supabase library did not load.";
+  } else if (!cfg || !cfg.url || !cfg.publishableKey) {
+    failReason = "supabase-config.js is missing, not loaded, or incomplete.";
+  } else {
+    try {
+      client = window.supabase.createClient(cfg.url, cfg.publishableKey);
+      window.safeBuySupabase = client;
+    } catch (e) {
+      failReason = "Could not create the Supabase client: " + e.message;
+      console.error("SafeBuy: could not create Supabase client.", e);
+    }
+  }
+
+  /* ---------- Load products ---------- */
+  function fail(message) {
+    console.warn("SafeBuy:", message);
+    setProducts(sampleProducts, "sample", message);
+  }
+
+  function mapRows(rows) {
+    return (rows || []).map(function (r, i) {
+      return normalizeProduct({
+        id: r.id,
+        name: r.name,
+        category: r.category,
+        price: Number(r.price_kobo) / 100, // stored in kobo, shown in naira
+        seller: r.shop_name,
+        image: r.image_url,
+        description: r.description,
+        verified: r.verified,
+        inStock: r.in_stock,
+        slug: r.slug,
+        condition: r.condition
+      }, i);
+    });
+  }
+
+  /* Direct REST request: used if the Supabase library fails for any reason. */
+  function restFallback(reason) {
+    console.warn("SafeBuy: library path failed (" + reason + "). Trying a direct request.");
+    if (!cfg || !cfg.url || !cfg.publishableKey) { fail(reason); return; }
+
+    var controller = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = setTimeout(function () { if (controller) controller.abort(); }, 10000);
+
+    fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+      headers: { apikey: cfg.publishableKey, Accept: "application/json" },
+      signal: controller ? controller.signal : undefined
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.text().then(function (t) {
+            throw new Error("HTTP " + res.status + " " + t.slice(0, 160));
+          });
+        }
+        return res.json();
+      })
+      .then(function (rows) {
+        clearTimeout(timer);
+        setProducts(mapRows(rows), "supabase");
+      })
+      .catch(function (e) {
+        clearTimeout(timer);
+        fail(reason + " Direct request also failed: " + e.message);
+      });
+  }
+
+  function loadProducts() {
+    if (!client) { restFallback(failReason); return; }
+
+    var timeout = new Promise(function (_, reject) {
+      setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
+    });
+
+    function viaClient() {
+      return client.from("seller_products_public").select("*").order("created_at", { ascending: false });
+    }
+    var early = window.__earlyProducts;
+    window.__earlyProducts = null;
+    var request = early
+      ? early.then(function (r) { return r.error ? viaClient() : r; })    // early request failed: try the library
+      : viaClient();
+
+    Promise.race([
+      request,
+      timeout
+    ])
+      .then(function (result) {
+        if (result.error) {
+          restFallback("Supabase error: " + result.error.message);
+          return;
+        }
+        if (window.__earlyRendered) return;      // already drawn from the early request
+        setProducts(mapRows(result.data), "supabase");
+      })
+      .catch(function (e) {
+        restFallback("Could not reach Supabase: " + e.message);
+      });
+  }
+
+  loadProducts();
+
+  /* ---------- Account ---------- */
+  var form = document.getElementById("account-form");
+  var nameInput = document.getElementById("account-name");
+  var nameLabel = document.getElementById("account-name-label");
+  var emailInput = document.getElementById("account-email");
+  var passwordInput = document.getElementById("account-password");
+  var submit = document.getElementById("account-submit");
+  var toggle = document.getElementById("account-toggle");
+  var message = document.getElementById("account-message");
+  var logout = document.getElementById("account-logout");
+  var reset = document.getElementById("account-reset");
+  var mode = "signin";
+  var unavailable = "Accounts are unavailable right now. Please try again later.";
+
+  function say(text) { message.textContent = text; }
+  function openAccount() { accountBackdrop.classList.add("open"); say(""); }
+  function closeAccount() { accountBackdrop.classList.remove("open"); }
+  window.openAccount = openAccount;
+  window.say = say;
+
+  function setMode(next) {
+    mode = next;
+    var signup = mode === "signup";
+    nameInput.hidden = !signup;
+    nameLabel.hidden = !signup;
+    nameInput.required = signup;
+    passwordInput.autocomplete = signup ? "new-password" : "current-password";
+    submit.textContent = signup ? "Create account" : "Sign in";
+    toggle.textContent = signup ? "Already registered? Sign in" : "Need an account? Sign up";
+    document.getElementById("account-title").textContent = signup ? "Create your account" : "Welcome to SafeBuy NG";
+    say("");
+  }
+
+  /* Account dropdown + drawer section, rebuilt on sign-in state changes */
+  var accMenu = document.getElementById("account-dd-menu");
+  var accLabel = document.getElementById("account-dd-label");
+  var drawerAcc = document.getElementById("drawer-account");
+
+  function renderAccountMenus(user) {
+    document.body.classList.toggle("sb-in", !!user);
+    if (!user) document.body.classList.remove("sb-seller", "sb-buyer");
+    if (user) {
+      var email = esc(user.email || "your account");
+      accLabel.textContent = "Account";
+      accMenu.innerHTML =
+        '<div class="dd-user">Signed in as<br><strong>' + email + '</strong><br><span class="mode-chip" data-mode-chip>Buyer mode</span></div><hr>' +
+        '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
+        '<button type="button" data-feature="orders"><span class="ico">📦</span><span class="lbl">My orders</span></button>' +
+        '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
+        '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
+        '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
+        '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
+        '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
+        '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
+        '<hr><button type="button" data-auth="signout"><span class="ico">🚪</span>Sign out</button>';
+      drawerAcc.innerHTML =
+        '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
+        '<button type="button" data-feature="mode" hidden><span class="lbl">🔄 Switch mode</span></button>' +
+        '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
+        '<button type="button" data-auth="signout">🚪 Sign out</button>';
+    } else {
+      accLabel.textContent = "Sign in";
+      accMenu.innerHTML =
+        '<button type="button" data-auth="signin"><span class="ico">🔑</span>Sign in</button>' +
+        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create buyer or seller account</button>';
+      drawerAcc.innerHTML =
+        '<button type="button" data-auth="signin">🔑 Sign in</button>' +
+        '<button type="button" data-auth="signup">✨ Create buyer or seller account</button>';
+    }
+    if (window.__sbSync) window.__sbSync();
+  }
+  renderAccountMenus(null);
+
+  document.addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-auth]");
+    if (!b) return;
+    var a = b.dataset.auth;
+    if (a === "signin" || a === "signup") { setMode(a); openAccount(); }
+    if (a === "signout" && client) {
+      var r = await client.auth.signOut();
+      showToast(r.error ? r.error.message : "You have signed out.");
+    }
+  });
+
+  document.querySelectorAll('[data-action="account"]').forEach(function (b) {
+    b.addEventListener("click", openAccount);
+  });
+  document.getElementById("account-close").addEventListener("click", closeAccount);
+  accountBackdrop.addEventListener("click", function (e) {
+    if (e.target === accountBackdrop) closeAccount();
+  });
+  toggle.addEventListener("click", function () {
+    setMode(mode === "signin" ? "signup" : "signin");
+  });
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!client) { say(unavailable); return; }
+    submit.disabled = true;
+    say("Please wait…");
+
+    try {
+      var email = emailInput.value.trim();
+      var password = passwordInput.value;
+
+      if (mode === "signup") {
+        var result = await client.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { full_name: nameInput.value.trim() },
+            emailRedirectTo: window.location.origin + window.location.pathname
+          }
+        });
+        if (result.error) throw result.error;
+        if (result.data.session) logout.hidden = false;
+        say(result.data.session
+          ? "Account created. You are signed in."
+          : "Account created. Check your email to confirm your address before signing in.");
+      } else {
+        var res = await client.auth.signInWithPassword({ email: email, password: password });
+        if (res.error) throw res.error;
+        say("Signed in successfully.");
+        logout.hidden = false;
+      }
+    } catch (error) {
+      say(error.message || "We couldn't complete that request.");
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  reset.addEventListener("click", async function () {
+    if (!client) { say(unavailable); return; }
+    var email = emailInput.value.trim();
+    if (!email) { say("Enter your email address first."); return; }
+    try {
+      var result = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+      if (result.error) throw result.error;
+      say("If the address is registered, a password-reset email will be sent.");
+    } catch (error) {
+      say(error.message || "Unable to request a password reset.");
+    }
+  });
+
+  logout.addEventListener("click", async function () {
+    if (!client) return;
+    var result = await client.auth.signOut();
+    if (result.error) { say(result.error.message); return; }
+    logout.hidden = true;
+    say("You have signed out.");
+  });
+
+  /* ---------- Shop setup, instant listing and product management ---------- */
+  var sellerBackdrop = document.getElementById("seller-backdrop");
+  var sellerBody = document.getElementById("seller-body");
+  var sellerTitle = document.getElementById("seller-title");
+  var currentApp = null;
+  var myProducts = [];
+  var editingId = null;
+
+  var CATEGORIES = ["Electronics", "Fashion", "Home", "Beauty", "Groceries"];
+  var CATEGORY_LABELS = { Home: "Home & living" };
+  var IMAGE_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+  var MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  function categoryOptions(selected) {
+    return CATEGORIES.map(function (c) {
+      return '<option value="' + esc(c) + '"' + (c === selected ? " selected" : "") + ">" +
+        esc(CATEGORY_LABELS[c] || c) + "</option>";
+    }).join("");
+  }
+
+  function slugify(text) {
+    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "shop";
+  }
+
+  function randomId() {
+    if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function waNumber(phone) {
+    var d = String(phone || "").replace(/\D/g, "");
+    if (d.indexOf("234") === 0) return d;
+    if (d.charAt(0) === "0") return "234" + d.slice(1);
+    if (d.length === 10) return "234" + d;
+    return d;
+  }
+
+  function formMessage(text, isError) {
+    var el = document.getElementById("form-message");
+    if (!el) return;
+    el.textContent = text || "";
+    el.style.color = isError ? "#8a1f1f" : "";
+  }
+
+  async function currentUser() {
+    if (!client) return null;
+    var r = await client.auth.getUser();
+    return r.data && r.data.user ? r.data.user : null;
+  }
+
+  function openSeller() { sellerBackdrop.classList.add("open"); }
+  function closeSeller() { sellerBackdrop.classList.remove("open"); }
+
+  async function startSelling() {
+    if (!client) {
+      showToast("Selling is unavailable right now. Please try again later.");
+      return;
+    }
+    var user = await currentUser();
+    if (!user) {
+      setMode("signin");
+      openAccount();
+      say("Sign in or create an account to start selling.");
+      return;
+    }
+
+    sellerTitle.textContent = "Sell on SafeBuy NG";
+    sellerBody.innerHTML = "<p>Loading…</p>";
+    openSeller();
+
+    var res = await client.from("seller_applications").select("*").eq("user_id", user.id).maybeSingle();
+    if (res.error) {
+      sellerBody.innerHTML = "<p>" + esc(res.error.message) + "</p>";
+      return;
+    }
+    if (!res.data) { renderSetup(user); return; }
+
+    currentApp = res.data;
+    editingId = null;
+    if (res.data.verification_status === "rejected") renderSuspended();
+    else renderDashboard();
+  }
+
+  function renderSuspended() {
+    sellerTitle.textContent = currentApp.shop_name;
+    sellerBody.innerHTML =
+      '<p class="status-pill bad">Suspended</p>' +
+      "<p>This shop is suspended and its products are hidden. Contact SafeBuy NG if you think this is a mistake.</p>";
+  }
+
+  /* One-step shop setup, then straight to listing */
+  function renderSetup(user) {
+    sellerTitle.textContent = "Set up your shop";
+    sellerBody.innerHTML =
+      "<p>Create your shop in one step, then list your first product right away.</p>" +
+      '<form id="setup-form">' +
+      '<label for="su-shop">Shop name</label><input id="su-shop" type="text" required maxlength="80">' +
+      '<label for="su-phone">WhatsApp / phone number</label><input id="su-phone" type="tel" required placeholder="08012345678">' +
+      '<label for="su-state">State</label><input id="su-state" type="text" placeholder="e.g. Lagos">' +
+      '<label for="su-cat">Main category</label><select id="su-cat">' + categoryOptions("") + "</select>" +
+      '<label for="su-ig">Instagram handle (optional)</label><input id="su-ig" type="text" placeholder="@yourshop">' +
+      '<label class="check"><input id="su-consent" type="checkbox" required> ' +
+      "I agree that buyers can contact me on this number when they tap “Chat seller”.</label>" +
+      '<button class="button button-primary" type="submit" id="su-submit">Create shop</button>' +
+      "</form>" +
+      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>';
+
+    document.getElementById("setup-form").addEventListener("submit", async function (event) {
+      event.preventDefault();
+      var btn = document.getElementById("su-submit");
+      btn.disabled = true;
+      formMessage("Creating your shop…");
+
+      var shop = document.getElementById("su-shop").value.trim();
+      var row = {
+        user_id: user.id,
+        shop_name: shop,
+        slug: slugify(shop) + "-" + Math.random().toString(36).slice(2, 6),
+        phone: document.getElementById("su-phone").value.trim(),
+        state: document.getElementById("su-state").value.trim() || null,
+        main_category: document.getElementById("su-cat").value || null,
+        instagram_handle: document.getElementById("su-ig").value.trim() || null,
+        verification_status: "pending"
+      };
+
+      var result = await client.from("seller_applications").insert(row).select().single();
+      if (result.error) {
+        var msg = result.error.message || "We could not create your shop.";
+        if (result.error.code === "23505" && /user/i.test(msg)) msg = "You already have a shop. Close this and tap Sell again.";
+        else if (/phone_format/.test(msg)) msg = "Please check your phone number format, for example 08012345678.";
+        formMessage(msg, true);
+        btn.disabled = false;
+        return;
+      }
+      currentApp = result.data;
+      showToast("Shop created. Add your first product.");
+      renderDashboard();
+    });
+  }
+
+  function productFormHtml() {
+    return (
+      '<h3 id="pf-heading">Add a product</h3>' +
+      '<form id="product-form">' +
+      '<label for="pf-name">Product name</label><input id="pf-name" type="text" required maxlength="120">' +
+      '<label for="pf-cat">Category</label><select id="pf-cat">' + categoryOptions("") + "</select>" +
+      '<label for="pf-cond">Condition</label><select id="pf-cond"><option value="new">New</option><option value="used">Used</option><option value="refurbished">Refurbished</option></select>' +
+      '<label for="pf-price">Price (₦)</label><input id="pf-price" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="e.g. 18500">' +
+      '<label for="pf-desc">Description</label><textarea id="pf-desc" maxlength="1000" placeholder="Condition, size, delivery areas…"></textarea>' +
+      '<label for="pf-photo" id="pf-photo-label">Photo (JPG, PNG or WebP, up to 5 MB)</label>' +
+      '<input id="pf-photo" type="file" accept="image/jpeg,image/png,image/webp">' +
+      '<label class="check"><input id="pf-stock" type="checkbox" checked> In stock</label>' +
+      '<button class="button button-primary" type="submit" id="pf-submit">Publish product</button>' +
+      '<button class="button button-outline" type="button" id="pf-cancel" hidden>Cancel edit</button>' +
+      "</form>"
+    );
+  }
+
+  function renderDashboard() {
+    var verified = currentApp.verification_status === "approved";
+    sellerTitle.textContent = currentApp.shop_name;
+    sellerBody.innerHTML =
+      (verified
+        ? '<p class="status-pill ok">✓ Verified seller</p>'
+        : '<p class="status-pill">Unverified shop</p><p class="muted">You can list right now. Buyers see an “Unverified” label until SafeBuy NG verifies your shop.</p>') +
+      productFormHtml() +
+      '<p class="form-message" id="form-message" role="status" aria-live="polite"></p>' +
+      "<h3>Your listings</h3>" +
+      '<div id="my-products">Loading…</div>';
+
+    document.getElementById("product-form").addEventListener("submit", submitProduct);
+    document.getElementById("pf-cancel").addEventListener("click", function () {
+      editingId = null;
+      renderDashboard();
+    });
+    loadMyProducts();
+  }
+
+  function startEdit(id) {
+    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!p) return;
+    editingId = p.id;
+    document.getElementById("pf-heading").textContent = "Edit product";
+    document.getElementById("pf-name").value = p.name || "";
+    document.getElementById("pf-cat").value = p.category || CATEGORIES[0];
+    document.getElementById("pf-cond").value = p.condition || "new";
+    document.getElementById("pf-price").value = (Number(p.price_kobo) / 100).toString();
+    document.getElementById("pf-desc").value = p.description || "";
+    document.getElementById("pf-stock").checked = p.in_stock !== false;
+    document.getElementById("pf-photo-label").textContent = "Replace photo (optional)";
+    document.getElementById("pf-submit").textContent = "Save changes";
+    document.getElementById("pf-cancel").hidden = false;
+    formMessage("");
+    document.getElementById("pf-heading").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function submitProduct(event) {
+    event.preventDefault();
+    var btn = document.getElementById("pf-submit");
+    var user = await currentUser();
+    if (!user || !currentApp) { formMessage("Please sign in again.", true); return; }
+
+    var naira = Number(document.getElementById("pf-price").value);
+    var priceKobo = Math.round(naira * 100);
+    if (!isFinite(priceKobo) || priceKobo <= 0) { formMessage("Enter a price greater than zero.", true); return; }
+
+    var file = document.getElementById("pf-photo").files[0];
+    if (file) {
+      if (!IMAGE_TYPES[file.type]) { formMessage("Photos must be JPG, PNG or WebP.", true); return; }
+      if (file.size > MAX_IMAGE_BYTES) { formMessage("That photo is larger than 5 MB.", true); return; }
+    }
+
+    btn.disabled = true;
+    formMessage(editingId ? "Saving…" : "Publishing…");
+
+    var newPath = null;
+    var newUrl = null;
+    if (file) {
+      newPath = user.id + "/" + randomId() + "." + IMAGE_TYPES[file.type];
+      var up = await client.storage.from("product-images").upload(newPath, file, { contentType: file.type, upsert: false });
+      if (up.error) {
+        formMessage("Photo upload failed: " + up.error.message, true);
+        btn.disabled = false;
+        return;
+      }
+      newUrl = client.storage.from("product-images").getPublicUrl(newPath).data.publicUrl;
+    }
+
+    var fields = {
+      name: document.getElementById("pf-name").value.trim(),
+      description: document.getElementById("pf-desc").value.trim(),
+      category: document.getElementById("pf-cat").value,
+      condition: document.getElementById("pf-cond").value,
+      price_kobo: priceKobo,
+      in_stock: document.getElementById("pf-stock").checked
+    };
+
+    var editing = editingId
+      ? myProducts.filter(function (x) { return String(x.id) === String(editingId); })[0]
+      : null;
+    var failure = null;
+
+    if (editing) {
+      if (newPath) { fields.image_path = newPath; fields.image_url = newUrl; }
+      fields.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(fields).eq("id", editing.id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) failure = upd.error ? upd.error.message : "The change was not saved.";
+      else if (newPath && editing.image_path) await client.storage.from("product-images").remove([editing.image_path]);
+    } else {
+      fields.seller_application_id = currentApp.id;
+      fields.status = "published";
+      fields.image_path = newPath;
+      fields.image_url = newUrl;
+      var ins = await client.from("seller_products").insert(fields);
+      if (ins.error) failure = ins.error.message;
+    }
+
+    if (failure) {
+      if (newPath) await client.storage.from("product-images").remove([newPath]);
+      formMessage("Could not save the product: " + failure, true);
+      btn.disabled = false;
+      return;
+    }
+
+    showToast(editing ? "Changes saved." : "Product published. It is live now.");
+    editingId = null;
+    renderDashboard();
+    loadProducts();
+  }
+
+  async function loadMyProducts() {
+    var box = document.getElementById("my-products");
+    if (!box || !currentApp) return;
+    var r = await client.from("seller_products")
+      .select("id,name,description,category,price_kobo,status,image_path,image_url,in_stock,condition")
+      .eq("seller_application_id", currentApp.id)
+      .order("created_at", { ascending: false });
+    if (r.error) { box.textContent = r.error.message; return; }
+    myProducts = r.data || [];
+    if (!myProducts.length) { box.textContent = "No listings yet. Add your first product above."; return; }
+
+    box.innerHTML = myProducts.map(function (p) {
+      var live = p.status === "published";
+      var thumb = p.image_url && /^https:\/\//.test(p.image_url)
+        ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
+        : '<div class="thumb"></div>';
+      return '<div class="seller-item">' +
+        '<div class="seller-item-top">' + thumb + '<div class="grow"><strong>' + esc(p.name) + "</strong><br>" +
+        '<span class="muted">' + esc(money(Number(p.price_kobo) / 100)) + " · " +
+        (live ? "Live" : "Hidden") + (p.in_stock === false ? " · Sold out" : "") + "</span></div></div>" +
+        '<div class="seller-actions">' +
+        '<button class="button button-outline" type="button" data-act="edit" data-id="' + esc(p.id) + '">Edit</button>' +
+        '<button class="button button-outline" type="button" data-act="stock" data-id="' + esc(p.id) + '">' + (p.in_stock === false ? "Back in stock" : "Mark sold out") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="visible" data-id="' + esc(p.id) + '">' + (live ? "Hide" : "Show") + "</button>" +
+        '<button class="button button-outline" type="button" data-act="delete" data-id="' + esc(p.id) + '" data-path="' + esc(p.image_path || "") + '">Delete</button>' +
+        "</div></div>";
+    }).join("");
+  }
+
+  sellerBody.addEventListener("click", async function (event) {
+    var button = event.target.closest("[data-act]");
+    if (!button) return;
+    var id = button.dataset.id;
+    var act = button.dataset.act;
+    var p = myProducts.filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!p) return;
+
+    if (act === "edit") { startEdit(id); return; }
+    button.disabled = true;
+
+    if (act === "delete") {
+      if (!window.confirm("Delete this listing permanently?")) { button.disabled = false; return; }
+      var del = await client.from("seller_products").delete().eq("id", id).select("id");
+      if (del.error || !del.data || !del.data.length) {
+        showToast(del.error ? del.error.message : "Could not delete that listing.");
+        button.disabled = false;
+        return;
+      }
+      if (button.dataset.path) await client.storage.from("product-images").remove([button.dataset.path]);
+      showToast("Listing deleted.");
+    } else {
+      var change = act === "stock"
+        ? { in_stock: p.in_stock === false }
+        : { status: p.status === "published" ? "hidden" : "published" };
+      change.updated_at = new Date().toISOString();
+      var upd = await client.from("seller_products").update(change).eq("id", id).select("id");
+      if (upd.error || !upd.data || !upd.data.length) {
+        showToast(upd.error ? upd.error.message : "The change was not saved.");
+        button.disabled = false;
+        return;
+      }
+    }
+    loadMyProducts();
+    loadProducts();
+  });
+
+  /* Buyer: "Chat seller" opens WhatsApp. The number is fetched only when tapped. */
+  document.addEventListener("click", async function (event) {
+    var button = event.target.closest('[data-action="whatsapp"]');
+    if (!button || !client) return;
+    var product = findProduct(button.dataset.id);
+    if (!product) return;
+
+    var win = window.open("about:blank", "_blank");
+    button.disabled = true;
+    var r = await client.rpc("seller_contact", { p_product: product.id });
+    button.disabled = false;
+
+    var number = r.error ? "" : waNumber(r.data);
+    if (!number) {
+      if (win) win.close();
+      showToast("This seller's contact is not available right now.");
+      return;
+    }
+    var text = "Hello, I'm interested in \"" + product.name + "\" (" + money(product.price) + ") on SafeBuy NG. Is it still available?";
+    var url = "https://wa.me/" + number + "?text=" + encodeURIComponent(text);
+    if (win) win.location.href = url; else window.location.href = url;
+  });
+
+  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
+    button.addEventListener("click", startSelling);
+  });
+  document.getElementById("seller-close").addEventListener("click", closeSeller);
+  sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
+
+  /* ---------- Auth state: update menus, close dialogs, go home once ---------- */
+  function goHome() {
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (m) { m.classList.remove("open"); });
+    var chat = document.getElementById("sbm");
+    if (chat) chat.classList.remove("open");
+    document.body.classList.remove("locked");
+    history.replaceState(null, "", location.pathname + location.search + "#home");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  if (client) {
+    client.auth.onAuthStateChange(function (event, session) {
+      currentApp = null;
+      renderAccountMenus(session && session.user ? session.user : null);
+      logout.hidden = !session;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+      if (accountBackdrop.classList.contains("open")) {
+        goHome();
+        setTimeout(goHome, 250);
+      }
+    });
+
+    client.auth.getSession().then(function (result) {
+      var s = result.data && result.data.session;
+      if (s) { logout.hidden = false; renderAccountMenus(s.user); }
+    });
+  }
+
+  setMode("signin");
+})();
+</script>
+
+<script>
+/* Tap a product photo to open its page (restored from the original) */
+document.addEventListener("click", function (e) {
+  var art = e.target.closest(".product-art");
+  if (!art) return;
+  var card = art.closest(".product-card");
+  var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
+  if (link) window.location.href = link.getAttribute("href");
+});
+</script>
+<!-- Feature scripts (unchanged) -->
+<script src="../shop-extras.js"></script>
+<script src="../messages.js"></script>
+<script src="../notify.js"></script>
+<script src="../verify.js"></script>
+<script src="../lead-capture.js"></script>
+<script src="../buyer-account.js"></script>
+<script src="../orders.js"></script>
+<script src="../account-settings.js"></script>
+<script src="../delivery.js"></script>
+<script src="../delivery-orders.js"></script>
+<script src="../delivery-boost.js"></script>
+<script src="../bottom-sheet.js"></script>
+<script src="../protect-core.js"></script>
+<script src="../protected-option.js"></script>
+<script src="../theme.js"></script>
+<script src="../admin-plus.js"></script>
+<button id="role-open" type="button" style="position:fixed;left:14px;bottom:86px;z-index:60;border:0;border-radius:30px;padding:12px 18px;background:#b45309;color:#fff;font:800 15px system-ui,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.25)">🏪 My shop</button>
+<button id="role-install" type="button" hidden style="position:fixed;left:14px;top:70px;z-index:60;border:1px solid #b45309;border-radius:30px;padding:8px 14px;background:#fff;color:#b45309;font:800 13px system-ui,sans-serif">⬇ Install SafeBuy Seller</button>
+<script>
+(function () {
+  "use strict";
+  var ACTION = "sell";
+  function open() { var b = document.querySelector('[data-action="' + ACTION + '"]'); if (b) b.click(); }
+  document.getElementById("role-open").addEventListener("click", open);
+  // open the right screen once the page has finished starting up
+  var tries = 0, t = setInterval(function () {
+    if (document.querySelector('[data-action="' + ACTION + '"]') && (window.safeBuySupabase || tries > 12)) { clearInterval(t); setTimeout(open, 300); }
+    else if (++tries > 40) clearInterval(t);
+  }, 250);
+  // own service worker + install button (this app is installed separately from the shop)
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(function () {});
+  var ev = null, ib = document.getElementById("role-install");
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); ev = e; ib.hidden = false; });
+  ib.addEventListener("click", function () { if (ev) { ev.prompt(); ev = null; ib.hidden = true; } });
+  window.addEventListener("appinstalled", function () { ib.hidden = true; });
+})();
+</script>
+</body>
+  </html>
