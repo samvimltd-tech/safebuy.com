@@ -2,16 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#12372a">
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/png" href="./icons/icon-192.png">
-<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="SafeBuy Admin">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SafeBuy NG Admin</title>
 <style>
 :root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7;--red:#8a1f1f;--amber:#7a4a05}
@@ -20,7 +12,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
 button,input,select{font:inherit}
 button{cursor:pointer}
-.wrap{width:min(920px,100% - 28px);margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom))}
+.wrap{width:min(920px,100% - 28px);margin:0 auto;padding:18px 0 60px}
 .narrow{width:min(420px,100% - 28px);padding-top:12vh}
 .card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
 h1{margin:0 0 4px;font-size:24px}
@@ -96,7 +88,6 @@ td .button{padding:6px 11px;font-size:12px}
 <main class="wrap narrow card" id="login-view" hidden>
   <h1>SafeBuy NG Admin</h1>
   <p class="muted">Authorised staff only.</p>
-  <p class="muted" id="ios-tip" hidden>To install on iPhone: tap Share, then “Add to Home Screen”.</p>
   <form id="login-form">
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="username" required>
@@ -115,7 +106,6 @@ td .button{padding:6px 11px;font-size:12px}
     </div>
     <div class="top-actions">
       <span class="live" id="live" title="Live updates"><span class="dot" id="live-dot"></span><span id="live-text">Connecting…</span></span>
-      <button class="button" type="button" id="install-btn" hidden>Install app</button>
       <button class="button outline" type="button" id="refresh-btn">Refresh</button>
       <button class="button outline" type="button" id="logout-btn">Sign out</button>
     </div>
@@ -148,7 +138,7 @@ td .button{padding:6px 11px;font-size:12px}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="../supabase-config.js"></script>
+<script src="./supabase-config.js"></script>
 <script>
 (function () {
   "use strict";
@@ -890,7 +880,7 @@ td .button{padding:6px 11px;font-size:12px}
     save.disabled = true;
     say("Saving…");
     try {
-      await rpc("admin_update_settings", {
+      await rpc("admin_save_settings", {
         p_offer: val("st-offer"), p_attempts: val("st-att"), p_fresh: val("st-fresh"), p_window: val("st-win"), p_share: val("st-share"),
         p_same_city: want.fee_same_city_kobo, p_same_state: want.fee_same_state_kobo, p_interstate: want.fee_interstate_kobo,
         p_instructions: document.getElementById("st-ins").value
@@ -901,9 +891,10 @@ td .button{padding:6px 11px;font-size:12px}
       var kept = dSettings && dSettings.fee_same_city_kobo === want.fee_same_city_kobo &&
         dSettings.fee_same_state_kobo === want.fee_same_state_kobo && dSettings.fee_interstate_kobo === want.fee_interstate_kobo;
       if (kept) { say("Saved. Buyers will now be charged these fees."); note("Delivery settings saved."); }
-      else say("The server accepted the request but kept the old fees. The database rule behind admin_update_settings is rejecting the change. Send this to your developer or to Claude.", true);
+      else say("The save went through but the fees did not change. Make sure you ran the admin_save_settings SQL in Supabase.", true);
     } catch (err) {
-      say("Not saved: " + (err.message || err), true);
+      var em = String(err.message || err);
+      say("Not saved: " + (/could not find the function|schema cache/i.test(em) ? "run the admin_save_settings SQL in Supabase first." : em), true);
       save.disabled = false;
     }
   });
@@ -1165,29 +1156,5 @@ td .button{padding:6px 11px;font-size:12px}
   });
 })();
 </script>
-<script>
-(function () {
-  "use strict";
-  /* ---------- Installable app (PWA) ---------- */
-  var installEvt = null, installBtn = document.getElementById("install-btn");
-  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-  window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault(); installEvt = e;
-    if (!standalone) installBtn.hidden = false;
-  });
-  installBtn.addEventListener("click", async function () {
-    if (!installEvt) return;
-    installEvt.prompt();
-    await installEvt.userChoice.catch(function () {});
-    installEvt = null; installBtn.hidden = true;
-  });
-  window.addEventListener("appinstalled", function () { installBtn.hidden = true; });
-  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) document.getElementById("ios-tip").hidden = false;
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
-  }
-
-})();
-</script>
 </body>
-  </html>
+</html>
