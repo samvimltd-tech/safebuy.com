@@ -292,6 +292,24 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 html{scroll-behavior:auto}
 *,*::before,*::after{transition:none!important}
 }
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
+.path{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);text-align:left;text-decoration:none;font:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(8,127,91,.07)}
+.path:active{transform:scale(.98)}
+.path-ico{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:12px;background:var(--green-light);font-size:22px}
+.path img{flex:0 0 46px;width:46px;height:46px;border-radius:12px;object-fit:cover;object-position:50% 20%;background:var(--green-light)}
+.path-t{flex:1;min-width:0}.path-t strong{display:block;font-size:16px;line-height:1.2}
+.path-t small{display:block;margin-top:2px;font-size:12px;color:var(--muted);line-height:1.25}
+.path-go{color:var(--green-dark);font-weight:800}
+.path-buy{background:linear-gradient(135deg,var(--green),var(--green-dark));border-color:transparent;color:#fff}
+.path-buy .path-ico{background:rgba(255,255,255,.2)}.path-buy small,.path-buy .path-go{color:#e6f8ee}
+@media(max-width:650px){.path{padding:10px;gap:8px}.path-ico{flex-basis:38px;height:38px;font-size:20px}.path img{flex-basis:42px;width:42px;height:42px}.path-t strong{font-size:14px}.path-t small{font-size:11px}.path-go{display:none}}
+/* Delivery partner banner */
+.rider-banner{margin:18px 0 6px;padding:18px 16px 20px;border:1px solid #bfe6d1;border-radius:22px;background:linear-gradient(180deg,#fff,var(--green-light));text-align:center;box-shadow:0 10px 26px rgba(8,127,91,.10)}
+.rider-banner img{mix-blend-mode:multiply;display:block;width:min(300px,78%);height:auto;margin:0 auto 6px}
+.rider-banner h2{margin:0;font-size:24px;color:var(--ink);line-height:1.2}
+.rider-banner p{margin:6px auto 14px;max-width:380px;font-size:14px;color:var(--muted)}
+.rider-banner .button{min-width:220px;font-size:16px;padding:14px 22px}
+@media(min-width:760px){.rider-banner{display:grid;grid-template-columns:260px 1fr;align-items:center;gap:24px;text-align:left;padding:20px 28px}.rider-banner img{width:100%;margin:0}.rider-banner p{margin-left:0}}
 /* Marketplace pulse card (inside the Shop menu) */
 .pulse-card{margin:2px 0 8px;padding:12px;border:1px solid #bfe6d1;border-radius:14px;background:linear-gradient(180deg,var(--green-light),#fff);text-align:left}
 .pulse-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -516,6 +534,10 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
       <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
+    </div>
+    <div class="paths" aria-label="Sell or deliver with SafeBuy NG">
+      <button class="path path-sell" type="button" data-action="sell"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></button>
+      <button class="path path-ride" type="button" data-action="deliver"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></button>
     </div>
     <div class="prototype-notice">
       <strong>Prototype notice:</strong>
@@ -1900,7 +1922,7 @@ updateCartCount();
     }
 
     var fields = {
-      name: docume.getElementById("pf-name").value.trim(),
+      name: document.getElementById("pf-name").value.trim(),
       description: document.getElementById("pf-desc").value.trim(),
       category: document.getElementById("pf-cat").value,
       condition: document.getElementById("pf-cond").value,
