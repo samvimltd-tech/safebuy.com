@@ -292,7 +292,75 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
 html{scroll-behavior:auto}
 *,*::before,*::after{transition:none!important}
 }
+/* Marketplace pulse card (inside the Shop menu) */
+.pulse-card{margin:2px 0 8px;padding:12px;border:1px solid #bfe6d1;border-radius:14px;background:linear-gradient(180deg,var(--green-light),#fff);text-align:left}
+.pulse-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.pulse-head strong{display:block;font-size:14px;color:var(--ink);line-height:1.25}
+.pulse-head span.sub{display:block;margin-top:2px;font-size:12px;font-weight:500;color:var(--muted);line-height:1.3}
+.pulse-live{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:3px 9px;border-radius:30px;background:#fff;border:1px solid #bfe6d1;color:var(--green-dark);font-size:11px;font-weight:800}
+.pulse-live i{width:7px;height:7px;border-radius:50%;background:#1fae6f;box-shadow:0 0 0 0 #1fae6f88;animation:pulse-dot 1.8s infinite}
+@keyframes pulse-dot{70%{box-shadow:0 0 0 6px #1fae6f00}100%{box-shadow:0 0 0 0 #1fae6f00}}
+.pulse-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.pulse-stat{padding:8px 4px;border-radius:10px;background:#fff;border:1px solid var(--line);text-align:center}
+.pulse-stat .pi{display:block;font-size:16px;line-height:1.1}
+.pulse-stat b{display:block;margin-top:3px;font-size:14px;color:var(--ink);line-height:1.2;word-break:break-word}
+.pulse-stat span.pl{display:block;font-size:10.5px;font-weight:600;color:var(--muted);line-height:1.2}
+.pulse-more{margin-top:8px}
+.pulse-more>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;font-weight:800;color:var(--ink);cursor:pointer;list-style:none}
+.pulse-more>summary::-webkit-details-marker{display:none}
+.pulse-more>summary .chev{transition:transform .18s;color:var(--green-dark)}
+.pulse-more[open]>summary .chev{transform:rotate(180deg)}
+.pulse-cats{margin-top:6px;display:grid;gap:2px}
+.pulse-cats button{display:flex!important;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:8px 10px!important;border:0;border-radius:8px!important;background:transparent;color:var(--ink);font-size:13px!important;font-weight:600;text-align:left}
+.pulse-cats button:hover{background:var(--green-light)}
+.pulse-cats button b{min-width:24px;padding:1px 7px;border-radius:20px;background:var(--green-light);color:var(--green-dark);text-align:center;font-size:12px}
+/* spinner shown on any button while it waits for the network (see the script below) */
+button.busy{color:transparent!important;pointer-events:none}
+button.busy>*{visibility:hidden}
+button.busy::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2.5px solid rgba(8,127,91,.25);border-top-color:var(--green);border-radius:50%;animation:sb-spin .7s linear infinite}
+button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(255,255,255,.4);border-top-color:#fff}
+@keyframes sb-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){button.busy::after{animation-duration:2.4s}}
 </style>
+<script>
+/* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
+   after a button is tapped puts a spinner on that button until the request finishes. */
+(function () {
+  "use strict";
+  var orig = window.fetch, last = null;
+  if (typeof orig !== "function") return;
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("button") : null;
+    last = b && !b.disabled && !b.hasAttribute("data-no-spinner") ? { b: b, t: Date.now() } : null;
+  }, true);
+  function track(b, p) {
+    if (!b.__sbN) {
+      b.__sbN = 0; b.__sbT = Date.now();
+      if (getComputedStyle(b).position === "static") { b.style.position = "relative"; b.__sbPos = true; }
+      if (/(^|\s)button-primary(\s|$)/.test(b.className) === false && getComputedStyle(b).backgroundColor === "rgb(8, 127, 91)") b.classList.add("sb-dark");
+      b.classList.add("busy"); b.setAttribute("aria-busy", "true");
+      b.__sbKill = setTimeout(function () { b.__sbN = 0; clear(b); }, 25000);   // never leave a button stuck
+    }
+    b.__sbN++;
+    var done = function () {
+      if (--b.__sbN > 0) return;
+      setTimeout(function () { if (!b.__sbN) clear(b); }, Math.max(0, 350 - (Date.now() - b.__sbT)));   // no flicker
+    };
+    p.then(done, done);
+  }
+  function clear(b) {
+    clearTimeout(b.__sbKill);
+    b.classList.remove("busy", "sb-dark"); b.removeAttribute("aria-busy");
+    if (b.__sbPos) { b.style.position = ""; b.__sbPos = false; }
+    b.__sbN = 0;
+  }
+  window.fetch = function () {
+    var p = orig.apply(this, arguments), L = last;
+    if (L && Date.now() - L.t < 800 && L.b.isConnected) track(L.b, p);
+    return p;
+  };
+})();
+</script>
 <script src="./pwa-install.js"></script>
 </head>
 <body>
@@ -777,7 +845,7 @@ function renderProducts() {
       <article class="product-card">
         <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
           ${!p.inStock ? '<span class="tag">Sold out</span>' : p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
-          ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
+          ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" decoding="async">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
         </div>
         <div class="product-info">
           <div class="product-category">${esc(p.category)}</div>
@@ -1232,8 +1300,111 @@ updateCartCount();
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* Marketplace pulse: one card in the Shop menu, built from the products currently on the page. */
+(function () {
+  "use strict";
+  var LABEL = { Home: "Home & living" };
+  function build() {
+    var list = (typeof products !== "undefined" && products) ? products : [];
+    if (!list.length) {
+      return '<div class="pulse-card"><div class="pulse-head"><div><strong>Marketplace pulse</strong><span class="sub">See what is on sale, by category</span></div><span class="pulse-live"><i></i>Live</span></div>' +
+             '<p class="sub" style="margin:10px 0 0;font-size:12px;color:var(--muted)">Loading products…</p></div>';
+    }
+    var sellers = {}, total = 0, sum = 0, cats = {}, order = [];
+    list.forEach(function (p) {
+      sellers[p.seller] = 1; total++; sum += Number(p.price) || 0;
+      if (!cats[p.category]) { cats[p.category] = 0; order.push(p.category); }
+      cats[p.category]++;
+    });
+    var names = order.slice().sort(function (a, b) { return cats[b] - cats[a] || order.indexOf(a) - order.indexOf(b); });
+    var avg = total ? Math.round(sum / total) : 0;
+    return '<div class="pulse-card">' +
+      '<div class="pulse-head"><div><strong>Marketplace pulse</strong><span class="sub">See what is on sale, by category</span></div><span class="pulse-live"><i></i>Live</span></div>' +
+      '<div class="pulse-stats">' +
+        '<div class="pulse-stat"><span class="pi">🏪</span><b>' + Object.keys(sellers).length + '</b><span class="pl">Active sellers</span></div>' +
+        '<div class="pulse-stat"><span class="pi">💰</span><b>' + esc(money(avg)) + '</b><span class="pl">Average price</span></div>' +
+        '<div class="pulse-stat"><span class="pi">⚡</span><b>' + names.length + '</b><span class="pl">Categories stocked</span></div>' +
+      '</div>' +
+      '<details class="pulse-more"><summary><span>' + total + ' product' + (total === 1 ? "" : "s") + ' · by category</span><span class="chev" aria-hidden="true">⌄</span></summary>' +
+      '<div class="pulse-cats">' + names.map(function (c) {
+        return '<button type="button" data-goto-category="' + esc(c) + '"><span>' + esc(LABEL[c] || c) + '</span><b>' + cats[c] + '</b></button>';
+      }).join("") + '</div></details></div>';
+  }
+  function render() {
+    var open = {};
+    document.querySelectorAll(".pulse-slot").forEach(function (slot, i) {
+      var d = slot.querySelector(".pulse-more");
+      open[i] = d && d.open;                       // keep a section open across refreshes
+      slot.innerHTML = build();
+      if (open[i]) slot.querySelector(".pulse-more").open = true;
+    });
+  }
+  window.renderPulse = render;
+  if (typeof setProducts === "function") {
+    var original = setProducts;
+    setProducts = function () { var r = original.apply(this, arguments); try { render(); } catch (e) {} return r; };
+  }
+  /* Merge the old on-page stats row + pulse block (drawn by shop-extras.js) into this one card. */
+  function adopt() {
+    if (document.querySelector("#pulse-main")) return true;
+    var a = null, b = null;
+    document.querySelectorAll("main *, body > *:not(script) *").forEach(function (el) {
+      if (el.children.length || el.closest(".dd-menu,#drawer,.pulse-card")) return;
+      var t = (el.textContent || "").trim();
+      if (!a && t === "Active sellers") a = el;
+      if (!b && t === "Marketplace pulse") b = el;
+    });
+    if (!a || !b) return false;
+    var anc = a; while (anc && !anc.contains(b)) anc = anc.parentElement;
+    if (!anc) return false;
+    var kids = Array.prototype.filter.call(anc.children, function (k) { return k.contains(a) || k.contains(b); });
+    if (!kids.length || kids.length > 3) return false;
+    var slot = document.createElement("div");
+    slot.id = "pulse-main"; slot.className = "pulse-slot";
+    anc.insertBefore(slot, kids[0]);
+    kids.forEach(function (k) { k.style.display = "none"; });
+    render();
+    return true;
+  }
+  var tries = 0, iv = setInterval(function () { if (adopt() || ++tries > 60) clearInterval(iv); }, 250);
+  render();
+})();
+</script>
+
 <script src="./supabase-config.js"></script>
+<script>
+/* Start downloading the products now, while the Supabase library below is still loading. */
+(function () {
+  var c = window.SAFEbuySupabaseConfig;
+  if (!c || !c.url || !c.publishableKey) return;
+  var base = String(c.url).replace(/\/+$/, "");
+  try { var l = document.createElement("link"); l.rel = "preconnect"; l.href = base; l.crossOrigin = ""; document.head.appendChild(l); } catch (e) {}
+  window.__earlyProducts = fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+    headers: { apikey: c.publishableKey, Accept: "application/json" }
+  }).then(function (r) {
+    return r.ok ? r.json().then(function (d) { return { data: d, error: null }; })
+                : r.text().then(function (t) { return { data: null, error: { message: "HTTP " + r.status + " " + t.slice(0, 120) } }; });
+  }).catch(function (e) { return { data: null, error: { message: e.message } }; })
+  .then(function (res) {
+    // Show the products right away; do not wait for the Supabase library.
+    if (!res.error && Array.isArray(res.data) && typeof setProducts === "function" && typeof normalizeProduct === "function") {
+      try {
+        setProducts(res.data.map(function (r, i) {
+          return normalizeProduct({
+            id: r.id, name: r.name, category: r.category, price: Number(r.price_kobo) / 100, seller: r.shop_name,
+            image: r.image_url, description: r.description, verified: r.verified, inStock: r.in_stock, slug: r.slug, condition: r.condition
+          }, i);
+        }), "supabase");
+        window.__earlyRendered = true;
+      } catch (e) { window.__earlyRendered = false; }
+    }
+    return res;
+  });
+})();
+</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function () {
   "use strict";
@@ -1317,8 +1488,17 @@ updateCartCount();
       setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
 
+    function viaClient() {
+      return client.from("seller_products_public").select("*").order("created_at", { ascending: false });
+    }
+    var early = window.__earlyProducts;
+    window.__earlyProducts = null;
+    var request = early
+      ? early.then(function (r) { return r.error ? viaClient() : r; })    // early request failed: try the library
+      : viaClient();
+
     Promise.race([
-      client.from("seller_products_public").select("*").order("created_at", { ascending: false }),
+      request,
       timeout
     ])
       .then(function (result) {
@@ -1326,6 +1506,7 @@ updateCartCount();
           restFallback("Supabase error: " + result.error.message);
           return;
         }
+        if (window.__earlyRendered) return;      // already drawn from the early request
         setProducts(mapRows(result.data), "supabase");
       })
       .catch(function (e) {
@@ -1719,7 +1900,7 @@ updateCartCount();
     }
 
     var fields = {
-      name: document.getElementById("pf-name").value.trim(),
+      name: docume.getElementById("pf-name").value.trim(),
       description: document.getElementById("pf-desc").value.trim(),
       category: document.getElementById("pf-cat").value,
       condition: document.getElementById("pf-cond").value,
