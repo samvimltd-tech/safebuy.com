@@ -1182,5 +1182,26 @@ td .button{padding:6px 11px;font-size:12px}
   });
 })();
 </script>
+  <style>
+  #sbn-fab, #sbm-fab {
+    position: fixed !important;
+    right: 14px !important;
+    left: auto !important;
+    top: auto !important;
+    z-index: 90 !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.28);
+  }
+  #sbm-fab { bottom: 24px !important; }
+  #sbn-fab { bottom: 90px !important; }
+
+  @media (max-width: 650px) {
+    #sbm-fab { bottom: calc(84px + env(safe-area-inset-bottom)) !important; }
+    #sbn-fab { bottom: calc(150px + env(safe-area-inset-bottom)) !important; }
+    .quick-link { padding-right: 56px; } /* keeps the bell off the Messages text */
+  }
+
+  /* a transform or filter on body would break "fixed", so switch them off */
+  body { transform: none !important; filter: none !important; }
+  </style>
 </body>
 </html>
