@@ -463,6 +463,7 @@ td .button{padding:6px 11px;font-size:12px}
       { label: "Sold out", value: p.soldout, go: ["products", "soldout"] },
       { label: "Leads", value: leadRows.length, go: ["leads", "all"] },
       { label: "Verification requests", value: vCounts().open, go: ["verify", "open"], alert: vCounts().open > 0 },
+      { label: "Total riders", value: dPartners.length, go: ["delivery", "partners"] },
       { label: "Delivery partners to review", value: d.partners, go: ["delivery", "partners"], alert: d.partners > 0 },
       { label: "Delivery fees to confirm", value: d.orders, go: ["delivery", "orders"], alert: d.orders > 0 },
       { label: "Active deliveries", value: d.active, go: ["delivery", "jobs"] },
@@ -742,6 +743,15 @@ td .button{padding:6px 11px;font-size:12px}
     else renderSettings();
   }
 
+  function partnerSummary() {
+    var n = { all: dPartners.length, approved: 0, pending: 0, rejected: 0, suspended: 0, online: 0 };
+    dPartners.forEach(function (p) { if (n[p.status] != null) n[p.status]++; if (p.is_online) n.online++; });
+    function chip(label, v, cls) { return '<span class="pill ' + (cls || "") + '" style="margin-right:6px">' + esc(label) + ": <strong>" + v + "</strong></span>"; }
+    return '<div class="item" style="padding:12px 14px"><strong style="font-size:15px">Total riders: ' + n.all + "</strong><br>" +
+      chip("Approved", n.approved, "approved") + chip("Online now", n.online, "approved") + chip("Pending", n.pending) +
+      chip("Rejected", n.rejected, "rejected") + chip("Suspended", n.suspended, "rejected") + "</div>";
+  }
+
   function renderPartners(fresh) {
     var term = searchBox.value.trim().toLowerCase();
     var pm = pMap();
@@ -753,7 +763,7 @@ td .button{padding:6px 11px;font-size:12px}
     rows = sortRows(rows, "full_name").sort(function (a, b) { return (a.status === "pending" ? 0 : 1) - (b.status === "pending" ? 0 : 1); });
     if (!rows.length) { dEmpty(term ? "No partners match your search." : "No delivery partners yet."); return; }
 
-    list.innerHTML = rows.map(function (p) {
+    list.innerHTML = partnerSummary() + rows.map(function (p) {
       var seen = {};
       var docs = (byPartner[p.id] || []).filter(function (d) { return seen[d.doc_type] ? false : (seen[d.doc_type] = 1); });
       var dhtml = docs.length ? docs.map(function (d) {
