@@ -127,9 +127,9 @@
   /* ---- Site content tab: edit what visitors see on index.html ---- */
   var FIELDS = [
     ["h", "Announcement bar"], ["ann_show", "Show the announcement bar", "on"], ["ann_text", "Announcement text", "text"],
-    ["h", "Home page"], ["hero_title", "Main headline", "text"], ["hero_lead", "Line under the headline", "area"],
-    ["role_buy_sub", "Buy card text", "text"], ["role_sell_sub", "Sell card text", "text"], ["role_ride_sub", "Deliver card text", "text"],
-    ["h", "Show or hide sections"], ["show_quicklinks", "Quick links row", "on"], ["show_notice", "Prototype notice", "on"], ["show_pulse", "Marketplace pulse", "on"], ["show_sell", "Sell and rider block", "on"],
+    ["h", "Home page"], ["hero_title", "Main headline (put | before the green second line, e.g. Good finds. | Better shopping.)", "text"], ["hero_lead", "Line under the headline", "area"],
+    ["role_sell_sub", "Sell with us card text", "text"], ["role_ride_sub", "Deliver with us card text", "text"],
+    ["h", "Show or hide sections"], ["show_quicklinks", "Quick links row", "on"], ["show_notice", "Prototype notice", "on"], ["show_pulse", "Marketplace pulse", "on"], ["show_sell", "Sell with us and Deliver with us cards", "on"],
     ["h", "Sell panel"], ["sell_title", "Title", "text"], ["sell_text", "Text", "area"], ["sell_button", "Button label", "text"],
     ["h", "Safety tips"], ["safety_tips", "One tip per line", "area"],
     ["h", "Footer"], ["footer_text", "Footer text", "area"],
@@ -154,7 +154,7 @@
     panel.hidden = false; panel.innerHTML = '<p class="muted">Loading…</p>';
     var v = {};
     try { var r = await fetch(base + "/rest/v1/site_content?key=eq.site&select=value", { headers: headers() }); if (r.ok) { var rows = await r.json(); v = (rows[0] && rows[0].value) || {}; } else throw 0; }
-    catch (e) { panel.innerHTML = '<div class="empty">Could not read site content. Run site-content.sql in Supabase first.</div>'; return; }
+    catch (e) { panel.innerHTML = '<div class="empty">Could not read site content. Run site_content.sql in Supabase first.</div>'; return; }
     panel.innerHTML = '<p class="muted">Leave a text box empty to keep the page’s own wording. Changes show on the live site the next time a visitor opens it.</p><div class="item"><form id="site-form">' +
       FIELDS.map(function (f) {
         if (f[0] === "h") return '<h3 style="margin:18px 0 4px;font-size:15px">' + esc(f[1]) + "</h3>";
@@ -171,7 +171,7 @@
       var r = await fetch(base + "/rest/v1/site_content?on_conflict=key", { method: "POST", headers: headers({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }), body: JSON.stringify({ key: "site", value: value, updated_at: new Date().toISOString() }) });
       if (!r.ok) throw new Error((await r.text()).slice(0, 160) || "Not saved");
       m.textContent = "Saved. The live site shows it the next time it loads.";
-    } catch (e) { m.className = "msg err"; m.textContent = "Not saved: " + e.message + " (run site-content.sql, then refresh this page)"; }
+    } catch (e) { m.className = "msg err"; m.textContent = "Not saved: " + e.message + " (run site_content.sql in Supabase, then refresh this page)"; }
   }
   siteTab.addEventListener("click", openSite);
   document.addEventListener("click", function (e) { if (e.target.closest("[data-tab],[data-go]")) closeSite(); });
