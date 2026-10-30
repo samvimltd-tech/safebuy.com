@@ -303,6 +303,25 @@ td .button{padding:6px 11px;font-size:12px}
     refreshTimer = setTimeout(function () { fetchAll(); }, 500);
   }
 
+  var DEL_REFRESH = { seller: ["apps", "prods", "vr"], verification: ["vr", "apps"], partner: ["partners", "docs", "jobs", "pays"],
+    document: ["docs"], job: ["jobs", "pays", "orders"], payout: ["pays"], area: ["areas"] };
+  document.addEventListener("click", async function (e) {
+    var b = e.target.closest("[data-adel]");
+    if (!b) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var kind = b.dataset.adel, label = b.dataset.alabel || "this item";
+    var typed = window.prompt("Delete " + label + "?\n\nThis removes it from the whole system. A copy is kept in the deleted-records log.\nType DELETE to confirm.", "");
+    if (typed === null) return;
+    if (typed.trim().toUpperCase() !== "DELETE") { note("Not deleted. You must type DELETE.", true); return; }
+    note(""); busy(b, true);
+    try {
+      var res = await rpc("admin_delete", { p_kind: kind, p_id: b.dataset.aid });
+      if (res !== "ok") { busy(b, false); note(res === "not_found" ? "That item was already gone." : String(res).replace(/^blocked: /, "Not deleted: "), res !== "not_found"); if (res === "not_found") fetchAll(false, DEL_REFRESH[kind]); return; }
+      note("Deleted.");
+      fetchAll(false, DEL_REFRESH[kind]);
+    } catch (err) { busy(b, false); note(err.message, true); }
+  }, true);
+
   function startLive() {
     stopLive();
     setLive("", "Connecting…");
@@ -454,6 +473,11 @@ td .button{padding:6px 11px;font-size:12px}
     return c;
   }
 
+  /* Delete buttons: one helper. The server (admin_delete) checks you are admin, keeps a copy in admin_deleted_log, and refuses unsafe deletes. */
+  function delBtn(kind, id, label) {
+    return '<button class="button danger" type="button" data-adel="' + esc(kind) + '" data-aid="' + esc(id) + '" data-alabel="' + esc(label || "") + '">Delete</button>';
+  }
+
   function renderStats() {
     var a = appCounts(), p = prodCounts(), d = dCounts();
     var cards = [
@@ -573,7 +597,7 @@ td .button{padding:6px 11px;font-size:12px}
         (s !== "rejected" ? '<button class="button danger" type="button" data-review="rejected" data-id="' + esc(a.id) + '">Suspend shop</button>' : "") +
         (s !== "pending" ? '<button class="button outline" type="button" data-review="pending" data-id="' + esc(a.id) + '">' + (s === "rejected" ? "Reinstate (unverified)" : "Remove verification") + "</button>" : "") +
         '<button class="button outline" type="button" data-acat="1" data-id="' + esc(a.id) + '" data-cat="' + esc(a.main_category || "") + '">Edit category</button>' +
-        "</div></div>";
+        delBtn("seller", a.id, a.shop_name || "this shop") + "</div></div>";
     }).join("");
   }
 
@@ -717,7 +741,7 @@ td .button{padding:6px 11px;font-size:12px}
           (v.status === "submitted" ? '<button class="button" type="button" data-vpay="' + esc(v.id) + '">Confirm payment received</button>' : "") +
           (v.status === "paid" ? '<button class="button" type="button" data-vapprove="' + esc(v.id) + '">Approve and issue badge</button>' : "") +
           '<button class="button danger" type="button" data-vreject="' + esc(v.id) + '">Reject</button></div>' : "") +
-        "</div>";
+        '<div class="actions">' + delBtn("verification", v.id, "this verification request") + "</div></div>";
     }).join("");
   }
 
@@ -772,7 +796,8 @@ td .button{padding:6px 11px;font-size:12px}
           (d.admin_note ? ' <span class="muted">' + esc(d.admin_note) + "</span>" : "") + "</div>" +
           '<button class="button outline" type="button" data-dview="' + esc(d.storage_path) + '">View</button>' +
           (d.status !== "approved" ? '<button class="button" type="button" data-ddoc="approved" data-id="' + esc(d.id) + '">Approve</button>' : "") +
-          (d.status !== "rejected" ? '<button class="button danger" type="button" data-ddoc="rejected" data-id="' + esc(d.id) + '">Reject</button>' : "") + "</div>";
+          (d.status !== "rejected" ? '<button class="button danger" type="button" data-ddoc="rejected" data-id="' + esc(d.id) + '">Reject</button>' : "") +
+          delBtn("document", d.id, "this document") + "</div>";
       }).join("") : '<div class="doc muted">No documents uploaded yet.</div>';
       var parent = p.company_id && pm[p.company_id] ? " · rides for " + esc(pName(pm[p.company_id])) : "";
       return '<div class="item' + (fresh["d" + p.id] ? " fresh" : "") + '">' +
@@ -787,7 +812,7 @@ td .button{padding:6px 11px;font-size:12px}
         (p.status === "pending" ? '<button class="button danger" type="button" data-dpst="rejected" data-id="' + esc(p.id) + '">Reject</button>' : "") +
         (p.status === "approved" ? '<button class="button danger" type="button" data-dpst="suspended" data-id="' + esc(p.id) + '">Suspend</button>' : "") +
         (p.status === "suspended" || p.status === "rejected" ? '<button class="button outline" type="button" data-dpst="pending" data-id="' + esc(p.id) + '">Move to pending</button>' : "") +
-        "</div></div>";
+        delBtn("partner", p.id, pName(p)) + "</div></div>";
     }).join("");
   }
 
@@ -828,7 +853,7 @@ td .button{padding:6px 11px;font-size:12px}
         '<div class="actions">' +
         (j.status === "unassigned" || j.status === "searching" ? '<button class="button" type="button" data-drequeue="' + esc(j.id) + '">Search again</button>' : "") +
         (!j.fee_collected ? '<button class="button outline" type="button" data-dcollected="' + esc(j.id) + '">Mark fee collected</button>' : "") +
-        "</div></div>";
+        delBtn("job", j.id, "this delivery job") + "</div></div>";
     }).join("");
   }
 
@@ -854,7 +879,8 @@ td .button{padding:6px 11px;font-size:12px}
         '<br><span class="muted">' + esc(when(r.created_at)) + (r.reference ? " · ref " + esc(r.reference) : "") + "</span>" +
         (r.status === "pending" ? '<div class="actions">' +
           (!AUTO_PAYOUTS ? "" : r.payout_blocked ? '<button class="button" type="button" data-dretry="' + esc(r.id) + '">Retry</button>' : inflight ? '<button class="button outline" type="button" data-dpayrun="' + esc(r.id) + '">Check status</button>' : '<button class="button" type="button" data-dpayrun="' + esc(r.id) + '">Pay now</button>') +
-          '<button class="button outline" type="button" data-dpay="' + esc(r.id) + '">Mark paid manually</button></div>' : "") + "</div>";
+          '<button class="button outline" type="button" data-dpay="' + esc(r.id) + '">Mark paid manually</button></div>' : "") +
+        '<div class="actions">' + delBtn("payout", r.id, "this " + money(r.amount_kobo) + " payout") + "</div></div>";
     }).join("");
   }
 
@@ -868,7 +894,8 @@ td .button{padding:6px 11px;font-size:12px}
       (rows.length ? rows.map(function (a) {
         return '<div class="item"><span class="pill ' + (a.is_active ? "approved" : "hidden") + '">' + (a.is_active ? "on" : "off") + '</span> <strong class="cap">' +
           esc(a.city ? a.city + ", " + a.state : "All of " + a.state) + '</strong><div class="actions"><button class="button outline" type="button" data-dcov="' + (a.is_active ? "off" : "on") +
-          '" data-dstate="' + esc(a.state) + '" data-dcity="' + esc(a.city) + '">' + (a.is_active ? "Switch off" : "Switch on") + "</button></div></div>";
+          '" data-dstate="' + esc(a.state) + '" data-dcity="' + esc(a.city) + '">' + (a.is_active ? "Switch off" : "Switch on") + "</button>" +
+          delBtn("area", (a.state || "") + "|" + (a.city || ""), a.city ? a.city + ", " + a.state : "all of " + a.state) + "</div></div>";
       }).join("") : '<div class="empty">No areas yet. Delivery is off everywhere.</div>');
   }
 
