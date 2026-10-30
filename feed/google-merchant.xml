@@ -4,6 +4,41 @@
     <title>SafeBuy NG</title>
     <link>https://samvimltd-tech.github.io/safebuy.com/</link>
     <description>Discover everyday products from Nigerian sellers on SafeBuy NG and chat with sellers directly.</description>
-
+    <item>
+      <g:id>1fd0562d-9667-4f9e-ae5d-efdd874685d4</g:id>
+      <g:title>Electrode</g:title>
+      <g:description>Very good</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/electrode-1fd0562d/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/834015d3-f30d-48af-824c-675ca753bc82.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>6235.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>f7ccb887-2600-447b-ae11-1c00ae28a48f</g:id>
+      <g:title>Cement</g:title>
+      <g:description>Quality and Strong cement</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/cement-f7ccb887/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/b32d737b-7895-4c0d-8c20-a41a6280965f.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>14000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
+    <item>
+      <g:id>344c977d-3346-45d7-ba61-a7f60ca02661</g:id>
+      <g:title>Story Books</g:title>
+      <g:description>Story books</g:description>
+      <g:link>https://samvimltd-tech.github.io/safebuy.com/p/story-books-344c977d/</g:link>
+      <g:image_link>https://vntxonelajiogqhvbctu.supabase.co/storage/v1/object/public/product-images/9be9bed5-6b96-4ad1-ac03-238fd842105a/a4024075-2578-4731-9b83-fb3f5686e9ff.jpg</g:image_link>
+      <g:availability>in_stock</g:availability>
+      <g:price>5000.00 NGN</g:price>
+      <g:condition>new</g:condition>
+      <g:brand>Agrohub supplies</g:brand>
+      <g:identifier_exists>no</g:identifier_exists>
+    </item>
   </channel>
 </rss>
