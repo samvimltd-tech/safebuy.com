@@ -2185,6 +2185,133 @@ document.addEventListener("click", function (e) {
   if (link) window.location.href = link.getAttribute("href");
 });
 </script>
+   <!-- ===== Password reset: email screen + new-password screen ===== -->
+<div class="modal-backdrop" id="reset-backdrop" role="dialog" aria-modal="true" aria-labelledby="reset-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="reset-title">Reset your password</h2>
+      <button class="icon-button" type="button" id="reset-close" aria-label="Close">✕</button>
+    </div>
+    <p>Enter your email and we will send you a link to choose a new password.</p>
+    <form id="reset-form">
+      <label for="reset-email">Email address</label>
+      <input id="reset-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <button class="button button-primary" type="submit" id="reset-send">Send reset link</button>
+    </form>
+    <p class="form-message" id="reset-msg" role="status" aria-live="polite"></p>
+    <button class="button button-outline" type="button" id="reset-back">Back to sign in</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="newpw-backdrop" role="dialog" aria-modal="true" aria-labelledby="newpw-title">
+  <div class="modal">
+    <div class="modal-top">
+      <h2 id="newpw-title">Set a new password</h2>
+      <button class="icon-button" type="button" id="newpw-close" aria-label="Close">✕</button>
+    </div>
+    <form id="newpw-form">
+      <label for="newpw-1">New password</label>
+      <input id="newpw-1" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required>
+      <label for="newpw-2">Confirm new password</label>
+      <input id="newpw-2" type="password" autocomplete="new-password" minlength="8" placeholder="Type it again" required>
+      <label class="check"><input id="newpw-show" type="checkbox"> Show passwords</label>
+      <button class="button button-primary" type="submit" id="newpw-save">Save new password</button>
+    </form>
+    <p class="form-message" id="newpw-msg" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function sb() { return window.safeBuySupabase; }
+  function open(id) { $(id).classList.add("open"); }
+  function close(id) { $(id).classList.remove("open"); }
+  function note(id, text, bad) { var el = $(id); el.textContent = text || ""; el.style.color = bad ? "#8a1f1f" : ""; }
+
+  /* 1. "Forgot password?" now opens the reset screen instead of using the sign-in email box */
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#account-reset")) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    $("reset-email").value = $("account-email").value.trim();
+    note("reset-msg", "");
+    close("account-backdrop");
+    open("reset-backdrop");
+    setTimeout(function () { $("reset-email").focus(); }, 50);
+  }, true);
+
+  $("reset-close").addEventListener("click", function () { close("reset-backdrop"); });
+  $("reset-backdrop").addEventListener("click", function (e) { if (e.target === $("reset-backdrop")) close("reset-backdrop"); });
+  $("reset-back").addEventListener("click", function () { close("reset-backdrop"); if (window.openAccount) window.openAccount(); });
+
+  /* 2. Send the reset email */
+  $("reset-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var c = sb();
+    if (!c) { note("reset-msg", "Accounts are unavailable right now. Please try again later.", true); return; }
+    var email = $("reset-email").value.trim();
+    if (!email) { note("reset-msg", "Enter your email address.", true); return; }
+    var btn = $("reset-send");
+    btn.disabled = true; note("reset-msg", "Sending…");
+    try {
+      var r = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      if (r.error) throw r.error;
+      note("reset-msg", "If " + email + " has an account, a reset link is on its way. Check your inbox and spam folder, then tap the link.");
+      btn.textContent = "Send again";
+    } catch (err) {
+      note("reset-msg", err.message || "We could not send the email. Try again.", true);
+    }
+    btn.disabled = false;
+  });
+
+  /* 3. The new-password screen, opened when the person returns from the email link */
+  var shown = false;
+  function openNewPw() {
+    if (shown) return;
+    shown = true;
+    ["account-backdrop", "reset-backdrop"].forEach(close);
+    note("newpw-msg", "");
+    open("newpw-backdrop");
+  }
+  $("newpw-close").addEventListener("click", function () { close("newpw-backdrop"); });
+  $("newpw-show").addEventListener("change", function () {
+    var t = this.checked ? "text" : "password";
+    $("newpw-1").type = t; $("newpw-2").type = t;
+  });
+  $("newpw-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var c = sb(), p1 = $("newpw-1").value, p2 = $("newpw-2").value;
+    if (p1.length < 8) { note("newpw-msg", "Use at least 8 characters.", true); return; }
+    if (p1 !== p2) { note("newpw-msg", "The two passwords do not match.", true); return; }
+    var btn = $("newpw-save");
+    btn.disabled = true; note("newpw-msg", "Saving…");
+    try {
+      var r = await c.auth.updateUser({ password: p1 });
+      if (r.error) throw r.error;
+      close("newpw-backdrop");
+      $("newpw-1").value = ""; $("newpw-2").value = "";
+      history.replaceState(null, "", location.pathname + location.search + "#home");
+      if (window.showToast) window.showToast("Password updated. You are signed in.");
+    } catch (err) {
+      note("newpw-msg", err.message || "We could not save your new password.", true);
+    }
+    btn.disabled = false;
+  });
+
+  /* The email link brings people back with #...type=recovery in the address */
+  if (/type=recovery/.test(location.hash)) openNewPw();
+  if (/error_code=otp_expired|error=access_denied/.test(location.hash)) {
+    history.replaceState(null, "", location.pathname + location.search + "#home");
+    if (window.showToast) window.showToast("That reset link has expired. Request a new one.");
+    open("reset-backdrop");
+  }
+  if (sb()) sb().auth.onAuthStateChange(function (ev) {
+    if (ev === "PASSWORD_RECOVERY") setTimeout(openNewPw, 0);
+  });
+})();
+       </script>
 <!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
 <script src="./messages.js"></script>
