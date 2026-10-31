@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy policy | SafeBuy NG</title>
+<meta name="description" content="Privacy policy for SafeBuy NG.">
+<meta name="theme-color" content="#087f5b">
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.7}
+.wrap{width:min(760px,100% - 32px);margin:0 auto;padding:18px 0 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:800;font-size:20px}
+.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--green);color:#fff;font-size:20px}
+.back{color:var(--green-dark);font-weight:700;text-decoration:none}
+article{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+h1{margin:0 0 4px;font-size:26px;line-height:1.2}
+h2{margin:24px 0 6px;font-size:18px}
+p{margin:8px 0}
+.muted{color:var(--muted);font-size:13px}
+.contact{margin-top:22px;padding:14px;border-radius:14px;background:var(--green-light)}
+.contact a{color:var(--green-dark);font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><a class="brand" href="./"><span class="mark">S</span>SafeBuy NG</a><a class="back" href="./">← Back to the shop</a></div>
+  <article>
+    <h1>Privacy policy</h1>
+    <p class="muted">Last updated: 30 October 2026</p>
+    <div id="body"></div>
+    <div class="contact" id="contact" hidden><strong>Questions?</strong> <span id="contact-links"></span></div>
+  </article>
+</main>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var FIELD = "privacy_text";
+  var DEFAULT = "SafeBuy NG (\"we\", \"us\") runs a marketplace that connects buyers, sellers and delivery partners in Nigeria. This policy explains what information we collect, why, and the choices you have. We handle personal data in line with the Nigeria Data Protection Act 2023.\n\n# What we collect\nAccount details: your name, email address and phone number when you sign up.\nOrders: the items you order, the delivery address and phone number you give for delivery, and order messages.\nSellers: shop name, pickup address, phone number, category, and product listings and photos.\nDelivery partners: your name, phone number, vehicle type, the areas you cover, identity and vehicle documents you upload, and your bank name, account name and the last four digits of your account number. Full account numbers are not stored by us. They are held by our payment provider.\nLocation: if you are a delivery partner and choose to go online, we use your phone's location while you are online so we can offer you nearby deliveries.\nTechnical data: basic information such as device type and pages used, so the site works properly.\n\n# How we use it\nTo run your account and process orders and deliveries.\nTo show buyers the delivery partner and seller details they need during an active delivery, and to show delivery partners the pickup and drop-off details they need for that job. These phone numbers and addresses are shared only for the order in progress.\nTo check and approve sellers and delivery partners, and to keep the marketplace safe from fraud and abuse.\nTo take payments and send payouts through our payment provider (Paystack).\nTo send you updates about your orders, deliveries and account.\n\n# Who we share it with\nOther people on the same order (buyer, seller and delivery partner), only as needed for that order.\nService providers who help us run the platform, such as hosting, database and payment providers.\nAuthorities, where the law requires it.\nWe do not sell your personal data.\n\n# How long we keep it\nWe keep your information while your account is active and for as long as needed for orders, payments, safety and legal record-keeping. You can ask us to delete your account and data, and we will do so unless we must keep some records by law.\n\n# Your choices\nYou can ask to see, correct or delete your personal data, or object to how we use it, by contacting us using the details below. Delivery partners can go offline at any time to stop location sharing.\n\n# Security\nWe use access controls and encrypted connections to protect your data. No system is completely secure, so please keep your password private and use a strong one.\n\n# Changes\nWe may update this policy. The date at the top shows the latest version.";
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function draw(text) {
+    document.getElementById("body").innerHTML = String(text).split(/\n\s*\n/).map(function (b) {
+      b = b.trim(); if (!b) return "";
+      if (b.indexOf("# ") === 0) return "<h2>" + esc(b.slice(2)) + "</h2>";
+      return "<p>" + esc(b).replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+  function contact(v) {
+    var out = [], d = String((v && v.support_whatsapp) || "").replace(/\D/g, ""), em = String((v && v.support_email) || "").trim();
+    if (d.charAt(0) === "0") d = "234" + d.slice(1);
+    if (d) out.push('<a href="https://wa.me/' + d + '" target="_blank" rel="noopener">WhatsApp us</a>');
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) out.push('<a href="mailto:' + esc(em) + '">' + esc(em) + "</a>");
+    if (out.length) { document.getElementById("contact-links").innerHTML = out.join(" · "); document.getElementById("contact").hidden = false; }
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem("safebuy-site-content-v1") || "null"); } catch (e) {}
+  draw((cached && cached[FIELD]) || DEFAULT); contact(cached);
+  var cfg = window.SAFEbuySupabaseConfig;
+  if (!cfg || !cfg.url || !cfg.publishableKey) return;
+  fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/site_content?key=eq.site&select=value", { headers: { apikey: cfg.publishableKey } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rows) {
+      if (!rows) return;
+      var v = (rows[0] && rows[0].value) || {};
+      try { localStorage.setItem("safebuy-site-content-v1", JSON.stringify(v)); } catch (e) {}
+      draw(v[FIELD] || DEFAULT); contact(v);
+    }).catch(function () {});
+})();
+</script>
+</body>
+</html>
