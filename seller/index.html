@@ -339,6 +339,9 @@ button.busy::after{content:"";position:absolute;left:50%;top:50%;width:18px;heig
 button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(255,255,255,.4);border-top-color:#fff}
 @keyframes sb-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){button.busy::after{animation-duration:2.4s}}
+/* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
+html::before,html::after,body::before,body::after{pointer-events:none!important}
+.quick-link,.path{position:relative;z-index:2}
 </style>
 <script>
 /* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
@@ -660,6 +663,8 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <a href="#how-it-works">How it works</a>
         <button type="button" data-action="delivery">Delivery areas</button>
         <button type="button" data-action="safety">Safety tips</button>
+        <a href="../about.html">About us</a>
+        <a href="../refund.html">Refund policy</a>
         <a href="../privacy.html">Privacy policy</a>
         <a href="../terms.html">Terms of use</a>
         <a id="sc-wa" href="#" target="_blank" rel="noopener" hidden>💬 Chat with support</a>
@@ -861,7 +866,7 @@ function renderProducts() {
   productGrid.innerHTML = visible.map(function (p) {
     return `
       <article class="product-card">
-        <div class="product-art" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
+        <div class="product-art" data-id="${esc(p.id)}" style="background:${esc(p.background)}" role="img" aria-label="${esc(p.name)}">
           ${!p.inStock ? '<span class="tag">Sold out</span>' : p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
           ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" decoding="async">` : `<span aria-hidden="true">${esc(p.emoji)}</span>`}
         </div>
@@ -1875,7 +1880,7 @@ updateCartCount();
     document.getElementById("setup-form").addEventListener("submit", async function (event) {
       event.preventDefault();
       var btn = document.getElementById("su-submit");
-       btn.disabled = true;
+      btn.disabled = true;
       formMessage("Creating your shop…");
 
       var shop = document.getElementById("su-shop").value.trim();
@@ -2163,10 +2168,16 @@ updateCartCount();
 </script>
 
 <script>
-/* Tap a product photo to open its page (restored from the original) */
+/* Tap a product photo: open the product pop-up (photos, options, Add to cart, reviews). If that is not available, open the product page. */
 document.addEventListener("click", function (e) {
   var art = e.target.closest(".product-art");
   if (!art) return;
+  var id = art.getAttribute("data-id");
+  if (id && typeof openProduct === "function" && typeof findProduct === "function" && findProduct(id)) {
+    e.preventDefault();
+    openProduct(id);
+    return;
+  }
   var card = art.closest(".product-card");
   var link = card && card.querySelector("h3 a[href], a.icon-button[href]");
   if (link) window.location.href = link.getAttribute("href");
@@ -2189,6 +2200,34 @@ document.addEventListener("click", function (e) {
 <script src="../protected-option.js"></script>
 <script src="../theme.js"></script>
 <script src="../admin-plus.js"></script>
+<script>
+/* Safety net: if any invisible decorative layer ends up on top of the main cards, let taps pass through it. */
+(function () {
+  "use strict";
+  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],button,a,input,select,textarea";
+  function fix() {
+    try {
+      var cards = document.querySelectorAll(".quick-link,.path,.product-card,.category-button");
+      for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].getBoundingClientRect();
+        if (r.width < 10 || r.bottom < 0 || r.top > innerHeight) continue;
+        var x = r.left + r.width / 2, y = Math.min(Math.max(r.top + r.height / 2, 1), innerHeight - 1);
+        var stack = document.elementsFromPoint(x, y);
+        for (var k = 0; k < stack.length; k++) {
+          var el = stack[k];
+          if (el === cards[i] || cards[i].contains(el)) break;
+          if (el === document.body || el === document.documentElement) break;
+          if (el.matches(KEEP) || el.closest(".modal-backdrop.open,.drawer.open,.mobile-nav,header")) continue;
+          var p = getComputedStyle(el).position;
+          if (p === "fixed" || p === "absolute" || p === "sticky") el.style.pointerEvents = "none";
+        }
+      }
+    } catch (e) {}
+  }
+  [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
+  window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
+})();
+</script>
 <button id="role-open" type="button" style="position:fixed;left:14px;bottom:86px;z-index:60;border:0;border-radius:30px;padding:12px 18px;background:#b45309;color:#fff;font:800 15px system-ui,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.25)">🏪 My shop</button>
 <button id="role-install" type="button" hidden style="position:fixed;left:14px;top:70px;z-index:60;border:1px solid #b45309;border-radius:30px;padding:8px 14px;background:#fff;color:#b45309;font:800 13px system-ui,sans-serif">⬇ Install SafeBuy Seller</button>
 <script>
@@ -2207,7 +2246,56 @@ document.addEventListener("click", function (e) {
   var ev = null, ib = document.getElementById("role-install");
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); ev = e; ib.hidden = false; });
   ib.addEventListener("click", function () { if (ev) { ev.prompt(); ev = null; ib.hidden = true; } });
-  window.addEventListener("appinstalled", function () { ib.hidden = true; });
+  window.addEventListener("appinstalled", function () { ib.hidden = true; store(KEY + "-done", "1"); hideCard(); });
+
+  // ---- Install card: appears right after sign-up / sign-in ----
+  var APPNAME = "SafeBuy Seller", COLOR = "#b45309", LETTER = "S", KEY = "role-install-sell", card = null, formUsed = 0;
+  function standalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+  function hideCard() { if (card) { card.remove(); card = null; } }
+  function showCard() {
+    if (card || standalone() || store(KEY + "-done")) return;
+    var later = Number(store(KEY + "-later") || 0);
+    if (later && Date.now() - later < 3 * 86400000) return;
+    var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
+    card = document.createElement("div");
+    card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(16,39,29,.62);display:flex;align-items:flex-end;justify-content:center";
+    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
+      '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:' + COLOR + ';color:#fff;font:800 34px/64px system-ui,sans-serif">' + LETTER + '</div>' +
+      '<h2 style="margin:0 0 6px;font-size:21px">Install ' + APPNAME + '</h2>' +
+      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">Your account is ready. Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
+      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:15px;background:' + COLOR + ';color:#fff;font:800 16px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
+      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:14px;line-height:1.55;text-align:left"></div>' +
+      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 14px system-ui,sans-serif;padding:10px">Not now</button></div>';
+    document.body.appendChild(card);
+    var help = card.querySelector("#ri-help");
+    function steps() {
+      help.style.display = "block";
+      help.innerHTML = inapp ? "This page is open inside another app. Tap the menu and choose <b>Open in browser</b> (Chrome or Safari), then install from there."
+        : ios ? "1. Tap the <b>Share</b> button in Safari (the square with an arrow).<br>2. Scroll and tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>."
+        : "Tap the <b>menu (three dots)</b> at the top of your browser, then tap <b>Install app</b> or <b>Add to Home screen</b>.";
+    }
+    card.querySelector("#ri-go").addEventListener("click", function () {
+      if (ev && !ios) { var p = ev; ev = null; ib.hidden = true; p.prompt(); if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === "accepted") { store(KEY + "-done", "1"); } hideCard(); }); }
+      else steps();
+    });
+    card.querySelector("#ri-later").addEventListener("click", function () { store(KEY + "-later", String(Date.now())); hideCard(); });
+  }
+  var formEl = document.getElementById("account-form");
+  if (formEl) formEl.addEventListener("submit", function () { formUsed = Date.now(); }, true);
+  function hook() {
+    var c = window.safeBuySupabase;
+    if (!c || !c.auth || hook.done) return;
+    hook.done = true;
+    c.auth.onAuthStateChange(function (event) {
+      if (event !== "SIGNED_IN") return;
+      if (Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(open, 900); setTimeout(showCard, 1400); }
+      else if (!store(KEY + "-seen")) { setTimeout(showCard, 3000); }
+      store(KEY + "-seen", "1");
+    });
+  }
+  var ht = setInterval(function () { hook(); if (hook.done) clearInterval(ht); }, 300);
+  setTimeout(function () { clearInterval(ht); }, 20000);
 })();
 </script>
 </body>
