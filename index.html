@@ -2255,62 +2255,7 @@ document.addEventListener("click", function (e) {
     if (!email) { note("reset-msg", "Enter your email address.", true); return; }
     var btn = $("reset-send");
     btn.disabled = true; note("reset-msg", "Sending…");
-    try {
-      var r = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-      if (r.error) throw r.error;
-      note("reset-msg", "If " + email + " has an account, a reset link is on its way. Check your inbox and spam folder, then tap the link.");
-      btn.textContent = "Send again";
-    } catch (err) {
-      note("reset-msg", err.message || "We could not send the email. Try again.", true);
-    }
-    btn.disabled = false;
-  });
 
-  /* 3. The new-password screen, opened when the person returns from the email link */
-  var shown = false;
-  function openNewPw() {
-    if (shown) return;
-    shown = true;
-    ["account-backdrop", "reset-backdrop"].forEach(close);
-    note("newpw-msg", "");
-    open("newpw-backdrop");
-  }
-  $("newpw-close").addEventListener("click", function () { close("newpw-backdrop"); });
-  $("newpw-show").addEventListener("change", function () {
-    var t = this.checked ? "text" : "password";
-    $("newpw-1").type = t; $("newpw-2").type = t;
-  });
-  $("newpw-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    var c = sb(), p1 = $("newpw-1").value, p2 = $("newpw-2").value;
-    if (p1.length < 8) { note("newpw-msg", "Use at least 8 characters.", true); return; }
-    if (p1 !== p2) { note("newpw-msg", "The two passwords do not match.", true); return; }
-    var btn = $("newpw-save");
-    btn.disabled = true; note("newpw-msg", "Saving…");
-    try {
-      var r = await c.auth.updateUser({ password: p1 });
-      if (r.error) throw r.error;
-      close("newpw-backdrop");
-      $("newpw-1").value = ""; $("newpw-2").value = "";
-      history.replaceState(null, "", location.pathname + location.search + "#home");
-      if (window.showToast) window.showToast("Password updated. You are signed in.");
-    } catch (err) {
-      note("newpw-msg", err.message || "We could not save your new password.", true);
-    }
-    btn.disabled = false;
-  });
-
-  /* The email link brings people back with #...type=recovery in the address */
-  if (/type=recovery/.test(location.hash)) openNewPw();
-  if (/error_code=otp_expired|error=access_denied/.test(location.hash)) {
-    history.replaceState(null, "", location.pathname + location.search + "#home");
-    if (window.showToast) window.showToast("That reset link has expired. Request a new one.");
-    open("reset-backdrop");
-  }
-  if (sb()) sb().auth.onAuthStateChange(function (ev) {
-    if (ev === "PASSWORD_RECOVERY") setTimeout(openNewPw, 0);
-  });
-})();
        </script>
 <!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
