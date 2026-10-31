@@ -341,6 +341,9 @@ button.busy::after{content:"";position:absolute;left:50%;top:50%;width:18px;heig
 button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(255,255,255,.4);border-top-color:#fff}
 @keyframes sb-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){button.busy::after{animation-duration:2.4s}}
+/* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
+html::before,html::after,body::before,body::after{pointer-events:none!important}
+.quick-link,.path{position:relative;z-index:2}
 </style>
 <script>
 /* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
@@ -2193,5 +2196,33 @@ document.addEventListener("click", function (e) {
 <script src="./protected-option.js"></script>
 <script src="./theme.js"></script>
 <script src="./admin-plus.js"></script>
+<script>
+/* Safety net: if any invisible decorative layer ends up on top of the main cards, let taps pass through it. */
+(function () {
+  "use strict";
+  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],button,a,input,select,textarea";
+  function fix() {
+    try {
+      var cards = document.querySelectorAll(".quick-link,.path,.product-card,.category-button");
+      for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].getBoundingClientRect();
+        if (r.width < 10 || r.bottom < 0 || r.top > innerHeight) continue;
+        var x = r.left + r.width / 2, y = Math.min(Math.max(r.top + r.height / 2, 1), innerHeight - 1);
+        var stack = document.elementsFromPoint(x, y);
+        for (var k = 0; k < stack.length; k++) {
+          var el = stack[k];
+          if (el === cards[i] || cards[i].contains(el)) break;
+          if (el === document.body || el === document.documentElement) break;
+          if (el.matches(KEEP) || el.closest(".modal-backdrop.open,.drawer.open,.mobile-nav,header")) continue;
+          var p = getComputedStyle(el).position;
+          if (p === "fixed" || p === "absolute" || p === "sticky") el.style.pointerEvents = "none";
+        }
+      }
+    } catch (e) {}
+  }
+  [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
+  window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
+})();
+</script>
 </body>
   </html>
