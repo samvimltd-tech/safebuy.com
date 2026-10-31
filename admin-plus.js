@@ -129,10 +129,15 @@
     ["h", "Announcement bar"], ["ann_show", "Show the announcement bar", "on"], ["ann_text", "Announcement text", "text"],
     ["h", "Home page"], ["hero_title", "Main headline (put | before the green second line, e.g. Good finds. | Better shopping.)", "text"], ["hero_lead", "Line under the headline", "area"],
     ["role_sell_sub", "Sell with us card text", "text"], ["role_ride_sub", "Deliver with us card text", "text"],
-    ["h", "Show or hide sections"], ["show_quicklinks", "Quick links row", "on"], ["show_notice", "Prototype notice", "on"], ["show_pulse", "Marketplace pulse", "on"], ["show_sell", "Sell with us and Deliver with us cards", "on"],
+    ["h", "Show or hide sections"], ["show_quicklinks", "Quick links row", "on"], ["show_notice", "Safety notice under the cards", "on"], ["show_pulse", "Marketplace pulse", "on"], ["show_sell", "Sell with us and Deliver with us cards", "on"],
     ["h", "Sell panel"], ["sell_title", "Title", "text"], ["sell_text", "Text", "area"], ["sell_button", "Button label", "text"],
+    ["h", "Notice under the Sell and Deliver cards"], ["notice_text", "Notice text (turn the notice on or off above)", "area"],
+    ["h", "Delivery pop-up"], ["delivery_note", "Note under the delivery areas list", "area"],
+    ["h", "Support contact (shown in the footer and on the Privacy and Terms pages)"], ["support_whatsapp", "Support WhatsApp number, e.g. 08012345678", "text"], ["support_email", "Support email", "text"],
     ["h", "Safety tips"], ["safety_tips", "One tip per line", "area"],
     ["h", "Footer"], ["footer_text", "Footer text", "area"],
+    ["h", "Privacy policy page (privacy.html)"], ["privacy_text", "Leave empty to use the built-in policy. Start a heading with # and leave a blank line between paragraphs", "long"],
+    ["h", "Terms of use page (terms.html)"], ["terms_text", "Leave empty to use the built-in terms. Start a heading with # and leave a blank line between paragraphs", "long"],
     ["h", "Brand"], ["brand_color", "Main colour, for example #087f5b", "text"]
   ];
   var siteTab = document.createElement("button");
@@ -160,6 +165,7 @@
         if (f[0] === "h") return '<h3 style="margin:18px 0 4px;font-size:15px">' + esc(f[1]) + "</h3>";
         var id = "sc-" + f[0], val = v[f[0]];
         if (f[2] === "on") return '<label style="display:flex;gap:9px;align-items:center;font-weight:400"><input type="checkbox" id="' + id + '" style="width:auto"' + (val === false ? "" : " checked") + "> " + esc(f[1]) + "</label>";
+        if (f[2] === "long") return '<label for="' + id + '">' + esc(f[1]) + '</label><textarea id="' + id + '" rows="12" maxlength="20000" style="width:100%;padding:12px;border:1px solid #dce5de;border-radius:12px;font:inherit">' + esc(val || "") + "</textarea>";
         if (f[2] === "area") return '<label for="' + id + '">' + esc(f[1]) + '</label><textarea id="' + id + '" rows="3" maxlength="800" style="width:100%;padding:12px;border:1px solid #dce5de;border-radius:12px;font:inherit">' + esc(val || "") + "</textarea>";
         return '<label for="' + id + '">' + esc(f[1]) + '</label><input id="' + id + '" maxlength="200" value="' + esc(val || "") + '">';
       }).join("") +
@@ -184,6 +190,8 @@
       if (f[2] === "on") { if (!el.checked) out[f[0]] = false; }
       else if (el.value.trim()) out[f[0]] = el.value.trim();
     });
+    if (out.support_email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(out.support_email)) { $("site-msg").className = "msg err"; $("site-msg").textContent = "That support email does not look right."; return; }
+    if (out.support_whatsapp && String(out.support_whatsapp).replace(/\D/g, "").length < 10) { $("site-msg").className = "msg err"; $("site-msg").textContent = "Enter the support WhatsApp number with at least 10 digits."; return; }
     if (out.brand_color && !/^#[0-9a-f]{6}$/i.test(out.brand_color)) { $("site-msg").className = "msg err"; $("site-msg").textContent = "Colour must look like #087f5b."; return; }
     saveSite(out);
   });
