@@ -938,7 +938,7 @@ function closeModal() {
 
 function showCart() {
   if (cart.length === 0) {
-    showToast("Your cart is empty. Tap “Add to cart” on a product.");
+   showToast("Tap “Chat seller” on a listing to contact the seller directly.");
     return;
   }
   const total = cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
@@ -1601,7 +1601,7 @@ updateCartCount();
           restFallback("Supabase error: " + result.error.message);
           return;
         }
-        if (window.__earlyRendered) return;      // already drawn from the early request
+            if (early && window.__earlyRendered) { window.__earlyRendered = false; return; }
         setProducts(mapRows(result.data), "supabase");
       })
       .catch(function (e) {
@@ -2125,8 +2125,9 @@ updateCartCount();
     if (win) win.location.href = url; else window.location.href = url;
   });
 
-  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
-    button.addEventListener("click", startSelling);
+    document.addEventListener("click", function (e) {
+    if (e.target.closest('[data-action="sell"]')) startSelling();
+  });
   });
   document.getElementById("seller-close").addEventListener("click", closeSeller);
   sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
@@ -2192,4 +2193,4 @@ document.addEventListener("click", function (e) {
 <script src="./theme.js"></script>
 <script src="./admin-plus.js"></script>
 </body>
-  </html>
+   </html>
