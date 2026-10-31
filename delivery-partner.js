@@ -395,6 +395,7 @@
   }
 
   function startTracking() {
+     if (tracking) return;
     tracking = true;
     watchId = navigator.geolocation.watchPosition(function (p) { lastPos = p.coords; }, function () {}, { enableHighAccuracy: true });
     pingTimer = setInterval(sendPing, 20000);
