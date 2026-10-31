@@ -40,7 +40,18 @@
       .select("shop_name,verification_status,badge_number,verified_until")
       .eq("user_id", user.id).maybeSingle();
     var a = !r.error ? r.data : null;
-    if (!a) { set(""); return; }              // buyers: nothing to show
+    if (r.error) return;
+if (!a) {
+  var d = await client.from("delivery_partners")
+    .select("status,partner_type").eq("user_id", user.id).maybeSingle();
+  var p = !d.error ? d.data : null;
+  if (!p) { set(""); return; }
+  var label = p.partner_type === "company" ? "Delivery company" : "Rider";
+  if (p.status === "approved") set("✓ " + label, "ok", label + " account approved.");
+  else if (p.status === "pending") set(label + ": under review", "", "Your delivery application is under review.");
+  else set(label + ": " + p.status, "bad", "This delivery account is not active.");
+  return;
+}
 
     var until = a.verified_until ? new Date(a.verified_until) : null;
     var verified = a.verification_status === "approved" && a.badge_number && until && until > new Date();
