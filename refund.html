@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refund policy | SafeBuy NG</title>
+<meta name="description" content="Refund policy for SafeBuy NG.">
+<meta name="theme-color" content="#087f5b">
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.7}
+.wrap{width:min(760px,100% - 32px);margin:0 auto;padding:18px 0 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:800;font-size:20px}
+.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--green);color:#fff;font-size:20px}
+.back{color:var(--green-dark);font-weight:700;text-decoration:none}
+article{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+h1{margin:0 0 4px;font-size:26px;line-height:1.2}
+h2{margin:24px 0 6px;font-size:18px}
+p{margin:8px 0}
+.muted{color:var(--muted);font-size:13px}
+.contact{margin-top:22px;padding:14px;border-radius:14px;background:var(--green-light)}
+.contact a{color:var(--green-dark);font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><a class="brand" href="./"><span class="mark">S</span>SafeBuy NG</a><a class="back" href="./">← Back to the shop</a></div>
+  <article>
+    <h1>Refund policy</h1>
+    <p class="muted">Last updated: 30 October 2026</p>
+    <div id="body"></div>
+    <div class="contact" id="contact" hidden><strong>Questions?</strong> <span id="contact-links"></span></div>
+  </article>
+</main>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var FIELD = "refund_text";
+  var DEFAULT = "This page explains how refunds work on SafeBuy NG. Please read it before you order.\n\n# Product payments\nIn most orders you pay the seller directly, and the sale is between you and the seller. Please meet in a public place and inspect the item before you pay. If an item is not as described, speak to the seller first. If you cannot agree, contact us and we will try to help.\n\n# Delivery fees\nThe delivery fee is paid to SafeBuy NG. You can ask for the delivery fee back if:\nNo rider is assigned to your delivery, or the delivery is cancelled before the rider collects the item.\nThe delivery fails because of the rider or SafeBuy NG.\nOnce a rider has collected your item and the delivery was attempted properly, the delivery fee is not refundable. This includes deliveries that fail because the address or phone number was wrong or you could not be reached.\n\n# How to ask for a refund\nContact us using the details below as soon as possible, with your order reference and a short explanation. We will review it and reply. Approved refunds go back to the original payment method or by bank transfer, and normally take a few working days.\n\n# Cancelling an order\nYou can ask to cancel before the seller has confirmed payment or before a rider has collected the item. After pickup, cancelling is not possible.\n\n# Changes\nWe may update this policy. The date at the top shows the latest version.";
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function draw(text) {
+    document.getElementById("body").innerHTML = String(text).split(/\n\s*\n/).map(function (b) {
+      b = b.trim(); if (!b) return "";
+      if (b.indexOf("# ") === 0) return "<h2>" + esc(b.slice(2)) + "</h2>";
+      return "<p>" + esc(b).replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+  function contact(v) {
+    var out = [], d = String((v && v.support_whatsapp) || "").replace(/\D/g, ""), em = String((v && v.support_email) || "").trim();
+    if (d.charAt(0) === "0") d = "234" + d.slice(1);
+    if (d) out.push('<a href="https://wa.me/' + d + '" target="_blank" rel="noopener">WhatsApp us</a>');
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) out.push('<a href="mailto:' + esc(em) + '">' + esc(em) + "</a>");
+    if (out.length) { document.getElementById("contact-links").innerHTML = out.join(" · "); document.getElementById("contact").hidden = false; }
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem("safebuy-site-content-v1") || "null"); } catch (e) {}
+  draw((cached && cached[FIELD]) || DEFAULT); contact(cached);
+  var cfg = window.SAFEbuySupabaseConfig;
+  if (!cfg || !cfg.url || !cfg.publishableKey) return;
+  fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/site_content?key=eq.site&select=value", { headers: { apikey: cfg.publishableKey } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rows) {
+      if (!rows) return;
+      var v = (rows[0] && rows[0].value) || {};
+      try { localStorage.setItem("safebuy-site-content-v1", JSON.stringify(v)); } catch (e) {}
+      draw(v[FIELD] || DEFAULT); contact(v);
+    }).catch(function () {});
+})();
+</script>
+</body>
+</html>
