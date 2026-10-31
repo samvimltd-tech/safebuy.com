@@ -125,7 +125,8 @@
   }
   abtn.onclick = function () { loadAlerts(true); };
   c.auth.onAuthStateChange(function () { firstLoad = true; seenTop = null; setTimeout(function () { loadAlerts(false); }, 0); });
-  setInterval(function () { if (!document.hidden) loadAlerts(false); }, 30000);
+  setInterval(function () { if (!document.hidden) loadAlerts(false); }, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) loadAlerts(false); });
   loadAlerts(false);
 
   /* ---------- buyer ---------- */
