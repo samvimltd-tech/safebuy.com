@@ -136,6 +136,8 @@
     ["h", "Support contact (shown in the footer and on the Privacy and Terms pages)"], ["support_whatsapp", "Support WhatsApp number, e.g. 08012345678", "text"], ["support_email", "Support email", "text"],
     ["h", "Safety tips"], ["safety_tips", "One tip per line", "area"],
     ["h", "Footer"], ["footer_text", "Footer text", "area"],
+    ["h", "About us page (about.html)"], ["about_text", "Leave empty to use the built-in text. Start a heading with # and leave a blank line between paragraphs", "long"],
+    ["h", "Refund policy page (refund.html)"], ["refund_text", "Leave empty to use the built-in policy. Start a heading with # and leave a blank line between paragraphs", "long"],
     ["h", "Privacy policy page (privacy.html)"], ["privacy_text", "Leave empty to use the built-in policy. Start a heading with # and leave a blank line between paragraphs", "long"],
     ["h", "Terms of use page (terms.html)"], ["terms_text", "Leave empty to use the built-in terms. Start a heading with # and leave a blank line between paragraphs", "long"],
     ["h", "Brand"], ["brand_color", "Main colour, for example #087f5b", "text"]
@@ -147,14 +149,19 @@
   panel.id = "site-panel"; panel.hidden = true; list.parentNode.insertBefore(panel, list.nextSibling);
   var covered = ["filter-tabs", "tools", "list", "dash-msg"];
   function headers(extra) { var h = { apikey: cfg.publishableKey, Authorization: "Bearer " + token() }; for (var k in extra) h[k] = extra[k]; return h; }
+  var launchTab = document.createElement("button");
+  launchTab.type = "button"; launchTab.className = "tab"; launchTab.dataset.plustab = "launch"; launchTab.textContent = "Launch check";
+  $("main-tabs").appendChild(launchTab);
+  var launchPanel = document.createElement("div");
+  launchPanel.id = "launch-panel"; launchPanel.hidden = true; list.parentNode.insertBefore(launchPanel, list.nextSibling);
   function closeSite() {
-    if (panel.hidden) return;
-    panel.hidden = true; siteTab.classList.remove("active"); areaTab.classList.remove("active");
+    if (panel.hidden && launchPanel.hidden) return;
+    panel.hidden = true; launchPanel.hidden = true; siteTab.classList.remove("active"); launchTab.classList.remove("active");
     covered.forEach(function (i) { $(i).hidden = false; });
   }
   async function openSite() {
     document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
-    siteTab.classList.add("active");
+    siteTab.classList.add("active"); launchTab.classList.remove("active"); launchPanel.hidden = true;
     covered.forEach(function (i) { $(i).hidden = true; });
     panel.hidden = false; panel.innerHTML = '<p class="muted">Loading…</p>';
     var v = {};
@@ -179,6 +186,45 @@
       m.textContent = "Saved. The live site shows it the next time it loads.";
     } catch (e) { m.className = "msg err"; m.textContent = "Not saved: " + e.message + " (run site_content.sql in Supabase, then refresh this page)"; }
   }
+
+  /* ---- Launch check: a live list of what is ready before real customers arrive ---- */
+  async function openLaunch() {
+    document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
+    launchTab.classList.add("active"); siteTab.classList.remove("active"); panel.hidden = true;
+    covered.forEach(function (i) { $(i).hidden = true; });
+    launchPanel.hidden = false; launchPanel.innerHTML = '<p class="muted">Checking…</p>';
+    var r = await Promise.all([get("seller_applications"), get("seller_products"), get("delivery_partners"), get("delivery_supported_areas"), get("site_content"), get("delivery_settings")]);
+    var apps = r[0], prods = r[1], partners = r[2], areas = r[3], sc = r[4], settings = r[5];
+    var site = {}; (sc || []).forEach(function (x) { if (x.key === "site") site = x.value || {}; });
+    var verified = apps.filter(function (a) { return a.verification_status === "approved"; }).length;
+    var approved = partners.filter(function (p) { return p.status === "approved"; });
+    var docsPending = partners.filter(function (p) { return p.status === "pending"; }).length;
+    var onAreas = areas.filter(function (a) { return a.is_active; }).length;
+    var hasFees = settings && settings.length && settings[0] && Number(settings[0].fee_same_city_kobo || settings[0].same_city_fee_kobo || 1) > 0;
+    var sup = !!(site.support_whatsapp || site.support_email);
+    var items = [
+      [apps.length > 0, "Shops on the platform", apps.length + " shop" + (apps.length === 1 ? "" : "s") + ", " + verified + " verified", "Sellers tab"],
+      [prods.length > 0, "Products listed", prods.length + " product" + (prods.length === 1 ? "" : "s"), "Products tab"],
+      [approved.length > 0, "Approved riders", approved.length + " approved" + (docsPending ? ", " + docsPending + " waiting for review" : ""), "Delivery > Partners"],
+      [onAreas > 0, "Delivery areas switched on", onAreas + " area" + (onAreas === 1 ? "" : "s") + " on", "Delivery > Coverage"],
+      [!!hasFees, "Delivery fees set", hasFees ? "Fees are set. Check they are the amounts you want" : "Open Delivery > Settings and set your fees", "Delivery > Settings"],
+      [sup, "Support contact entered", sup ? "Shown in the footer and on the policy pages" : "Add a WhatsApp number or email", "Site content"],
+      [!!(site.privacy_text || site.terms_text || site.refund_text || site.about_text), "Policy pages reviewed", (site.privacy_text || site.terms_text || site.refund_text || site.about_text) ? "You have edited at least one page" : "Pages use the built-in draft text. Read and edit them before launch", "Site content"],
+      [null, "Paystack online payments", "Cannot be checked from here. Follow SETUP.md, then test a full order in Paystack test mode", "SETUP.md"],
+      [null, "Database security", "Run: select tablename from pg_tables where schemaname='public' and not rowsecurity; and fix anything listed", "Supabase SQL"],
+      [null, "Rider documents are private", "In Supabase Storage, the delivery-docs bucket must not be public", "Supabase Storage"],
+      [null, "Supabase plan", "The free plan pauses after a week of no activity and has no backups. Consider the paid plan", "Supabase billing"]
+    ];
+    var ok = items.filter(function (i) { return i[0] === true; }).length, auto = items.filter(function (i) { return i[0] !== null; }).length;
+    launchPanel.innerHTML = '<p class="muted">Checked just now from your live data. Items marked "Check yourself" cannot be tested from this page.</p>' +
+      '<div class="item"><strong style="font-size:16px">' + ok + " of " + auto + ' automatic checks passed</strong></div>' +
+      items.map(function (i) {
+        var pill = i[0] === true ? '<span class="pill approved">Ready</span>' : i[0] === false ? '<span class="pill rejected">Fix</span>' : '<span class="pill">Check yourself</span>';
+        return '<div class="item">' + pill + " <strong>" + esc(i[1]) + '</strong><br><span class="muted">' + esc(i[2]) + " · " + esc(i[3]) + "</span></div>";
+      }).join("") + '<button class="button outline full" type="button" id="launch-again">Check again</button>';
+  }
+  launchTab.addEventListener("click", openLaunch);
+  launchPanel.addEventListener("click", function (e) { if (e.target.id === "launch-again") openLaunch(); });
   siteTab.addEventListener("click", openSite);
   document.addEventListener("click", function (e) { if (e.target.closest("[data-tab],[data-go]")) closeSite(); });
   panel.addEventListener("submit", function (e) {
