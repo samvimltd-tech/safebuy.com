@@ -8,6 +8,9 @@
   var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
   var VEHICLES = [["bike","Motorbike"],["tricycle","Tricycle (keke)"],["car","Car"],["van","Van"],["bicycle","Bicycle"],["foot","On foot"]];
 
+  // Set to true after Paystack and the backend functions are set up (see SETUP.md).
+  var AUTO_PAYOUTS = false;
+
   var S = { partner: null, areas: [], coverage: [], riders: [], payouts: [], docs: [], offer: null, job: null };
   var tracking = false, lastPos = null, watchId = null, pingTimer = null, pollTimer = null, countTimer = null, wakeLock = null;
   var lastOfferId = null, lastJobKey = "";
@@ -22,6 +25,16 @@
   async function rpc(name, args) {
     var r = await c.rpc(name, args || {});
     if (r.error) throw r.error;
+    return r.data;
+  }
+  async function fn(name, payload) {
+    var r = await c.functions.invoke(name, { body: payload });
+    if (r.error) {
+      var m = r.error.message;
+      try { var j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) {}
+      throw new Error(m);
+    }
+    if (r.data && r.data.error) throw new Error(r.data.error);
     return r.data;
   }
   function normPhone(v) {
@@ -111,7 +124,7 @@
       .eq("partner_id", S.partner.id).order("created_at", { ascending: false });
     S.docs = dd.data || [];
     if (S.partner.status === "approved") {
-      var po = await c.from("delivery_payouts").select("amount_kobo,status,created_at")
+      var po = await c.from("delivery_payouts").select("amount_kobo,status,created_at,payout_error")
         .eq("payee_partner_id", S.partner.id).order("created_at", { ascending: false }).limit(10);
       S.payouts = po.data || [];
       if (S.partner.partner_type === "company") {
@@ -275,8 +288,9 @@
         (S.riders.length ? S.riders.map(function (r) {
           return '<div class="seller-row"><span>' + esc(r.full_name) + '</span><span class="muted">' + esc(r.status) + (r.is_online ? " · online" : "") + "</span></div>";
         }).join("") : '<p class="muted">No riders have joined yet.</p>') +
-        "<h3>Earnings</h3>" + payoutsHtml();
-      body.innerHTML = html + '<p class="form-message" id="dp-msg"></p>';
+        "<h3>Earnings</h3>" + payoutsHtml() + bankHtml();
+      body.innerHTML = html + '<p class="form-message" id="dp-msg" role="status" aria-live="polite"></p>';
+      wireBank();
       return;
     }
 
@@ -291,9 +305,10 @@
       "</div>" +
       "<h3>Service areas</h3>" + areaBoxes(S.areas) +
       '<button class="button button-light" type="button" id="dp-save-areas">Save areas</button>' +
-      "<h3>Earnings</h3>" + payoutsHtml() +
+      "<h3>Earnings</h3>" + payoutsHtml() + bankHtml() +
       '<p class="form-message" id="dp-msg" role="status" aria-live="polite"></p>';
     body.innerHTML = html;
+    wireBank();
     lastOfferId = null; lastJobKey = "";
     drawOffer(); drawJob();
 
@@ -306,10 +321,51 @@
     });
   }
 
+  /* ---------- Bank account for automatic payouts ---------- */
+  function bankHtml() {
+    var p = S.partner;
+    if (!AUTO_PAYOUTS) return "";
+    if (p.partner_type !== "company" && p.company_id) {
+      return '<h3>Bank account</h3><p class="muted">Your company receives the earnings for your deliveries.</p>';
+    }
+    var has = !!p.paystack_recipient_code;
+    return "<h3>Bank account for payouts</h3>" +
+      (has ? '<div class="dp-card"><strong>' + esc(p.bank_name || "Bank") + " ••••" + esc(p.bank_last4 || "") + "</strong><br>" + esc(p.bank_account_name || "") + "</div>"
+           : '<p class="modal-note">Add your bank account. After each delivery your earnings are sent to it automatically.</p>') +
+      '<button class="button button-light" type="button" id="dp-bank-open">' + (has ? "Change" : "Add") + ' bank account</button><div id="dp-bank-form"></div>';
+  }
+  function wireBank() {
+    var open = body.querySelector("#dp-bank-open");
+    if (!open) return;
+    open.addEventListener("click", async function () {
+      var box = body.querySelector("#dp-bank-form");
+      open.disabled = true; msg("Loading banks…");
+      try {
+        var res = await fn("partner-bank", { action: "banks" });
+        box.innerHTML =
+          '<label for="dp-bank">Bank</label><select id="dp-bank"><option value="">Choose your bank</option>' +
+          res.banks.map(function (b) { return '<option value="' + esc(b.code) + '">' + esc(b.name) + "</option>"; }).join("") + "</select>" +
+          '<label for="dp-acct">Account number (10 digits)</label><input id="dp-acct" inputmode="numeric" maxlength="10">' +
+          '<button class="button button-primary" type="button" id="dp-bank-save">Verify and save</button>';
+        msg("");
+        body.querySelector("#dp-bank-save").addEventListener("click", async function () {
+          var b = this; b.disabled = true; msg("Checking your account…");
+          try {
+            var r = await fn("partner-bank", { action: "save", bank_code: body.querySelector("#dp-bank").value, account_number: body.querySelector("#dp-acct").value });
+            toast("Saved: " + r.account_name);
+            var u = (await c.auth.getUser()).data.user; await load(u); render();
+            msg("Bank account saved: " + r.account_name + ".");
+          } catch (err) { msg(err.message, true); b.disabled = false; }
+        });
+      } catch (err) { msg(err.message, true); }
+      open.disabled = false;
+    });
+  }
+
   function payoutsHtml() {
     if (!S.payouts.length) return '<p class="muted">Completed deliveries will appear here. SafeBuy NG collects the delivery fee and pays you.</p>';
     return S.payouts.map(function (x) {
-      return '<div class="seller-row"><span>' + naira(x.amount_kobo) + '</span><span class="muted">' + (x.status === "paid" ? "Paid" : "Pending payout") + "</span></div>";
+      return '<div class="seller-row"><span>' + naira(x.amount_kobo) + '</span><span class="muted">' + (x.status === "paid" ? "Paid" : x.payout_error ? "Waiting: " + esc(x.payout_error) : AUTO_PAYOUTS ? "Sending to your bank" : "Pending payout") + "</span></div>";
     }).join("");
   }
 
@@ -408,6 +464,21 @@
     body.querySelector("#dp-dec").addEventListener("click", function () { answer(false); });
   }
 
+  function digits(v) {
+    var d = String(v || "").replace(/\D/g, "");
+    if (d.indexOf("234") === 0) return d;
+    if (d.charAt(0) === "0") return "234" + d.slice(1);
+    return d.length === 10 ? "234" + d : "";
+  }
+  // Call + WhatsApp + Map buttons for one person (seller or buyer).
+  function reach(num, who, place, hello) {
+    var wa = digits(num), out = "";
+    if (wa) out += '<a class="button button-outline" href="tel:+' + wa + '">📞 Call ' + who + '</a>' +
+      '<a class="button button-outline" target="_blank" rel="noopener" href="https://wa.me/' + wa + "?text=" + encodeURIComponent(hello) + '">💬 WhatsApp</a>';
+    if (place) out += '<a class="button button-outline" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(place) + '">🗺️ Map</a>';
+    return out ? '<div class="dp-row" style="flex-wrap:wrap;gap:8px;margin:6px 0 10px">' + out + "</div>" : "";
+  }
+
   function drawJob() {
     var box = body.querySelector("#dp-job");
     if (!box) return;
@@ -416,16 +487,17 @@
     if (key === lastJobKey) return;       // do not wipe the code field while the partner is typing
     lastJobKey = key;
     if (!j) { box.innerHTML = ""; return; }
+    var order = "order " + String(j.order_id || j.job_id).slice(0, 8);
     box.innerHTML =
-      '<div class="dp-card"><strong>' + (j.status === "assigned" ? "Go to pickup" : "Deliver to buyer") + "</strong>" +
-      "<p><strong>Pickup:</strong> " + esc(j.pickup_address) + ", " + esc(j.pickup_city) +
-      (j.pickup_phone ? ' · <a href="tel:' + esc(j.pickup_phone) + '">' + esc(j.pickup_phone) + "</a>" : "") +
-      "<br><strong>Drop-off:</strong> " + esc(j.dropoff_address) + ", " + esc(j.dropoff_city) +
-      (j.dropoff_name ? "<br>" + esc(j.dropoff_name) : "") +
-      (j.dropoff_phone ? ' · <a href="tel:' + esc(j.dropoff_phone) + '">' + esc(j.dropoff_phone) + "</a>" : "") +
-      "<br>You earn <strong>" + naira(j.earnings_kobo) + "</strong></p>" +
+      '<div class="dp-card"><strong>' + (j.status === "assigned" ? "1. Go to the seller" : "2. Deliver to the buyer") + "</strong>" +
+      '<p style="margin:8px 0"><strong>Pickup:</strong> ' + esc(j.pickup_address) + ", " + esc(j.pickup_city) + "</p>" +
+      reach(j.pickup_phone, "seller", [j.pickup_address, j.pickup_city].join(", "), "Hello, I am the SafeBuy NG rider for " + order + ". I am coming to collect it.") +
+      '<p style="margin:8px 0"><strong>Drop-off:</strong> ' + esc(j.dropoff_address) + ", " + esc(j.dropoff_city) + (j.dropoff_name ? "<br>" + esc(j.dropoff_name) : "") + "</p>" +
+      reach(j.dropoff_phone, "buyer", [j.dropoff_address, j.dropoff_city].join(", "), "Hello, I am your SafeBuy NG rider for " + order + ". I will bring it to you.") +
+      "<p>You earn <strong>" + naira(j.earnings_kobo) + "</strong></p>" +
       (j.status === "assigned"
-        ? '<div class="dp-row"><button class="button button-primary" type="button" id="dp-picked">Picked up</button>' +
+        ? '<label for="dp-pcode">Seller\'s 4-digit pickup code</label><input id="dp-pcode" inputmode="numeric" maxlength="4" placeholder="Ask the seller for it">' +
+          '<div class="dp-row"><button class="button button-primary" type="button" id="dp-picked">Picked up</button>' +
           '<button class="button button-outline" type="button" id="dp-release">Give back job</button></div>'
         : '<label for="dp-dcode">Buyer\'s 4-digit delivery code</label><input id="dp-dcode" inputmode="numeric" maxlength="4">' +
           '<button class="button button-primary" type="button" id="dp-done">Mark delivered</button>') +
@@ -433,7 +505,14 @@
 
     async function run(fn) { try { await fn(); } catch (err) { toast(err.message); } await poll(); }
     var pk = box.querySelector("#dp-picked"), rl = box.querySelector("#dp-release"), dn = box.querySelector("#dp-done");
-    if (pk) pk.addEventListener("click", function () { run(function () { return rpc("partner_update_job", { p_job: j.job_id, p_status: "picked_up" }); }); });
+    if (pk) pk.addEventListener("click", function () {
+      run(async function () {
+        var r = await rpc("partner_update_job", { p_job: j.job_id, p_status: "picked_up", p_code: box.querySelector("#dp-pcode").value.trim() });
+        if (r === "wrong_code") toast("That pickup code is not correct. Ask the seller to check the code in their app.");
+        else if (r === "locked") toast("Too many wrong codes. Contact SafeBuy NG.");
+        else toast("Picked up. Now deliver to the buyer.");
+      });
+    });
     if (rl) rl.addEventListener("click", function () {
       if (confirm("Give this job back? It will be offered to another rider.")) run(function () { return rpc("partner_release_job", { p_job: j.job_id }); });
     });
