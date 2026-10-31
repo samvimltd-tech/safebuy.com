@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SafeBuy NG Health Check</title>
+<style>
+:root{--green:#087f5b;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7;--red:#8a1f1f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
+.wrap{width:min(760px,100% - 28px);margin:0 auto;padding:18px 0 60px}
+h1{margin:0 0 4px;font-size:24px}
+h2{margin:22px 0 8px;font-size:16px}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin:6px 0;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:14px}
+.row b{display:block}
+.ic{flex:0 0 22px;font-size:18px;line-height:1.3}
+.fix{display:block;margin-top:2px;color:var(--red);font-size:13px}
+.ok .fix{display:none}
+button{border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:700;background:var(--green);color:#fff;margin:6px 8px 6px 0}
+button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
+#sum{padding:14px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:16px;font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>SafeBuy NG Health Check</h1>
+  <p class="muted">This page checks that every file and database function your site needs is in place. It only reads. It changes nothing.</p>
+  <div id="sum">Checking…</div>
+  <button id="again" type="button">Check again</button><button id="copy" class="o" type="button">Copy report</button>
+  <div id="out"></div>
+</main>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var out = document.getElementById("out"), sum = document.getElementById("sum");
+  var cfg = window.SAFEbuySupabaseConfig || {};
+  var base = String(cfg.url || "").replace(/\/+$/, ""), key = cfg.publishableKey || "";
+  var report = [], counts = { ok: 0, bad: 0, warn: 0 };
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function section(t) { out.insertAdjacentHTML("beforeend", "<h2>" + esc(t) + "</h2>"); report.push("\n== " + t); }
+  function row(state, title, detail, fix) {
+    counts[state]++;
+    var ic = state === "ok" ? "✅" : state === "bad" ? "❌" : "⚠️";
+    out.insertAdjacentHTML("beforeend", '<div class="row ' + state + '"><span class="ic">' + ic + "</span><div><b>" + esc(title) + "</b>" +
+      (detail ? '<span class="muted">' + esc(detail) + "</span>" : "") + (fix && state !== "ok" ? '<span class="fix">' + esc(fix) + "</span>" : "") + "</div></div>");
+    report.push((state === "ok" ? "OK   " : state === "bad" ? "FAIL " : "WARN ") + title + (detail ? " - " + detail : "") + (fix && state !== "ok" ? " | FIX: " + fix : ""));
+  }
+  function get(path) {
+    return fetch(path + (path.indexOf("?") < 0 ? "?" : "&") + "hc=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text().then(function (t) { return { ok: true, text: t }; }) : { ok: false, status: r.status }; })
+      .catch(function () { return { ok: false, status: 0 }; });
+  }
+  // [file, strings that must be inside it (proves it is the latest version), what to do]
+  var FILES = [
+    ["./index.html", ["sc-notice-text", "about.html", "site_content"], "Upload the latest index.html to the main folder."],
+    ["./delivery.js", ["dp-pcode"], "Upload the latest rider file, named delivery.js (replace the old one)."],
+    ["./delivery-orders.js", ["rate_delivery", "order_tracking"], "Upload the latest delivery-orders.js."],
+    ["./orders.js", [], "orders.js is missing. It is part of your original site."],
+    ["./admin.html", ["partnerSummary", "data-adel", "admin-plus.js"], "Upload the latest admin.html."],
+    ["./admin-plus.js", ["openLaunch", "refund_text"], "Upload the latest admin-plus.js to the same folder as admin.html."],
+    ["./privacy.html", [], "Upload privacy.html."], ["./terms.html", [], "Upload terms.html."],
+    ["./about.html", [], "Upload about.html."], ["./refund.html", [], "Upload refund.html."],
+    ["./rider.webp", [], "Upload rider.webp to the main folder."],
+    ["./seller/index.html", ["role-open"], "Upload seller/index.html (inside the seller folder)."],
+    ["./seller/manifest.json", ["SafeBuy Seller"], "Upload seller/manifest.json."], ["./seller/sw.js", ["seller-v1"], "Upload seller/sw.js."],
+    ["./rider/index.html", ["role-open"], "Upload rider/index.html (inside the rider folder)."],
+    ["./rider/manifest.json", ["SafeBuy Rider"], "Upload rider/manifest.json."], ["./rider/sw.js", ["rider-v1"], "Upload rider/sw.js."]
+  ];
+  function checkFiles() {
+    section("1. Website files");
+    return Promise.all(FILES.map(function (f) { return get(f[0]); })).then(function (rs) {
+      rs.forEach(function (r, i) {
+        var f = FILES[i], name = f[0].slice(2);
+        if (!r.ok) { row("bad", name, "not found (error " + r.status + ")", f[2]); return; }
+        var missing = f[1].filter(function (s) { return r.text.indexOf(s) < 0; });
+        if (missing.length) row("bad", name, "found, but it is an OLD version", f[2]);
+        else row("ok", name, "latest version");
+      });
+      // every script the pages load must exist, otherwise buttons silently stop working
+      return Promise.all([get("./index.html"), get("./seller/index.html"), get("./rider/index.html")]);
+    }).then(function (pages) {
+      section("2. Scripts each page loads");
+      var seen = {};
+      pages.forEach(function (p, i) {
+        if (!p.ok) return;
+        var prefix = ["./", "./seller/", "./rider/"][i], m, re = /<script[^>]+src="(\.{1,2}\/[^"?#]+)/g, list = [];
+        while ((m = re.exec(p.text))) list.push(m[1]);
+        list.forEach(function (src) {
+          var url = new URL(src, location.origin + location.pathname.replace(/[^/]*$/, "") + prefix.slice(2)).pathname;
+          seen[url] = seen[url] || [];
+          seen[url].push(["shop", "seller app", "rider app"][i]);
+        });
+      });
+      var urls = Object.keys(seen);
+      return Promise.all(urls.map(function (u) { return fetch(u + "?hc=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok; }, function () { return false; }); })).then(function (oks) {
+        oks.forEach(function (ok, i) {
+          var short = urls[i].replace(/^.*\/safebuy\.com\//, "").replace(/^\//, "");
+          if (ok) row("ok", short, "loads in: " + seen[urls[i]].filter(function (v, k, a) { return a.indexOf(v) === k; }).join(", "));
+          else row("bad", short, "MISSING. Pages use it, so some buttons will not work", "Upload " + short.split("/").pop() + " to the folder it belongs in.");
+        });
+      });
+    });
+  }
+  function api(path, opt) {
+    opt = opt || {}; opt.headers = Object.assign({ apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" }, opt.headers || {});
+    return fetch(base + path, opt).then(function (r) { return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) {} return { status: r.status, json: j, text: t }; }); })
+      .catch(function () { return { status: 0, json: null, text: "" }; });
+  }
+  var TABLES = [
+    ["seller_products_public", "Products shown to shoppers", ""], ["site_content", "Admin-edited site text", "Run site_content.sql in Supabase."],
+    ["user_alerts", "In-app updates", "Run delivery_automation_paste.sql in Supabase."], ["order_events", "Order progress list", "Run connect_roles.sql in Supabase."],
+    ["delivery_ratings", "Rider ratings", "Run connect_roles.sql in Supabase."], ["admin_deleted_log", "Deleted-records log", "Run admin_delete.sql in Supabase."],
+    ["delivery_supported_areas", "Delivery areas", ""], ["delivery_partners", "Delivery partners", ""], ["delivery_jobs", "Delivery jobs", ""], ["delivery_payouts", "Payouts", ""]
+  ];
+  var RPCS = [
+    ["list_delivery_coverage", {}, "Delivery areas list", "Run: grant execute on function public.list_delivery_coverage() to anon, authenticated;"],
+    ["order_tracking", { p_order: "00000000-0000-0000-0000-000000000000" }, "Order progress and contacts", "Run connect_roles.sql in Supabase."],
+    ["rate_delivery", { p_order: "00000000-0000-0000-0000-000000000000", p_stars: 5 }, "Rider ratings", "Run connect_roles.sql in Supabase."],
+    ["alerts_mark_read", {}, "In-app updates", "Run delivery_automation_paste.sql in Supabase."],
+    ["partner_update_job", { p_job: "00000000-0000-0000-0000-000000000000", p_status: "x" }, "Rider pickup and delivery", "Run connect_roles.sql in Supabase."],
+    ["admin_delete", { p_kind: "x", p_id: "x" }, "Admin delete", "Run admin_delete.sql in Supabase."]
+  ];
+  function checkDb() {
+    section("3. Database tables");
+    if (!base || !key) { row("bad", "supabase-config.js", "Supabase settings did not load", "Upload supabase-config.js to the main folder."); return Promise.resolve(); }
+    return Promise.all(TABLES.map(function (t) { return api("/rest/v1/" + t[0] + "?select=*&limit=1"); })).then(function (rs) {
+      rs.forEach(function (r, i) {
+        var t = TABLES[i], code = r.json && r.json.code;
+        if (r.status === 200) row("ok", t[0], t[1]);
+        else if (r.status === 401 || r.status === 403 || code === "42501") row("ok", t[0], t[1] + " (private, as it should be)");
+        else if (r.status === 404 || code === "42P01" || code === "PGRST205") row("bad", t[0], "table not found: " + t[1], t[2] || "Table is missing. Tell Claude.");
+        else row("warn", t[0], "unexpected answer (" + r.status + ")", "");
+      });
+      section("4. Database functions");
+      return Promise.all(RPCS.map(function (f) { return api("/rest/v1/rpc/" + f[0], { method: "POST", body: JSON.stringify(f[1]) }); }));
+    }).then(function (rs) {
+      if (!rs) return;
+      rs.forEach(function (r, i) {
+        var f = RPCS[i], code = r.json && r.json.code;
+        if (code === "PGRST202" || r.status === 404) row("bad", f[0], "function not found: " + f[2], f[3]);
+        else if (r.status === 0) row("warn", f[0], "could not reach Supabase", "Check your internet connection.");
+        else row("ok", f[0], f[2]);
+      });
+    });
+  }
+  function checkFunctions() {
+    section("5. Paystack backend (optional until you set up Paystack)");
+    var names = ["delivery-pay", "partner-bank", "payout-run", "paystack-webhook"];
+    return Promise.all(names.map(function (n) { return api("/functions/v1/" + n, { method: "POST", body: "{}" }); })).then(function (rs) {
+      rs.forEach(function (r, i) { if (r.status === 404) row("warn", names[i], "not deployed yet. Fine until you set up Paystack", "Follow SETUP.md when you are ready."); else if (r.status === 0) row("warn", names[i], "could not reach it", ""); else row("ok", names[i], "deployed"); });
+    });
+  }
+  function run() {
+    out.innerHTML = ""; report = ["SafeBuy NG health check " + new Date().toISOString() + " " + location.href]; counts = { ok: 0, bad: 0, warn: 0 };
+    sum.textContent = "Checking…";
+    checkFiles().then(checkDb).then(checkFunctions).then(function () {
+      sum.textContent = counts.bad ? "❌ " + counts.bad + " problem" + (counts.bad === 1 ? "" : "s") + " found. " + counts.ok + " checks passed." : "✅ Everything checked is in place. " + counts.ok + " checks passed.";
+      report.unshift(sum.textContent);
+    }).catch(function (e) { sum.textContent = "The check itself failed: " + e.message; });
+  }
+  document.getElementById("again").addEventListener("click", run);
+  document.getElementById("copy").addEventListener("click", function () {
+    var t = report.join("\n"); if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { document.getElementById("copy").textContent = "Copied"; });
+  });
+  run();
+})();
+</script>
+</body>
+</html>
