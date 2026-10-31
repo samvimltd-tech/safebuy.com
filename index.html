@@ -7,7 +7,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="Discover everyday products from Nigerian sellers on SafeBuy NG, with delivery partners across Nigeria.">
+<meta name="description" content="Discover everyday products on SafeBuy NG, a Nigerian marketplace prototype.">
 <!-- seo:start -->
 <link rel="canonical" href="https://samvimltd-tech.github.io/safebuy.com/">
 <meta property="og:type" content="website">
@@ -185,7 +185,6 @@ footer{margin-top:34px;padding:35px 0 40px;background:#fff;border-top:1px solid 
 .modal input:focus{border-color:var(--green)}
 .source-banner{margin:0 0 14px;padding:11px 14px;border-radius:12px;font-size:13px;border:1px solid var(--line);background:#fff}
 .source-banner.supabase{background:var(--green-light);border-color:#bfe6d1;color:var(--green-dark);font-weight:700}
-.source-banner.error{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
 .source-banner.sample{background:#fff3e0;border-color:#f1c27d;color:#7a4a05}
 .source-banner.loading{color:var(--muted)}
 .product-art img,.modal-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -440,7 +439,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <div class="dd-menu" role="menu" id="account-dd-menu"></div>
       </div>
 
-      <button class="cart-button" type="button" data-action="cart" aria-label="Open cart">
+      <button class="cart-button" type="button" data-action="cart" aria-label="Open demo cart">
         🛒 Cart <span class="cart-count" id="cart-count">0</span>
       </button>
       <button class="menu-toggle" type="button" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">☰</button>
@@ -505,7 +504,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <button type="button" data-action="safety">🛡️ Safety tips</button>
       </div>
     </details>
-    <button class="d-single" type="button" data-action="cart">🛒 Cart (<span class="cart-count-inline">0</span>)</button>
+    <button class="d-single" type="button" data-action="cart">🛒 Demo cart (<span class="cart-count-inline">0</span>)</button>
   </div>
 </aside>
 
@@ -542,8 +541,8 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
       <button class="path path-ride" type="button" data-action="deliver"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></button>
     </div>
     <div class="prototype-notice" id="sc-notice">
-      <strong>Stay safe:</strong>
-      <span id="sc-notice-text">Meet in a public place and inspect the item before you pay. Prefer shops with the ✓ Verified label.</span>
+      <strong>Prototype notice:</strong>
+      This is a demonstration. Payments, escrow, delivery protection and real orders are not active. Do not send money based on this demo.
     </div>
   </div>
 
@@ -572,7 +571,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <button class="category-button" type="button" data-category="Groceries">Groceries</button>
       </div>
 
-      <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Loading products…</div>
+      <div class="source-banner loading" id="source-banner" role="status" aria-live="polite">Connecting to Supabase…</div>
 
       <div class="toolbar">
         <p class="results-line" id="results-line" aria-live="polite">Loading products…</p>
@@ -606,7 +605,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">👤</div>
           <h3>Know the seller</h3>
-          <p>Every shop shows a clear Verified or Unverified label. Verification is added by SafeBuy NG, and shops that break the rules can be suspended.</p>
+          <p>Every shop shows a clear Verified or Unverified label. Verification is added by SafeBuy NG, and shops that break the rules can be suspended. Detailed identity checks and reviews are limited in this demo.</p>
         </article>
         <article class="trust-card">
           <div class="trust-icon" aria-hidden="true">🧾</div>
@@ -622,7 +621,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
       <div class="sell-panel" id="sc-sell">
         <div>
           <h2>Have products to sell?</h2>
-          <p>SafeBuy NG is built for Nigerian businesses and independent sellers. Create a shop in one step and list products with photos straight away. Shoppers contact you directly on WhatsApp.</p>
+          <p>SafeBuy NG is being designed for Nigerian businesses and independent sellers. Create a shop in one step and list products with photos straight away. Shoppers contact you directly on WhatsApp.</p>
         </div>
         <button class="button" type="button" data-action="sell">I'm interested in selling →</button>
       </div>
@@ -637,7 +636,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <span class="brand-mark">S</span>
         <span class="brand-name">SafeBuy <span>NG</span></span>
       </a>
-      <p id="sc-footer">SafeBuy NG is a Nigerian marketplace that connects buyers, sellers and delivery partners.</p>
+      <p id="sc-footer">A Nigerian marketplace prototype in development. No real payments or buyer-protection services are currently active.</p>
       <p>© <span id="year">2026</span> SafeBuy NG</p>
     </div>
     <nav class="footer-cols" aria-label="Footer navigation">
@@ -661,10 +660,6 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
         <a href="#how-it-works">How it works</a>
         <button type="button" data-action="delivery">Delivery areas</button>
         <button type="button" data-action="safety">Safety tips</button>
-        <a href="./privacy.html">Privacy policy</a>
-        <a href="./terms.html">Terms of use</a>
-        <a id="sc-wa" href="#" target="_blank" rel="noopener" hidden>💬 Chat with support</a>
-        <a id="sc-mail" href="#" hidden>✉️ Email support</a>
         <a href="#home">Back to top ↑</a>
       </div>
     </nav>
@@ -739,7 +734,7 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
     <label for="area-search">Search your state or city</label>
     <input id="area-search" type="search" placeholder="e.g. Lagos, Abuja, Rivers" autocomplete="off">
     <div id="area-results" aria-live="polite"></div>
-    <p class="modal-note" id="sc-delnote" style="margin-top:14px">Delivery works only in the areas listed above. Elsewhere, agree pickup or delivery details directly with the seller.</p>
+    <p class="modal-note" style="margin-top:14px">Delivery is not fully active in this prototype. Until delivery is available in your area, agree pickup or delivery details directly with the seller.</p>
   </div>
 </div>
 
@@ -762,7 +757,20 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
 <script>
 "use strict";
 
-
+const sampleProducts = [
+  {id:1,name:"Wireless headphones",category:"Electronics",price:18500,seller:"Demo Gadgets",emoji:"🎧",background:"#e9eaff",tag:"Popular",description:"Sample wireless headphones for everyday listening."},
+  {id:2,name:"Classic wristwatch",category:"Fashion",price:12500,seller:"Demo Style Store",emoji:"⌚",background:"#f8e8d5",tag:"Everyday pick",description:"A sample classic-style wristwatch."},
+  {id:3,name:"Quality rice, 5kg",category:"Groceries",price:10500,seller:"Demo Food Mart",emoji:"🍚",background:"#fff0cc",tag:"Home essential",description:"A sample five-kilogram rice listing. The price is illustrative."},
+  {id:4,name:"Kitchen blender",category:"Home",price:28500,seller:"Demo Home Store",emoji:"🥤",background:"#dff4ec",tag:"Useful find",description:"A sample kitchen blender listing."},
+  {id:5,name:"Everyday sneakers",category:"Fashion",price:22000,seller:"Demo Style Store",emoji:"👟",background:"#e7f0ff",tag:"New",description:"Sample casual sneakers for everyday wear."},
+  {id:6,name:"Smartphone",category:"Electronics",price:145000,seller:"Demo Gadgets",emoji:"📱",background:"#e7eefa",tag:"Tech pick",description:"A sample smartphone listing. No device is actually for sale."},
+  {id:7,name:"Skincare essentials",category:"Beauty",price:9500,seller:"Demo Beauty Shop",emoji:"🧴",background:"#ffe8ef",tag:"Self-care",description:"A sample skincare product listing."},
+  {id:8,name:"Decorative table lamp",category:"Home",price:16500,seller:"Demo Home Store",emoji:"💡",background:"#fff1d7",tag:"Home style",description:"A sample decorative lamp listing."},
+  {id:9,name:"Ankara fabric",category:"Fashion",price:18500,seller:"Demo Fabrics",emoji:"🧵",background:"#ffebd9",tag:"Made for style",description:"A sample Ankara fabric listing."},
+  {id:10,name:"Fresh fruit basket",category:"Groceries",price:8000,seller:"Demo Food Mart",emoji:"🍍",background:"#eaf6d9",tag:"Fresh pick",description:"A sample fruit basket listing."},
+  {id:11,name:"Everyday backpack",category:"Fashion",price:17000,seller:"Demo Style Store",emoji:"🎒",background:"#eee7ff",tag:"Daily essential",description:"A sample everyday backpack listing."},
+  {id:12,name:"Electric kettle",category:"Home",price:14500,seller:"Demo Home Store",emoji:"🫖",background:"#e0f3f7",tag:"Kitchen pick",description:"A sample electric kettle listing."}
+];
 
 let products = [];
 let productSource = "loading"; // loading | supabase | sample
@@ -838,15 +846,11 @@ function renderProducts() {
   }
 
   const visible = getVisibleProducts();
-  resultsLine.textContent = productSource === "error" ? "" : "Showing " + visible.length + " product" + (visible.length === 1 ? "" : "s");
+  const label = productSource === "supabase" ? "Supabase" : "sample";
+  resultsLine.textContent = "Showing " + visible.length + " " + label + " product" + (visible.length === 1 ? "" : "s");
 
   if (visible.length === 0) {
-    if (productSource === "error") {
-      productGrid.innerHTML =
-        '<div class="empty-state"><h3>We could not load products</h3>' +
-        '<p>Please check your internet connection and try again.</p>' +
-        '<button class="button button-primary" type="button" data-action="retry">Try again</button></div>';
-    } else if (products.length === 0 && productSource === "supabase") {
+    if (products.length === 0 && productSource === "supabase") {
       productGrid.innerHTML =
         '<div class="empty-state"><h3>No products yet</h3>' +
         '<p>No approved seller has published a listing yet. Check back soon.</p></div>';
@@ -907,7 +911,7 @@ function addToCart(id) {
     cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1 });
   }
   updateCartCount();
-  showToast(product.name + " added to your cart.");
+  showToast(product.name + " added to your demo cart.");
 }
 
 function openProduct(id) {
@@ -926,7 +930,7 @@ function openProduct(id) {
       : '<p class="modal-note"><strong>Stay safe:</strong> SafeBuy NG does not handle payments or delivery yet. Agree details with the seller, meet in a public place, and inspect the item before you pay.</p>'}
     ${productSource === "supabase"
       ? `<button class="button button-primary" type="button" data-action="whatsapp" data-id="${esc(product.id)}"${product.inStock ? "" : " disabled"}>${product.inStock ? "Chat seller on WhatsApp" : "Sold out"}</button>`
-      : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to cart</button>`}`;
+      : `<button class="button button-primary" type="button" data-action="add" data-id="${esc(product.id)}">Add to demo cart</button>`}`;
 
   modalBackdrop.classList.add("open");
   document.getElementById("close-modal").focus();
@@ -938,12 +942,14 @@ function closeModal() {
 
 function showCart() {
   if (cart.length === 0) {
-   showToast("Tap “Chat seller” on a listing to contact the seller directly.");
+    showToast(productSource === "supabase"
+      ? "The cart is for demo products only. Tap “Chat seller” on a listing to buy."
+      : "Your demo cart is empty. Add a sample product first.");
     return;
   }
   const total = cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
   const summary = cart.map(function (item) { return item.quantity + " × " + item.name; }).join("; ");
-  showToast("Cart: " + summary + ". Total: " + money(total) + ".");
+  showToast("Demo cart: " + summary + ". Total: " + money(total) + ". Checkout is not connected.");
 }
 
 function chooseCategory(category) {
@@ -985,7 +991,6 @@ document.addEventListener("click", function (event) {
   const action = button.dataset.action;
   const id = button.dataset.id;
 
-  if (action === "retry") { location.reload(); return; }
   if (action === "add") addToCart(id);
   if (action === "view") openProduct(id);
   if (action === "cart") { closeDrawer(); showCart(); }
@@ -1009,16 +1014,13 @@ function renderSource() {
   banner.className = "source-banner " + productSource;
 
   if (productSource === "supabase") {
-    banner.hidden = true;
-    sub.textContent = "Explore products across popular categories.";
-  } else if (productSource === "error") {
-    banner.hidden = false;
-    banner.innerHTML = "<strong>We could not load products.</strong> Check your internet connection and try again. " +
-      '<button class="button button-light" type="button" data-action="retry" style="margin-left:6px;padding:6px 12px">Try again</button>';
-    sub.textContent = "Products could not be loaded.";
+    banner.textContent = "✓ Supabase products — loaded live from the database.";
+    sub.textContent = "Browse products from our database.";
+  } else if (productSource === "sample") {
+    banner.innerHTML = "<strong>⚠ Database unavailable.</strong> These are sample products, not real listings. " + esc(sourceMessage);
+    sub.textContent = "Showing sample products only.";
   } else {
-    banner.hidden = false;
-    banner.textContent = "Loading products…";
+    banner.textContent = "Connecting to Supabase…";
     sub.textContent = "Explore products across popular categories.";
   }
 }
@@ -1431,12 +1433,6 @@ updateCartCount();
     var sp = $("sc-sell");
     if (sp) { setText(sp.querySelector("h2"), v.sell_title); setText(sp.querySelector("p"), v.sell_text); setText(sp.querySelector("button"), v.sell_button); }
     setText($("sc-footer"), v.footer_text);
-    setText($("sc-notice-text"), v.notice_text);
-    setText($("sc-delnote"), v.delivery_note);
-    var wa = $("sc-wa"), ml = $("sc-mail"), digits = String(v.support_whatsapp || "").replace(/\D/g, "");
-    if (digits.charAt(0) === "0") digits = "234" + digits.slice(1);
-    if (wa) { wa.hidden = !digits; if (digits) wa.href = "https://wa.me/" + digits; }
-    if (ml) { var em = String(v.support_email || "").trim(); var okm = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em); ml.hidden = !okm; if (okm) ml.href = "mailto:" + em; }
     var tips = $("sc-tips");
     if (tips && v.safety_tips) {
       tips.textContent = "";
@@ -1499,7 +1495,7 @@ updateCartCount();
 })();
 </script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 (function () {
   "use strict";
@@ -1525,7 +1521,7 @@ updateCartCount();
   /* ---------- Load products ---------- */
   function fail(message) {
     console.warn("SafeBuy:", message);
-    setProducts([], "error", message);
+    setProducts(sampleProducts, "sample", message);
   }
 
   function mapRows(rows) {
@@ -1601,7 +1597,7 @@ updateCartCount();
           restFallback("Supabase error: " + result.error.message);
           return;
         }
-            if (early && window.__earlyRendered) { window.__earlyRendered = false; return; }
+        if (window.__earlyRendered) return;      // already drawn from the early request
         setProducts(mapRows(result.data), "supabase");
       })
       .catch(function (e) {
@@ -2125,9 +2121,8 @@ updateCartCount();
     if (win) win.location.href = url; else window.location.href = url;
   });
 
-    document.addEventListener("click", function (e) {
-    if (e.target.closest('[data-action="sell"]')) startSelling();
-  });
+  document.querySelectorAll('[data-action="sell"]').forEach(function (button) {
+    button.addEventListener("click", startSelling);
   });
   document.getElementById("seller-close").addEventListener("click", closeSeller);
   sellerBackdrop.addEventListener("click", function (e) { if (e.target === sellerBackdrop) closeSeller(); });
@@ -2193,4 +2188,4 @@ document.addEventListener("click", function (e) {
 <script src="./theme.js"></script>
 <script src="./admin-plus.js"></script>
 </body>
-   </html>
+  </html>
