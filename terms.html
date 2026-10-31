@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of use | SafeBuy NG</title>
+<meta name="description" content="Terms of use for SafeBuy NG.">
+<meta name="theme-color" content="#087f5b">
+<style>
+:root{--green:#087f5b;--green-dark:#066548;--green-light:#e7f7ef;--ink:#172b24;--muted:#718078;--line:#e6ece8;--bg:#f7f9f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.7}
+.wrap{width:min(760px,100% - 32px);margin:0 auto;padding:18px 0 60px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-weight:800;font-size:20px}
+.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--green);color:#fff;font-size:20px}
+.back{color:var(--green-dark);font-weight:700;text-decoration:none}
+article{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px}
+h1{margin:0 0 4px;font-size:26px;line-height:1.2}
+h2{margin:24px 0 6px;font-size:18px}
+p{margin:8px 0}
+.muted{color:var(--muted);font-size:13px}
+.contact{margin-top:22px;padding:14px;border-radius:14px;background:var(--green-light)}
+.contact a{color:var(--green-dark);font-weight:700}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><a class="brand" href="./"><span class="mark">S</span>SafeBuy NG</a><a class="back" href="./">← Back to the shop</a></div>
+  <article>
+    <h1>Terms of use</h1>
+    <p class="muted">Last updated: 30 October 2026</p>
+    <div id="body"></div>
+    <div class="contact" id="contact" hidden><strong>Questions?</strong> <span id="contact-links"></span></div>
+  </article>
+</main>
+<script src="./supabase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var FIELD = "terms_text";
+  var DEFAULT = "These terms apply when you use SafeBuy NG as a buyer, seller or delivery partner. By using SafeBuy NG you agree to them.\n\n# What SafeBuy NG is\nSafeBuy NG is a marketplace that connects buyers, sellers and delivery partners. Sellers are independent businesses or individuals. Unless we clearly say otherwise on an order, the sale is between the buyer and the seller.\n\n# Buyers\nGive correct contact and delivery details. Meet in a public place and inspect items before you pay. Prefer shops with the Verified label. Do not give your delivery code to a rider until you have received and checked your item.\nDelivery fees shown at checkout are paid to SafeBuy NG. Delivery is available only in the areas we switch on.\n\n# Sellers\nYou must be able to legally sell what you list. Do not list illegal, counterfeit, stolen or prohibited items. Descriptions, prices and photos must be accurate. Keep your stock and pickup address up to date. We may suspend or remove shops and listings that break these rules or put buyers at risk.\nVerified status is given by SafeBuy NG after our checks and may be removed.\n\n# Delivery partners\nYou must give true information and documents and be allowed to work in Nigeria. You must keep to the law and drive or ride safely. Collect the item using the seller's pickup code and complete the delivery using the buyer's delivery code. Payouts are made for completed deliveries. We may suspend partners who break these rules or receive serious complaints.\n\n# Payments and refunds\nDelivery fees and payouts are processed through our payment provider. If something goes wrong with an order or delivery, contact us as soon as possible using the details below, and we will work with the buyer, seller and delivery partner to resolve it.\n\n# Fair use\nDo not misuse the platform, attempt to break it, harass others or use it to defraud anyone. We may suspend or close accounts that do.\n\n# Our responsibility\nWe work to keep SafeBuy NG running and safe, but we cannot guarantee it will always be available or error-free. To the extent allowed by law, we are not responsible for losses that come from a dispute between a buyer and seller or from items we do not sell ourselves.\n\n# Changes and contact\nWe may update these terms. The date at the top shows the latest version. If you have questions, contact us using the details below.\n\n# Governing law\nThese terms are governed by the laws of the Federal Republic of Nigeria.";
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function draw(text) {
+    document.getElementById("body").innerHTML = String(text).split(/\n\s*\n/).map(function (b) {
+      b = b.trim(); if (!b) return "";
+      if (b.indexOf("# ") === 0) return "<h2>" + esc(b.slice(2)) + "</h2>";
+      return "<p>" + esc(b).replace(/\n/g, "<br>") + "</p>";
+    }).join("");
+  }
+  function contact(v) {
+    var out = [], d = String((v && v.support_whatsapp) || "").replace(/\D/g, ""), em = String((v && v.support_email) || "").trim();
+    if (d.charAt(0) === "0") d = "234" + d.slice(1);
+    if (d) out.push('<a href="https://wa.me/' + d + '" target="_blank" rel="noopener">WhatsApp us</a>');
+    if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) out.push('<a href="mailto:' + esc(em) + '">' + esc(em) + "</a>");
+    if (out.length) { document.getElementById("contact-links").innerHTML = out.join(" · "); document.getElementById("contact").hidden = false; }
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem("safebuy-site-content-v1") || "null"); } catch (e) {}
+  draw((cached && cached[FIELD]) || DEFAULT); contact(cached);
+  var cfg = window.SAFEbuySupabaseConfig;
+  if (!cfg || !cfg.url || !cfg.publishableKey) return;
+  fetch(String(cfg.url).replace(/\/+$/, "") + "/rest/v1/site_content?key=eq.site&select=value", { headers: { apikey: cfg.publishableKey } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rows) {
+      if (!rows) return;
+      var v = (rows[0] && rows[0].value) || {};
+      try { localStorage.setItem("safebuy-site-content-v1", JSON.stringify(v)); } catch (e) {}
+      draw(v[FIELD] || DEFAULT); contact(v);
+    }).catch(function () {});
+})();
+</script>
+</body>
+</html>
