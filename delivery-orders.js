@@ -66,6 +66,79 @@
     return c.rpc("order_tracking", { p_order: id }).then(function (r) { return r.error ? null : r.data; }, function () { return null; });
   }
 
+  /* ---------- rider search animation (big radar) ---------- */
+  var st1 = document.createElement("style");
+  st1.textContent =
+    ".rdr{position:relative;height:310px;margin:12px 0;border-radius:24px;overflow:hidden;color:#fff;background:radial-gradient(circle at 50% 46%,#117a58 0,#07402f 62%,#04281e 100%);box-shadow:0 14px 34px rgba(4,40,30,.35),inset 0 0 0 1px rgba(255,255,255,.08);isolation:isolate}" +
+    ".rdr.sm{height:215px}" +
+    ".rdr-map{position:absolute;left:-40px;top:-40px;right:-40px;bottom:-40px;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:38px 38px,38px 38px,19px 19px;animation:rdr-pan 9s linear infinite}" +
+    ".rdr-sweep{position:absolute;left:50%;top:46%;width:420px;height:420px;margin:-210px 0 0 -210px;border-radius:50%;background:conic-gradient(from 0deg,rgba(130,255,200,0) 0deg,rgba(130,255,200,.55) 62deg,rgba(130,255,200,0) 64deg,rgba(130,255,200,0) 360deg);animation:rdr-spin 2.4s linear infinite}" +
+    ".rdr.sm .rdr-sweep{width:300px;height:300px;margin:-150px 0 0 -150px}" +
+    ".rdr-ring{position:absolute;left:50%;top:46%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid rgba(150,255,210,.9);opacity:0;animation:rdr-wave 3.3s ease-out infinite}" +
+    ".rdr-ring.r2{animation-delay:1.1s}.rdr-ring.r3{animation-delay:2.2s}" +
+    ".rdr-me{position:absolute;left:50%;top:46%;width:56px;height:56px;margin:-28px 0 0 -28px;display:grid;place-items:center;border-radius:50%;background:#fff;font-size:30px;box-shadow:0 0 0 6px rgba(255,255,255,.25),0 6px 18px rgba(0,0,0,.35);animation:rdr-bob 1.6s ease-in-out infinite;z-index:3}" +
+    ".rdr-orbit{position:absolute;left:50%;top:46%;width:0;height:0;animation:rdr-spin var(--d,9s) linear infinite;animation-delay:var(--dl,0s);z-index:2}" +
+    ".rdr-orbit i{position:absolute;left:0;top:0;display:block;font-style:normal;transform:translateX(var(--r,90px))}" +
+    ".rdr.sm .rdr-orbit i{transform:translateX(calc(var(--r,90px) * .62))}" +
+    ".rdr-orbit i b{display:grid;place-items:center;width:42px;height:42px;margin:-21px 0 0 -21px;border-radius:50%;background:rgba(255,255,255,.95);font-size:24px;box-shadow:0 4px 12px rgba(0,0,0,.35);animation:rdr-spin var(--d,9s) linear infinite reverse,rdr-ping 1.8s ease-in-out infinite;animation-delay:var(--dl,0s),var(--pl,0s)}" +
+    ".rdr-text{position:absolute;left:0;right:0;bottom:0;padding:34px 14px 14px;text-align:center;background:linear-gradient(rgba(4,40,30,0),rgba(4,40,30,.92));z-index:4}" +
+    ".rdr-msg{display:block;font-size:18px;line-height:1.25;font-weight:800;text-shadow:0 1px 6px rgba(0,0,0,.4)}.rdr-time{display:block;margin-top:3px;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}" +
+    "@keyframes rdr-spin{to{transform:rotate(360deg)}}" +
+    "@keyframes rdr-pan{to{transform:translate(38px,38px)}}" +
+    "@keyframes rdr-wave{0%{transform:scale(.6);opacity:.95}100%{transform:scale(9);opacity:0}}" +
+    "@keyframes rdr-bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.08)}}" +
+    "@keyframes rdr-ping{0%,100%{box-shadow:0 4px 12px rgba(0,0,0,.35),0 0 0 0 rgba(255,235,120,.0)}50%{box-shadow:0 4px 12px rgba(0,0,0,.35),0 0 0 9px rgba(255,235,120,.35)}}" +
+    "@media (prefers-reduced-motion:reduce){.rdr *{animation:none!important}.rdr-ring{opacity:.35;transform:scale(3)}.rdr-orbit{transform:rotate(var(--a0,0deg))}}";
+  document.head.appendChild(st1);
+
+  var RDR_MSG = ["Searching for riders near you…", "Checking who is closest to the seller…", "Sending your delivery request…", "Waiting for a rider to accept…"];
+  var RDR_RIDERS = [["70px", "6.5s", "0s", "0deg", "0s"], ["105px", "9s", "-2s", "70deg", ".4s"], ["135px", "11.5s", "-5s", "140deg", ".9s"],
+                    ["88px", "8s", "-3.5s", "210deg", "1.3s"], ["120px", "13s", "-8s", "280deg", ".2s"], ["55px", "5.5s", "-1s", "320deg", "1.1s"]];
+  function radar(orderId, small, sinceIso, stage) {
+    var t0 = sinceIso ? new Date(sinceIso).getTime() : Date.now();
+    if (!isFinite(t0)) t0 = Date.now();
+    return '<div class="rdr' + (small ? " sm" : "") + '" data-order="' + E(orderId) + '" data-t0="' + t0 + '" data-stage="' + (stage || "job") + '" role="status" aria-live="polite" aria-label="Searching for a rider">' +
+      '<div class="rdr-map"></div><div class="rdr-sweep"></div>' +
+      '<span class="rdr-ring"></span><span class="rdr-ring r2"></span><span class="rdr-ring r3"></span>' +
+      RDR_RIDERS.map(function (r) { return '<span class="rdr-orbit" style="--r:' + r[0] + ';--d:' + r[1] + ';--dl:' + r[2] + ';--a0:' + r[3] + ';--pl:' + r[4] + '"><i><b>🏍️</b></i></span>'; }).join("") +
+      '<span class="rdr-me">📍</span>' +
+      '<div class="rdr-text"><span class="rdr-msg">' + RDR_MSG[0] + '</span><span class="rdr-time">0:00</span></div></div>';
+  }
+  setInterval(function () {
+    var els = document.querySelectorAll(".rdr");
+    if (!els.length) return;
+    var now = Date.now();
+    [].forEach.call(els, function (el) {
+      var s = Math.max(0, Math.floor((now - (Number(el.dataset.t0) || now)) / 1000));
+      var tm = el.querySelector(".rdr-time"), mg = el.querySelector(".rdr-msg");
+      if (tm) tm.textContent = Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+      if (mg) mg.textContent = RDR_MSG[Math.floor(now / 3200) % RDR_MSG.length];
+    });
+  }, 1000);
+  /* While the radar is on screen, check every few seconds and switch to the rider card the moment a rider accepts. */
+  var rdrBusy = false;
+  setInterval(async function () {
+    if (rdrBusy || document.hidden) return;
+    var els = [].filter.call(document.querySelectorAll(".rdr"), function (e) { return e.offsetParent; });
+    if (!els.length) return;
+    rdrBusy = true;
+    try {
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i], t = await track(el.dataset.order);
+        if (!t) continue;
+        var done = el.dataset.stage === "fee" ? t.delivery_status === "dispatched" : (t.job_status && t.job_status !== "searching" && t.job_status !== "offered");
+        if (done) {
+          if (t.job_status === "assigned") {
+            if (typeof showToast === "function") showToast("🎉 A rider accepted your delivery!");
+            try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+          }
+          if (el.closest("#do-sbody")) loadSeller(); else showBuyer();
+          break;
+        }
+      }
+    } catch (e) {} finally { rdrBusy = false; }
+  }, 6000);
+
   /* ---------- modal ---------- */
   var back = document.createElement("div");
   back.className = "modal-backdrop";
@@ -168,9 +241,11 @@
           (ONLINE_PAYMENTS ? '<div class="seller-actions"><button class="button button-primary" type="button" data-dpay="' + E(o.id) + '">Pay ' + N(inf.fee_kobo) + ' now</button></div><p class="form-message do-paymsg"></p>' : "") +
           "<p class=\"muted\">" + (ONLINE_PAYMENTS ? "Your payment is confirmed automatically. Cannot pay online? " : "") + E(inf.instructions) + " Quote order #" + E(String(o.id).slice(0, 8)) + " when you pay.</p>";
       } else if (inf.delivery_status === "fee_paid") {
-        inner = '<p><span class="status-pill ok">Fee confirmed</span></p><p class="muted">' + (o.status === "paid" ? "We are finding a rider for you." : "We will find a rider as soon as the seller marks your order Paid.") + "</p>";
+        inner = '<p><span class="status-pill ok">Fee confirmed</span></p>' + (o.status === "paid" ? radar(o.id, true, null, "fee") : "") + '<p class="muted">' + (o.status === "paid" ? "We are finding a rider for you." : "We will find a rider as soon as the seller marks your order Paid.") + "</p>";
       } else if (inf.delivery_status === "dispatched") {
+        var searchEv = trk && trk.events ? trk.events.filter(function (ev) { return ev.kind === "searching"; }).pop() : null;
         inner = '<p><span class="status-pill' + (inf.job_status === "delivered" ? " ok" : inf.job_status === "unassigned" ? " bad" : "") + '">' + E(JOB_LABEL[inf.job_status] || inf.job_status) + "</span></p>" +
+          (inf.job_status === "searching" || inf.job_status === "offered" ? radar(o.id, false, searchEv && searchEv.at, "job") : "") +
           (inf.rider_name ? "<p>Rider: <strong>" + E(inf.rider_name) + "</strong>" + (inf.rider_vehicle ? " (" + E(inf.rider_vehicle) + ")" : "") + "</p>" : "") +
           (inf.delivery_code ? '<p class="modal-note">Your delivery code: <strong style="font-size:22px;letter-spacing:4px">' + E(inf.delivery_code) +
             "</strong><br>Give it to the rider only after you have received and checked your item.</p>" : "") +
@@ -300,6 +375,10 @@
       if (trk && trk.rider) {
         extra += '<div class="cx-box"><strong>Rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(trk.rider.vehicle) + ")" : "") + "</strong>" +
           contactRow(trk.rider.phone, "rider", "Hello, I am the seller for order #" + String(x.id).slice(0, 8) + " on SafeBuy NG.") + "</div>";
+      }
+      if (trk && (trk.job_status === "searching" || trk.job_status === "offered")) {
+        var sEv = trk.events ? trk.events.filter(function (ev) { return ev.kind === "searching"; }).pop() : null;
+        extra = radar(x.id, true, sEv && sEv.at, "job") + extra;
       }
       extra += timeline(trk && trk.events);
       var st = x.delivery_status, act = "";
