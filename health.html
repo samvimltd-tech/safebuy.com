@@ -27,8 +27,8 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
 <main class="wrap">
   <h1>SafeBuy NG Health Check</h1>
   <p class="muted">This page checks that every file and database function your site needs is in place. It only reads. It changes nothing.</p>
-  <div id="sum">Checking…</div>
-  <button id="again" type="button">Check again</button><button id="copy" class="o" type="button">Copy report</button>
+  <div id="sum">Checking… (about 15 seconds)</div>
+  <button id="again" type="button">Check again</button><button id="copy" class="o" type="button" disabled>Copy report (wait…)</button>
   <div id="out"></div>
 </main>
 <script src="./supabase-config.js"></script>
@@ -67,7 +67,7 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["./rider.webp", [], "Upload rider.webp to the main folder."],
     ["./seller/index.html", ["role-open"], "Upload seller/index.html (inside the seller folder)."],
     ["./seller/manifest.json", ["SafeBuy Seller"], "Upload seller/manifest.json."], ["./seller/sw.js", ["seller-v1"], "Upload seller/sw.js."],
-    ["./rider/index.html", ["role-open"], "Upload rider/index.html (inside the rider folder)."],
+    ["./rider/index.html", ["rd-go", "delivery.js"], "Upload the new rider/index.html (inside the rider folder). It is the delivery-only Rider app."],
     ["./rider/manifest.json", ["SafeBuy Rider"], "Upload rider/manifest.json."], ["./rider/sw.js", ["rider-v1"], "Upload rider/sw.js."]
   ];
   function checkFiles() {
@@ -107,8 +107,11 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
   }
   function api(path, opt) {
     opt = opt || {}; opt.headers = Object.assign({ apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" }, opt.headers || {});
-    return fetch(base + path, opt).then(function (r) { return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) {} return { status: r.status, json: j, text: t }; }); })
-      .catch(function () { return { status: 0, json: null, text: "" }; });
+    var ctl = typeof AbortController === "function" ? new AbortController() : null;
+    var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+    if (ctl) opt.signal = ctl.signal;
+    return fetch(base + path, opt).then(function (r) { clearTimeout(tm); return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) {} return { status: r.status, json: j, text: t }; }); })
+      .catch(function () { clearTimeout(tm); return { status: 0, json: null, text: "" }; });
   }
   var TABLES = [
     ["seller_products_public", "Products shown to shoppers", ""], ["site_content", "Admin-edited site text", "Run site_content.sql in Supabase."],
@@ -128,6 +131,10 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     section("3. Database tables");
     if (!base || !key) { row("bad", "supabase-config.js", "Supabase settings did not load", "Upload supabase-config.js to the main folder."); return Promise.resolve(); }
     return Promise.all(TABLES.map(function (t) { return api("/rest/v1/" + t[0] + "?select=*&limit=1"); })).then(function (rs) {
+      if (rs.every(function (r) { return r.status === 0 || r.status >= 520; })) {
+        row("bad", "Supabase database", "did not answer at all. This is why cards, buttons and admin can fail together.", "Open supabase.com, open your project. If it says Paused, tap Restore project and wait 3 minutes. Then tap Check again.");
+        return null;
+      }
       rs.forEach(function (r, i) {
         var t = TABLES[i], code = r.json && r.json.code;
         if (r.status === 200) row("ok", t[0], t[1]);
@@ -154,13 +161,86 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
       rs.forEach(function (r, i) { if (r.status === 404) row("warn", names[i], "not deployed yet. Fine until you set up Paystack", "Follow SETUP.md when you are ready."); else if (r.status === 0) row("warn", names[i], "could not reach it", ""); else row("ok", names[i], "deployed"); });
     });
   }
+
+  /* ---- 6. Open the real pages, record script errors, and tap the main buttons ---- */
+  var PAGES = [
+    ["index.html", "Shop", true],
+    ["seller/index.html", "Seller app", true],
+    ["rider/index.html", "Rider app", false],
+    ["admin.html", "Admin", false]
+  ];
+  var TAPS = [
+    ["#sc-paths .path-sell", "Sell with us card"],
+    ["#sc-paths .path-ride", "Deliver with us card"],
+    [".quick-link[data-action=delivery]", "Delivery quick link"],
+    [".quick-link[data-feature=orders]", "My orders quick link"],
+    [".quick-link[data-feature=messages]", "Messages quick link"],
+    [".mobile-nav [data-action=sell]", "Sell (bottom bar)"],
+    [".mobile-nav [data-action=cart]", "Cart (bottom bar)"],
+    ["#mobile-menu-btn", "Menu (bottom bar)"],
+    [".signin-btn", "Sign in button"],
+    [".footer-col [data-action=safety]", "Safety tips (footer)"],
+    [".category-button[data-category=Fashion]", "Fashion category"]
+  ];
+  function dirOf(p) { var u = new URL(p, location.href); return u.href.replace(/[^\/]*$/, ""); }
+  function probe(page) {
+    return get(page[0] + "?hc=" + Date.now()).then(function (r) {
+      if (!r.ok) return { page: page, missing: true };
+      var guard = "<base href=\"" + dirOf(page[0]) + "\"><script>window.__errs=[];" +
+        "window.addEventListener('error',function(e){var t=e.target;if(t&&t!==window&&(t.src||t.href)){__errs.push('failed to load '+(t.src||t.href).split('/').slice(-2).join('/'));}else{__errs.push(String(e.filename||'').split('/').pop()+':'+e.lineno+' '+e.message);}},true);" +
+        "window.addEventListener('unhandledrejection',function(e){__errs.push('promise: '+((e.reason&&e.reason.message)||e.reason));});<\/script>";
+      var html = r.text.replace(/<head[^>]*>/i, function (m) { return m + guard; });
+      var f = document.createElement("iframe");
+      f.style.cssText = "position:fixed;left:-9999px;top:0;width:420px;height:800px;border:0";
+      f.srcdoc = html; document.body.appendChild(f);
+      return new Promise(function (res) { setTimeout(res, 7000); }).then(function () {
+        var w = f.contentWindow, d = f.contentDocument, res = { page: page, loadErrors: [], taps: [] };
+        try { res.loadErrors = (w.__errs || []).slice(); } catch (e) { res.loadErrors = ["could not inspect: " + e.message]; }
+        if (!page[2]) { f.remove(); return res; }
+        function snap() { return [d.querySelectorAll(".open,.show,[open]").length, d.body.className, d.body.children.length, (d.body.innerText || "").length].join("|"); }
+        var chain = Promise.resolve();
+        TAPS.forEach(function (t) {
+          chain = chain.then(function () {
+            var el = d.querySelector(t[0]);
+            if (!el) { res.taps.push({ name: t[1], state: "missing" }); return; }
+            var before = snap(), n = w.__errs.length;
+            try { el.click(); } catch (e) { w.__errs.push("click: " + e.message); }
+            return new Promise(function (x) { setTimeout(x, 700); }).then(function () {
+              var err = w.__errs.slice(n), changed = snap() !== before;
+              res.taps.push({ name: t[1], state: err.length ? "error" : changed ? "ok" : "nothing", err: err });
+              d.querySelectorAll(".modal-backdrop.open,.drawer.open,.drawer-backdrop.open").forEach(function (o) { o.classList.remove("open"); });
+            });
+          });
+        });
+        return chain.then(function () { try { res.allErrors = w.__errs.slice(); } catch (e) {} f.remove(); return res; });
+      });
+    });
+  }
+  function checkPages() {
+    section("6. Real page test (opens each page and taps the main buttons)");
+    return Promise.all(PAGES.map(probe)).then(function (list) {
+      list.forEach(function (r) {
+        var name = r.page[1];
+        if (r.missing) { row("bad", name, "page file not found", "Upload " + r.page[0] + "."); return; }
+        var le = r.loadErrors.filter(function (e) { return !/serviceworker|service worker/i.test(e); });
+        if (le.length) row("bad", name + ": errors while loading", le.slice(0, 5).join("  |  "), "Send me this report. Each error names the file and line.");
+        else row("ok", name + ": opens with no script errors", "");
+        (r.taps || []).forEach(function (t) {
+          if (t.state === "ok") row("ok", name + ": " + t.name, "responds");
+          else if (t.state === "missing") row("warn", name + ": " + t.name, "button not found on this page", "");
+          else if (t.state === "error") row("bad", name + ": " + t.name, "error when tapped: " + t.err.slice(0, 3).join("  |  "), "Send me this report.");
+          else row("warn", name + ": " + t.name, "tapped, but nothing happened", "Tell me if this button should do something.");
+        });
+      });
+    });
+  }
   function run() {
     out.innerHTML = ""; report = ["SafeBuy NG health check " + new Date().toISOString() + " " + location.href]; counts = { ok: 0, bad: 0, warn: 0 };
-    sum.textContent = "Checking…";
-    checkFiles().then(checkDb).then(checkFunctions).then(function () {
+    sum.textContent = "Checking…"; var cb = document.getElementById("copy"); cb.disabled = true; cb.textContent = "Copy report (wait…)";
+    checkFiles().then(checkDb).then(checkFunctions).then(checkPages).then(function () {
       sum.textContent = counts.bad ? "❌ " + counts.bad + " problem" + (counts.bad === 1 ? "" : "s") + " found. " + counts.ok + " checks passed." : "✅ Everything checked is in place. " + counts.ok + " checks passed.";
       report.unshift(sum.textContent);
-    }).catch(function (e) { sum.textContent = "The check itself failed: " + e.message; });
+    }).catch(function (e) { sum.textContent = "The check itself failed: " + e.message; }).then(function () { var cb = document.getElementById("copy"); cb.disabled = false; cb.textContent = "Copy report"; });
   }
   document.getElementById("again").addEventListener("click", run);
   document.getElementById("copy").addEventListener("click", function () {
