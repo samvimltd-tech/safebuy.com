@@ -56,7 +56,9 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
   }
   // [file, strings that must be inside it (proves it is the latest version), what to do]
   var FILES = [
-    ["./index.html", ["sc-notice-text", "about.html", "site_content", "sw-bar"], "Upload the latest index.html to the main folder."],
+    ["./index.html", ["sc-notice-text", "about.html", "site_content", "sw-bar", "data-door"], "Upload the latest index.html to the main folder."],
+    ["./sw.js", ["safebuy-v4", "no-cache"], "Upload the new sw.js to the main folder (replaces the old one)."],
+    ["./pwa-install.js", ["controllerchange"], "Upload the new pwa-install.js to the main folder."],
     ["./delivery.js", ["dp-pcode", "vh-picker"], "Upload the latest rider file, named delivery.js (replace the old one)."],
     ["./delivery-orders.js", ["rate_delivery", "order_tracking"], "Upload the latest delivery-orders.js."],
     ["./orders.js", [], "orders.js is missing. It is part of your original site."],
@@ -65,9 +67,9 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["./privacy.html", [], "Upload privacy.html."], ["./terms.html", [], "Upload terms.html."],
     ["./about.html", [], "Upload about.html."], ["./refund.html", [], "Upload refund.html."],
     ["./rider.webp", [], "Upload rider.webp to the main folder."],
-    ["./seller/index.html", ["role-open"], "Upload seller/index.html (inside the seller folder)."],
+    ["./seller/index.html", ["role-open", "role-gate", "Seller sign in"], "Upload seller/index.html (inside the seller folder)."],
     ["./seller/manifest.json", ["SafeBuy Seller"], "Upload seller/manifest.json."], ["./seller/sw.js", ["seller-v1"], "Upload seller/sw.js."],
-    ["./rider/index.html", ["rd-go", "delivery.js"], "Upload the new rider/index.html (inside the rider folder). It is the delivery-only Rider app."],
+    ["./rider/index.html", ["rd-go", "delivery.js", "showInstall(false)"], "Upload the new rider/index.html (inside the rider folder). It is the delivery-only Rider app."],
     ["./rider/manifest.json", ["SafeBuy Rider"], "Upload rider/manifest.json."], ["./rider/sw.js", ["rider-v1"], "Upload rider/sw.js."]
   ];
   function checkFiles() {
@@ -171,8 +173,6 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["admin.html", "Admin", false]
   ];
   var TAPS = [
-    ["#sc-paths .path-sell", "Sell with us card"],
-    ["#sc-paths .path-ride", "Deliver with us card"],
     [".quick-link[data-action=delivery]", "Delivery quick link"],
     [".quick-link[data-feature=orders]", "My orders quick link"],
     [".quick-link[data-feature=messages]", "Messages quick link"],
