@@ -399,6 +399,9 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 })();
 </script>
 <script src="./pwa-install.js"></script>
+<!--WORDS-->
+<script>window.__sbWords={signinTitle:"Buyer sign in",signupTitle:"Create your buyer account",signupBtn:"Create buyer account",toggleSignup:"New buyer? Create an account",menuSignup:"Create buyer account"};</script>
+<!--/WORDS-->
 </head>
 <body>
 <div class="announcement" id="sc-ann">Made for Nigerian shoppers and sellers · NGN prices</div>
@@ -561,8 +564,8 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
-      <button class="path path-sell" type="button" data-action="sell"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></button>
-      <button class="path path-ride" type="button" data-action="deliver"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></button>
+      <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></a>
+      <a class="path path-ride" href="./rider/" data-door="rider" style="text-decoration:none;color:inherit"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></a>
     </div>
     <div class="prototype-notice" id="sc-notice">
       <strong>Stay safe:</strong>
@@ -1671,6 +1674,7 @@ updateCartCount();
   var pw2Input = document.getElementById("account-pw2");
   var pwLabel = document.getElementById("account-pw-label");
 
+  function W() { return window.__sbWords || {}; }
   function setMode(next) {
     mode = next;
     var signup = mode === "signup", forgot = mode === "forgot", newpass = mode === "newpass";
@@ -1685,12 +1689,12 @@ updateCartCount();
     pw2Input.required = newpass;
     pwLabel.textContent = newpass ? "New password" : "Password";
     passwordInput.autocomplete = (signup || newpass) ? "new-password" : "current-password";
-    submit.textContent = signup ? "Create account" : forgot ? "Send reset link" : newpass ? "Save new password" : "Sign in";
-    toggle.textContent = signup ? "Already registered? Sign in" : forgot ? "Back to sign in" : "Need an account? Sign up";
+    submit.textContent = signup ? (W().signupBtn || "Create account") : forgot ? "Send reset link" : newpass ? "Save new password" : "Sign in";
+    toggle.textContent = signup ? "Already registered? Sign in" : forgot ? "Back to sign in" : (W().toggleSignup || "Need an account? Sign up");
     toggle.hidden = newpass;
     reset.hidden = forgot || newpass || signup;
     document.getElementById("account-title").textContent =
-      signup ? "Create your account" : forgot ? "Reset your password" : newpass ? "Set a new password" : "Welcome to SafeBuy NG";
+      signup ? (W().signupTitle || "Create your account") : forgot ? "Reset your password" : newpass ? "Set a new password" : (W().signinTitle || "Welcome to SafeBuy NG");
     say(forgot ? "Enter your email and we will send you a link to reset your password." : newpass ? "Choose a new password. Use at least 8 characters." : "");
   }
 
@@ -1725,10 +1729,10 @@ updateCartCount();
       accLabel.textContent = "Sign in";
       accMenu.innerHTML =
         '<button type="button" data-auth="signin"><span class="ico">🔑</span>Sign in</button>' +
-        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create buyer or seller account</button>';
+        '<button type="button" data-auth="signup"><span class="ico">✨</span>' + (W().menuSignup || "Create buyer or seller account") + '</button>';
       drawerAcc.innerHTML =
         '<button type="button" data-auth="signin">🔑 Sign in</button>' +
-        '<button type="button" data-auth="signup">✨ Create buyer or seller account</button>';
+        '<button type="button" data-auth="signup">✨ ' + (W().menuSignup || "Create buyer or seller account") + '</button>';
     }
     if (window.__sbSync) window.__sbSync();
   }
@@ -2279,7 +2283,7 @@ document.addEventListener("click", function (e) {
 /* Safety net: if any invisible decorative layer ends up on top of the main cards, let taps pass through it. */
 (function () {
   "use strict";
-  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],button,a,input,select,textarea";
+  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],#role-install-card,#role-install,#role-open,button,a,input,select,textarea";
   function fix() {
     try {
       var cards = document.querySelectorAll(".quick-link,.path,.product-card,.category-button");
@@ -2293,6 +2297,7 @@ document.addEventListener("click", function (e) {
           if (el === cards[i] || cards[i].contains(el)) break;
           if (el === document.body || el === document.documentElement) break;
           if (el.matches(KEEP) || el.closest(".modal-backdrop.open,.drawer.open,.mobile-nav,header")) continue;
+          if (el.querySelector("button,a,input,select,textarea")) continue;
           var p = getComputedStyle(el).position;
           if (p === "fixed" || p === "absolute" || p === "sticky") el.style.pointerEvents = "none";
         }
