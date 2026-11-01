@@ -6,7 +6,24 @@
   if (!c) return;
 
   var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
-  var VEHICLES = [["bike","Motorbike"],["tricycle","Tricycle (keke)"],["car","Car"],["van","Van"],["bicycle","Bicycle"],["foot","On foot"]];
+  // [code, name, emoji, how it moves, short note]
+  var VEHICLES = [
+    ["foot", "Walking / On foot", "🚶", "walk", "Short trips, small items"],
+    ["bicycle", "Bicycle", "🚲", "pedal", "Light parcels, short distances"],
+    ["bike", "Motorcycle / Bike", "🏍️", "fast", "Fast. Best for most parcels"],
+    ["tricycle", "Keke (Tricycle)", "🛺", "fast", "Bulkier items, city streets"],
+    ["car", "Car", "🚗", "glide", "Parcels and boxes"],
+    ["taxi", "Taxi", "🚕", "glide", "Parcels and boxes"],
+    ["suv", "SUV", "🚙", "glide", "Larger boxes and luggage"],
+    ["van", "Van / Minibus", "🚐", "heavy", "Many or bulky parcels"],
+    ["pickup", "Pickup Truck", "🛻", "heavy", "Heavy and bulky loads"],
+    ["small_truck", "Delivery Van / Small Truck", "🚚", "heavy", "Appliances and furniture"],
+    ["truck", "Truck / Lorry", "🚛", "heavy", "Very large loads"]
+  ];
+  var VEH_GROUPS = [["On foot and two wheels", ["foot", "bicycle", "bike"]], ["Three and four wheels", ["tricycle", "car", "taxi", "suv"]], ["Vans and trucks", ["van", "pickup", "small_truck", "truck"]]];
+  // The older database function only knows these six, so registration sends the closest one, then the exact type is saved separately.
+  var VEH_LEGACY = { foot: "foot", bicycle: "bicycle", bike: "bike", tricycle: "tricycle", car: "car", taxi: "car", suv: "car", van: "van", pickup: "van", small_truck: "van", truck: "van" };
+  function vehOf(code) { return VEHICLES.filter(function (v) { return v[0] === code; })[0] || VEHICLES[2]; }
 
   // Set to true after Paystack and the backend functions are set up (see SETUP.md).
   var AUTO_PAYOUTS = false;
@@ -57,6 +74,69 @@
     ".dp-seg label{margin:0;padding:12px;border:1px solid var(--line);border-radius:12px;text-align:center;cursor:pointer}" +
     ".dp-seg input{display:none}.dp-seg input:checked+span{color:var(--green-dark);font-weight:800}";
   document.head.appendChild(style);
+
+  var vstyle = document.createElement("style");
+  vstyle.textContent =
+    ".vh-prev{position:relative;height:212px;margin:8px 0 14px;border-radius:22px;overflow:hidden;background:linear-gradient(#9fdcff 0,#d9f2ff 52%,#6f7f7a 52%,#55645f 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}" +
+    ".vh-sun{position:absolute;right:16px;top:12px;font-size:30px;animation:vh-spin 24s linear infinite}" +
+    ".vh-cloud{position:absolute;top:14px;left:-60px;font-size:34px;opacity:.9;animation:vh-cloud 16s linear infinite}.vh-cloud.c2{top:44px;font-size:24px;animation-duration:23s;animation-delay:-9s}" +
+    ".vh-road{position:absolute;left:0;right:0;bottom:58px;height:6px;background:repeating-linear-gradient(90deg,#f7f7f7 0 28px,transparent 28px 56px);animation:vh-road var(--rs,.6s) linear infinite;opacity:.9}" +
+    ".vh-ride{position:absolute;left:50%;bottom:66px;width:110px;margin-left:-55px;text-align:center;font-size:76px;line-height:1;filter:drop-shadow(0 8px 6px rgba(0,0,0,.28))}" +
+    ".vh-ride>span{display:inline-block}" +
+    ".vh-sl{position:absolute;bottom:92px;right:calc(50% - 130px);width:70px;height:46px;opacity:.7}.vh-sl i{position:absolute;right:0;height:3px;border-radius:3px;background:#fff;animation:vh-lines .5s linear infinite}.vh-sl i:nth-child(1){top:4px;width:60px}.vh-sl i:nth-child(2){top:20px;width:44px;animation-delay:-.2s}.vh-sl i:nth-child(3){top:36px;width:56px;animation-delay:-.35s}" +
+    ".vh-name{position:absolute;left:0;right:0;bottom:0;padding:6px 10px;background:rgba(10,40,30,.78);color:#fff;text-align:center;font-weight:800;font-size:14px}.vh-name small{display:block;font-weight:500;font-size:12px;opacity:.9}" +
+    ".vh-pop{animation:vh-pop .5s cubic-bezier(.2,1.6,.4,1)}" +
+    ".vh-grp{margin:14px 0 6px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}" +
+    ".vh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
+    ".vh-t{position:relative;display:block;padding:8px 6px 12px;border:2px solid var(--line);border-radius:16px;background:#fff;text-align:center;overflow:hidden;cursor:pointer;font:inherit;color:var(--ink);transition:transform .2s,border-color .2s,box-shadow .2s}" +
+    ".vh-t:active{transform:scale(.96)}.vh-t .vh-e{display:block;height:56px;font-size:42px;line-height:56px}.vh-t .vh-e span{display:inline-block}" +
+    ".vh-t b{display:block;font-size:13px;line-height:1.2;min-height:32px}.vh-t small{display:block;margin-top:2px;font-size:11px;color:var(--muted);line-height:1.2}" +
+    ".vh-t .vh-r{position:absolute;left:0;right:0;bottom:0;height:4px;background:repeating-linear-gradient(90deg,#cfd9d4 0 12px,transparent 12px 24px);animation:vh-road var(--rs,.8s) linear infinite}" +
+    ".vh-t.on{border-color:var(--green);background:var(--green-light);box-shadow:0 0 0 4px rgba(8,127,91,.18),0 10px 22px rgba(8,127,91,.18);transform:scale(1.04)}.vh-t.on::after{content:'✓';position:absolute;right:8px;top:6px;width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;line-height:22px;font-weight:800}" +
+    ".m-walk>span{animation:vh-walk .7s ease-in-out infinite}.m-pedal>span{animation:vh-pedal .9s ease-in-out infinite}.m-fast>span{animation:vh-fast .55s ease-in-out infinite}.m-glide>span{animation:vh-glide 1.1s ease-in-out infinite}.m-heavy>span{animation:vh-heavy .42s ease-in-out infinite}" +
+    ".vh-t.on .vh-e{transform:scale(1.18)}" +
+    "@keyframes vh-road{to{background-position-x:56px}}@keyframes vh-lines{0%{transform:translateX(30px);opacity:0}30%{opacity:1}100%{transform:translateX(-30px);opacity:0}}" +
+    "@keyframes vh-cloud{to{transform:translateX(560px)}}@keyframes vh-spin{to{transform:rotate(360deg)}}@keyframes vh-pop{0%{transform:scale(.4) translateX(60px);opacity:0}100%{transform:none;opacity:1}}" +
+    "@keyframes vh-walk{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-8px) rotate(5deg)}}" +
+    "@keyframes vh-pedal{0%,100%{transform:translateX(-4px) rotate(-3deg)}50%{transform:translateX(4px) rotate(3deg) translateY(-3px)}}" +
+    "@keyframes vh-fast{0%,100%{transform:translateX(5px) translateY(0)}50%{transform:translateX(-5px) translateY(-4px)}}" +
+    "@keyframes vh-glide{0%,100%{transform:translateX(-6px)}50%{transform:translateX(6px) translateY(-2px)}}" +
+    "@keyframes vh-heavy{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}" +
+    "@media (prefers-reduced-motion:reduce){.vh-prev *,.vh-t *{animation:none!important}.vh-t .vh-r{animation:none}}";
+  document.head.appendChild(vstyle);
+
+  var VEH_SPEED = { walk: "1.1s", pedal: ".8s", fast: ".35s", glide: ".5s", heavy: ".75s" };
+  function vehTile(v, on) {
+    return '<button type="button" class="vh-t' + (on ? " on" : "") + '" data-veh="' + v[0] + '" aria-pressed="' + (on ? "true" : "false") + '" style="--rs:' + VEH_SPEED[v[3]] + '">' +
+      '<span class="vh-e m-' + v[3] + '"><span>' + v[2] + '</span></span><b>' + esc(v[1]) + '</b><small>' + esc(v[4]) + '</small><i class="vh-r"></i></button>';
+  }
+  function vehPreview(v) {
+    return '<div class="vh-sun">☀️</div><span class="vh-cloud">☁️</span><span class="vh-cloud c2">☁️</span>' +
+      '<div class="vh-road" style="--rs:' + VEH_SPEED[v[3]] + '"></div><div class="vh-sl"><i></i><i></i><i></i></div>' +
+      '<div class="vh-ride m-' + v[3] + ' vh-pop"><span>' + v[2] + '</span></div>' +
+      '<div class="vh-name">' + esc(v[1]) + '<small>' + esc(v[4]) + '</small></div>';
+  }
+  function vehPicker(selected) {
+    var cur = vehOf(selected || "bike");
+    return '<div class="vh-picker" data-sel="' + cur[0] + '"><div class="vh-prev">' + vehPreview(cur) + '</div>' +
+      '<input type="hidden" id="dp-veh" value="' + cur[0] + '">' +
+      VEH_GROUPS.map(function (g) {
+        return '<div class="vh-grp">' + esc(g[0]) + '</div><div class="vh-grid">' +
+          g[1].map(function (code) { return vehTile(vehOf(code), code === cur[0]); }).join("") + "</div>";
+      }).join("") + "</div>";
+  }
+  // tapping a tile: select it and update the big preview
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest(".vh-t[data-veh]");
+    if (!t) return;
+    var pk = t.closest(".vh-picker"); if (!pk) return;
+    var v = vehOf(t.dataset.veh);
+    [].forEach.call(pk.querySelectorAll(".vh-t"), function (x) { var on = x === t; x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false"); });
+    pk.querySelector("#dp-veh").value = v[0];
+    pk.dataset.sel = v[0];
+    var pv = pk.querySelector(".vh-prev"); pv.innerHTML = vehPreview(v);
+    if (navigator.vibrate) try { navigator.vibrate(15); } catch (x) {}
+  });
 
   var wrap = document.createElement("div");
   wrap.className = "modal-backdrop";
@@ -227,8 +307,7 @@
       '<label for="dp-phone">Phone / WhatsApp</label><input id="dp-phone" type="tel" required placeholder="08012345678">' +
       '<label for="dp-state">Home state</label><select id="dp-state">' +
       STATES.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("") + "</select>" +
-      '<div id="dp-ind"><label for="dp-veh">Vehicle</label><select id="dp-veh">' +
-      VEHICLES.map(function (v) { return '<option value="' + v[0] + '">' + v[1] + "</option>"; }).join("") + "</select>" +
+      '<div id="dp-ind"><label>Choose your vehicle</label>' + vehPicker("bike") +
       '<label for="dp-code">Company code (optional, if you ride for a company)</label><input id="dp-code" maxlength="12" style="text-transform:uppercase">' +
       '<label>Where will you deliver?</label>' + areaBoxes([]) + "</div>" +
       '<label class="check"><input id="dp-agree" type="checkbox" required> I confirm my details are true and I agree to be verified (ID check) before taking jobs.</label>' +
@@ -259,10 +338,11 @@
           p_company_reg: type === "company" ? body.querySelector("#dp-reg").value : null,
           p_phone: phone,
           p_state: body.querySelector("#dp-state").value,
-          p_vehicle: type === "individual" ? body.querySelector("#dp-veh").value : null,
+          p_vehicle: type === "individual" ? (VEH_LEGACY[body.querySelector("#dp-veh").value] || "bike") : null,
           p_company_code: type === "individual" ? body.querySelector("#dp-code").value : null,
           p_areas: type === "individual" ? readAreas() : []
         });
+        if (type === "individual") { try { await rpc("partner_set_vehicle", { p_type: body.querySelector("#dp-veh").value }); } catch (x) {} }
         toast("Application received. We will review it.");
         await start();
       } catch (err) {
@@ -303,6 +383,8 @@
         : '<label class="check"><input type="checkbox" id="dp-consent"' + (p.location_consent ? " checked" : "") + '> I agree to share my live location while I am online.</label>' +
           '<button class="button button-primary" type="button" id="dp-on">' + (p.is_online ? "Resume sharing location" : "Go online") + "</button>") +
       "</div>" +
+      '<h3>My vehicle</h3><div class="dp-card" id="dp-vehcard">' + vehPicker(p.vehicle_type) +
+      '<button class="button button-light" type="button" id="dp-save-veh">Save vehicle</button></div>' +
       "<h3>Service areas</h3>" + areaBoxes(S.areas) +
       '<button class="button button-light" type="button" id="dp-save-areas">Save areas</button>' +
       "<h3>Earnings</h3>" + payoutsHtml() + bankHtml() +
@@ -311,6 +393,13 @@
     wireBank();
     lastOfferId = null; lastJobKey = "";
     drawOffer(); drawJob();
+
+    body.querySelector("#dp-save-veh").addEventListener("click", async function () {
+      var code = body.querySelector("#dp-veh").value, b = this; b.disabled = true;
+      try { await rpc("partner_set_vehicle", { p_type: code }); S.partner.vehicle_type = code; msg("Vehicle saved: " + vehOf(code)[1] + "."); }
+      catch (err) { msg("Could not save your vehicle. Ask SafeBuy NG to switch on the new vehicle list.", true); }
+      b.disabled = false;
+    });
 
     var on = body.querySelector("#dp-on"), off = body.querySelector("#dp-off");
     if (on) on.addEventListener("click", goOnline);
