@@ -14,6 +14,8 @@
 
   function E(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
   function N(k) { return "₦" + (Number(k) / 100).toLocaleString("en-NG"); }
+  var VEH_NAMES = { foot: "🚶 Walking / On foot", bicycle: "🚲 Bicycle", bike: "🏍️ Motorcycle / Bike", tricycle: "🛺 Keke (Tricycle)", car: "🚗 Car", taxi: "🚕 Taxi", suv: "🚙 SUV", van: "🚐 Van / Minibus", pickup: "🛻 Pickup Truck", small_truck: "🚚 Delivery Van / Small Truck", truck: "🚛 Truck / Lorry" };
+  function VEH(v) { return VEH_NAMES[v] || v || ""; }
   function T(m) { if (window.showToast) window.showToast(m); }
   function user() { return c.auth.getUser().then(function (r) { return r.data && r.data.user; }); }
   async function rpc(n, a) { var r = await c.rpc(n, a || {}); if (r.error) throw r.error; return r.data; }
@@ -246,10 +248,10 @@
         var searchEv = trk && trk.events ? trk.events.filter(function (ev) { return ev.kind === "searching"; }).pop() : null;
         inner = '<p><span class="status-pill' + (inf.job_status === "delivered" ? " ok" : inf.job_status === "unassigned" ? " bad" : "") + '">' + E(JOB_LABEL[inf.job_status] || inf.job_status) + "</span></p>" +
           (inf.job_status === "searching" || inf.job_status === "offered" ? radar(o.id, false, searchEv && searchEv.at, "job") : "") +
-          (inf.rider_name ? "<p>Rider: <strong>" + E(inf.rider_name) + "</strong>" + (inf.rider_vehicle ? " (" + E(inf.rider_vehicle) + ")" : "") + "</p>" : "") +
+          (inf.rider_name ? "<p>Rider: <strong>" + E(inf.rider_name) + "</strong>" + (inf.rider_vehicle ? " (" + E(VEH(inf.rider_vehicle)) + ")" : "") + "</p>" : "") +
           (inf.delivery_code ? '<p class="modal-note">Your delivery code: <strong style="font-size:22px;letter-spacing:4px">' + E(inf.delivery_code) +
             "</strong><br>Give it to the rider only after you have received and checked your item.</p>" : "") +
-          (trk && trk.rider ? '<div class="cx-box"><strong>Your rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(trk.rider.vehicle) + ")" : "") +
+          (trk && trk.rider ? '<div class="cx-box"><strong>Your rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(VEH(trk.rider.vehicle)) + ")" : "") +
             (trk.rider.rating_count ? " · ★ " + E(trk.rider.rating_avg) + " (" + E(trk.rider.rating_count) + ")" : "") + "</strong>" +
             contactRow(trk.rider.phone, "rider", "Hello, I am the buyer of order #" + String(o.id).slice(0, 8) + " on SafeBuy NG.") + "</div>" : "");
       }
@@ -373,7 +375,7 @@
           "<div class=\"muted\">Give this code to the rider when they arrive. They need it to collect the item.</div></div>";
       }
       if (trk && trk.rider) {
-        extra += '<div class="cx-box"><strong>Rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(trk.rider.vehicle) + ")" : "") + "</strong>" +
+        extra += '<div class="cx-box"><strong>Rider: ' + E(trk.rider.name || "Rider") + (trk.rider.vehicle ? " (" + E(VEH(trk.rider.vehicle)) + ")" : "") + "</strong>" +
           contactRow(trk.rider.phone, "rider", "Hello, I am the seller for order #" + String(x.id).slice(0, 8) + " on SafeBuy NG.") + "</div>";
       }
       if (trk && (trk.job_status === "searching" || trk.job_status === "offered")) {
