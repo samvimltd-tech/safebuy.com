@@ -335,6 +335,11 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
 /* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
 html::before,html::after,body::before,body::after{pointer-events:none!important}
 .quick-link,.path{position:relative;z-index:2}
+/* Switch between the Marketplace and the Rider app (shown to delivery partners) */
+#sw-bar{position:sticky;top:var(--header-h);z-index:29;display:flex;justify-content:center;padding:7px 10px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line)}
+.swx{display:inline-flex;padding:3px;border-radius:30px;background:#e6efea;border:1px solid #cfe0d7;font:800 13px Arial,Helvetica,sans-serif}
+.swx>*{display:inline-flex;align-items:center;padding:8px 14px;border-radius:30px;white-space:nowrap;text-decoration:none;color:#3b5a4d}
+.swx .swx-on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(8,127,91,.3)}
 
 /* ---------- Rider app (delivery only) ---------- */
 :root{--green:#12372a;--green-dark:#0a2a1f;--green-light:#e6f3ed;--header-h:60px}
@@ -346,6 +351,11 @@ body{padding-bottom:0;background:#f3f7f5}
 .rd-brand .brand-name span{color:#12372a}
 .rd-actions{display:flex;align-items:center;gap:8px}
 .rd-actions .button{padding:9px 12px;font-size:13px;white-space:nowrap}
+.sw{display:inline-flex;padding:3px;border-radius:30px;background:#e6efea;border:1px solid #cfe0d7;font:800 12.5px system-ui,sans-serif}
+.sw>*{display:inline-flex;align-items:center;padding:8px 11px;border-radius:30px;white-space:nowrap;text-decoration:none;color:#3b5a4d}
+.sw .sw-on{background:#12372a;color:#fff;box-shadow:0 3px 10px rgba(10,42,31,.28)}
+.rd-head{flex-wrap:wrap}
+@media (max-width:420px){.sw>*{padding:8px 8px;font-size:12px}.rd-brand .brand-name{font-size:17px}.rd-actions{gap:6px}}
 #role-ribbon{background:#12372a;color:#fff;padding:7px 14px;font:800 12px/1.35 system-ui,sans-serif;letter-spacing:.3px;text-align:center}
 #role-who{font-weight:600;opacity:.92}
 #rd-auth,#rd-app{display:block}
@@ -387,7 +397,10 @@ body:not(.rd-out) #rd-auth{display:none}
     <span class="brand-name">SafeBuy <span>Rider</span></span>
   </div>
   <div class="rd-actions">
-    <a class="button button-outline" href="../" id="rd-market">🛍️ Marketplace</a>
+    <div class="sw" role="group" aria-label="Switch app">
+      <span class="sw-on" aria-current="page">🏍️ Deliveries</span>
+      <a href="../?from=rider" id="rd-market">🛍️ Marketplace</a>
+    </div>
     <button class="button button-outline" type="button" id="rd-signout" hidden>Sign out</button>
   </div>
 </header>
@@ -545,6 +558,7 @@ body:not(.rd-out) #rd-auth{display:none}
   function showWho(u) { var n = nameOf(u); $("role-who").textContent = n ? "· Signed in as " + n : "· Not signed in"; }
 
   function enter() {
+    try { localStorage.setItem("sb-rider", "1"); } catch (e) {}
     document.body.classList.remove("rd-out");
     $("rd-signout").hidden = false;
     if (!started) { started = true; $("rd-go").click(); }
