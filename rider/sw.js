@@ -24,13 +24,13 @@ self.addEventListener("fetch", (e) => {
 
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req)
+      fetch(new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }))
         .catch(() => new Response('<meta name=viewport content="width=device-width"><body style="font-family:sans-serif;text-align:center;padding:40px"><h2>You are offline</h2><p>Connect to the internet and open the app again.</p>', {headers:{'Content-Type':'text/html'}}))
     );
     return;
   }
   e.respondWith(
-    fetch(req)
+    fetch(new Request(req, { cache: 'no-cache' }))
       .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); } return res; })
       .catch(() => caches.match(req))
   );
