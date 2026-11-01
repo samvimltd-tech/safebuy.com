@@ -396,9 +396,10 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
   window.__sbLinkError = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
 })();
 </script>
+<script>window.__sbWords={signinTitle:"Seller sign in",signupTitle:"Open your seller account",signupBtn:"Create seller account",toggleSignup:"New seller? Create an account",menuSignup:"Create seller account"};</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////w3c7Edz20UwmGl+YyAAACC0lEQVR42u2YO04DMRCGf0MeSBRJAxLZSHADuAHLDagooKChSihyAzhCCuhSEhoKaqrkCHS0KbK8RJECCVjQmiLsI1l7ZyxBgTSuLPnL2DOe+T0bpeEwFiC00EILLbTQQgstNJ/WlzsLe+2hCdf50QUAlK/yKwZ6HBs6YNCRn+x7SNPj9JS1+bW8l72CmKj5XjP7+9qEimDoFO9HJ3pUeJnzbvsoiMm8lzNBIr3UTln1CQBoDcI+59yvAOBprfWTz7lLAEcAsHpD254AUHHGkLYnGV+8LmV7BKCqbcNku/RPFeLLif50oqNTp3P3uHQdAIJjZu38FFrbfJemrAKAfRb9Gu+5ysmTJEeePYaX5WR236GVLbOZikjbKtUTvUXfTkZ97mityirbgFT79wy9TipEJTN/Ic+tbtP5G/k2IKzaY5jP2EqqInpIv64f6eI2rYOV8Yy6ULXjXdhoGPO4b3lKzLQOpvQyR7+BxthJqxo+6+WOR9AEUH1n0tGigbaqpnLSWOX/oX672y4R9EMyGzJshx2X/mRUiRs9U1bl+6pmpr+qk14GnYL+Ki8+6jrpODeJ/B4BUK1BeAYAOGHQdmkrpjWvdiwhKKTLTvSSE73hRHeZb/FU4sj3cs0yt4Q0SCtzwPgmCaxfJEYdfJpWZEOzaB2e72KlZRJTJf9/Cy200EILLbTQQv8K/Q1+aubmT9k2pAAAAABJRU5ErkJggg==">
-</head>
+<style>body.role-gate #account-backdrop{background:#b45309;align-items:center}body.role-gate #account-close{display:none}#account-backdrop .button:not(.button-outline){background:#b45309;border-color:#b45309}#role-browse{display:block;margin:14px auto 0;text-align:center;font:700 14px system-ui,sans-serif;color:#b45309}</style></head>
 <body>
 <div class="announcement" id="sc-ann">Made for Nigerian shoppers and sellers · NGN prices</div>
 
@@ -560,11 +561,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
-    <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
-      <button class="path path-sell" type="button" data-action="sell"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></button>
-      <button class="path path-ride" type="button" data-action="deliver"><img src="../rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></button>
-    </div>
-    <div class="prototype-notice" id="sc-notice">
+        <div class="prototype-notice" id="sc-notice">
       <strong>Stay safe:</strong>
       <span id="sc-notice-text">Meet in a public place and inspect the item before you pay. Prefer shops with the ✓ Verified label.</span>
     </div>
@@ -1671,6 +1668,7 @@ updateCartCount();
   var pw2Input = document.getElementById("account-pw2");
   var pwLabel = document.getElementById("account-pw-label");
 
+  function W() { return window.__sbWords || {}; }
   function setMode(next) {
     mode = next;
     var signup = mode === "signup", forgot = mode === "forgot", newpass = mode === "newpass";
@@ -1685,12 +1683,12 @@ updateCartCount();
     pw2Input.required = newpass;
     pwLabel.textContent = newpass ? "New password" : "Password";
     passwordInput.autocomplete = (signup || newpass) ? "new-password" : "current-password";
-    submit.textContent = signup ? "Create account" : forgot ? "Send reset link" : newpass ? "Save new password" : "Sign in";
-    toggle.textContent = signup ? "Already registered? Sign in" : forgot ? "Back to sign in" : "Need an account? Sign up";
+    submit.textContent = signup ? (W().signupBtn || "Create account") : forgot ? "Send reset link" : newpass ? "Save new password" : "Sign in";
+    toggle.textContent = signup ? "Already registered? Sign in" : forgot ? "Back to sign in" : (W().toggleSignup || "Need an account? Sign up");
     toggle.hidden = newpass;
     reset.hidden = forgot || newpass || signup;
     document.getElementById("account-title").textContent =
-      signup ? "Create your account" : forgot ? "Reset your password" : newpass ? "Set a new password" : "Welcome to SafeBuy NG";
+      signup ? (W().signupTitle || "Create your account") : forgot ? "Reset your password" : newpass ? "Set a new password" : (W().signinTitle || "Welcome to SafeBuy NG");
     say(forgot ? "Enter your email and we will send you a link to reset your password." : newpass ? "Choose a new password. Use at least 8 characters." : "");
   }
 
@@ -1725,10 +1723,10 @@ updateCartCount();
       accLabel.textContent = "Sign in";
       accMenu.innerHTML =
         '<button type="button" data-auth="signin"><span class="ico">🔑</span>Sign in</button>' +
-        '<button type="button" data-auth="signup"><span class="ico">✨</span>Create buyer or seller account</button>';
+        '<button type="button" data-auth="signup"><span class="ico">✨</span>' + (W().menuSignup || "Create buyer or seller account") + '</button>';
       drawerAcc.innerHTML =
         '<button type="button" data-auth="signin">🔑 Sign in</button>' +
-        '<button type="button" data-auth="signup">✨ Create buyer or seller account</button>';
+        '<button type="button" data-auth="signup">✨ ' + (W().menuSignup || "Create buyer or seller account") + '</button>';
     }
     if (window.__sbSync) window.__sbSync();
   }
@@ -2278,7 +2276,7 @@ document.addEventListener("click", function (e) {
 /* Safety net: if any invisible decorative layer ends up on top of the main cards, let taps pass through it. */
 (function () {
   "use strict";
-  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],button,a,input,select,textarea";
+  var KEEP = "header,nav,.mobile-nav,.toast,.modal-backdrop,.drawer,.drawer-backdrop,#toast,[role=dialog],#role-install-card,#role-install,#role-open,button,a,input,select,textarea";
   function fix() {
     try {
       var cards = document.querySelectorAll(".quick-link,.path,.product-card,.category-button");
@@ -2292,6 +2290,7 @@ document.addEventListener("click", function (e) {
           if (el === cards[i] || cards[i].contains(el)) break;
           if (el === document.body || el === document.documentElement) break;
           if (el.matches(KEEP) || el.closest(".modal-backdrop.open,.drawer.open,.mobile-nav,header")) continue;
+          if (el.querySelector("button,a,input,select,textarea")) continue;
           var p = getComputedStyle(el).position;
           if (p === "fixed" || p === "absolute" || p === "sticky") el.style.pointerEvents = "none";
         }
@@ -2339,73 +2338,109 @@ document.addEventListener("click", function (e) {
 })();
 </script>
 <button id="role-open" type="button" style="position:fixed;left:14px;bottom:86px;z-index:60;border:0;border-radius:30px;padding:12px 18px;background:#b45309;color:#fff;font:800 15px system-ui,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.25)">🏪 My shop</button>
-<button id="role-install" type="button" hidden style="position:fixed;left:14px;top:70px;z-index:60;border:1px solid #b45309;border-radius:30px;padding:8px 14px;background:#fff;color:#b45309;font:800 13px system-ui,sans-serif">⬇ Install SafeBuy Seller</button>
+<script>
+(function () {
+  "use strict";
+  var C = {name: "SafeBuy Seller", color: "#b45309", letter: "S", key: "role-install-sell", skip: false};
+  if (C.skip) return;
+  var ev = null, card = null, pill = null, formUsed = 0;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+  function standalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
+  function done() { return standalone() || !!store(C.key + "-done"); }
+  function hide() { if (card) { card.remove(); card = null; } }
+  function hidePill() { if (pill) { pill.remove(); pill = null; } }
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); ev = e;
+    if (done() || pill) return;
+    pill = document.createElement("button"); pill.type = "button"; pill.id = "role-install";
+    pill.style.cssText = "position:fixed;left:14px;top:70px;z-index:60;border:1px solid " + C.color + ";border-radius:30px;padding:8px 14px;background:#fff;color:" + C.color + ";font:800 13px system-ui,sans-serif";
+    pill.textContent = "⬇ Install " + C.name;
+    pill.addEventListener("click", function () { show(true); });
+    document.body.appendChild(pill);
+  });
+  window.addEventListener("appinstalled", function () { store(C.key + "-done", "1"); hide(); hidePill(); });
+  function show(force, ready) {
+    if (card || done()) return;
+    var later = Number(store(C.key + "-later") || 0);
+    if (!force && later && Date.now() - later < 3 * 86400000) return;
+    var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
+    card = document.createElement("div");
+    card.id = "role-install-card";
+    card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(16,39,29,.62);display:flex;align-items:flex-end;justify-content:center";
+    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
+      '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:' + C.color + ';color:#fff;font:800 34px/64px system-ui,sans-serif">' + C.letter + '</div>' +
+      '<h2 style="margin:0 0 6px;font-size:21px">Install ' + C.name + '</h2>' +
+      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">' + (ready ? "Your account is ready. " : "") + 'Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
+      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:15px;background:' + C.color + ';color:#fff;font:800 16px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
+      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:14px;line-height:1.55;text-align:left"></div>' +
+      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 14px system-ui,sans-serif;padding:10px">Not now</button></div>';
+    document.body.appendChild(card);
+    var help = card.querySelector("#ri-help");
+    card.querySelector("#ri-go").addEventListener("click", function () {
+      if (ev && !ios) {
+        var p = ev; ev = null; hidePill(); p.prompt();
+        if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === "accepted") store(C.key + "-done", "1"); hide(); });
+      } else {
+        help.style.display = "block";
+        help.innerHTML = inapp ? "This page is open inside another app. Tap the menu and choose <b>Open in browser</b> (Chrome or Safari), then install from there."
+          : ios ? "1. Tap the <b>Share</b> button in Safari (the square with an arrow).<br>2. Scroll and tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>."
+          : "Tap the <b>menu (three dots)</b> at the top of your browser, then tap <b>Install app</b> or <b>Add to Home screen</b>.";
+      }
+    });
+    card.querySelector("#ri-later").addEventListener("click", function () { store(C.key + "-later", String(Date.now())); hide(); });
+  }
+  window.__installCard = { show: show };
+  // 1) as soon as the app opens  2) again right after sign-up if it was skipped
+  if (!window.__sbRecovery) setTimeout(function () { show(false); }, 1200);
+  var fe = document.getElementById("account-form");
+  if (fe) fe.addEventListener("submit", function () { formUsed = Date.now(); }, true);
+  var tries = 0, ht = setInterval(function () {
+    var c = window.safeBuySupabase;
+    if (c && c.auth) {
+      clearInterval(ht);
+      c.auth.onAuthStateChange(function (event) {
+        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(function () { show(true, true); }, 1400); }
+      });
+    } else if (++tries > 60) clearInterval(ht);
+  }, 300);
+})();
+
+</script>
 <script>
 (function () {
   "use strict";
   var ACTION = "sell";
   function open() { if (window.__sbRecovery) return; var b = document.querySelector('[data-action="' + ACTION + '"]'); if (b) b.click(); }
   document.getElementById("role-open").addEventListener("click", open);
-  // open the right screen once the page has finished starting up
-  var tries = 0, t = setInterval(function () {
-    if (document.querySelector('[data-action="' + ACTION + '"]') && (window.safeBuySupabase || tries > 12)) { clearInterval(t); setTimeout(open, 300); }
-    else if (++tries > 40) clearInterval(t);
-  }, 250);
-  // own service worker + install button (this app is installed separately from the shop)
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(function () {});
-  var ev = null, ib = document.getElementById("role-install");
-  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); ev = e; ib.hidden = false; });
-  ib.addEventListener("click", function () { if (ev) { ev.prompt(); ev = null; ib.hidden = true; } });
-  window.addEventListener("appinstalled", function () { ib.hidden = true; store(KEY + "-done", "1"); hideCard(); });
 
-  // ---- Install card: appears right after sign-up / sign-in ----
-  var APPNAME = "SafeBuy Seller", COLOR = "#b45309", LETTER = "S", KEY = "role-install-sell", card = null, formUsed = 0;
-  function standalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
-  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
-  function hideCard() { if (card) { card.remove(); card = null; } }
-  function showCard() {
-    if (card || standalone() || store(KEY + "-done")) return;
-    var later = Number(store(KEY + "-later") || 0);
-    if (later && Date.now() - later < 3 * 86400000) return;
-    var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
-    card = document.createElement("div");
-    card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(16,39,29,.62);display:flex;align-items:flex-end;justify-content:center";
-    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
-      '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:' + COLOR + ';color:#fff;font:800 34px/64px system-ui,sans-serif">' + LETTER + '</div>' +
-      '<h2 style="margin:0 0 6px;font-size:21px">Install ' + APPNAME + '</h2>' +
-      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">Your account is ready. Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
-      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:15px;background:' + COLOR + ';color:#fff;font:800 16px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
-      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:14px;line-height:1.55;text-align:left"></div>' +
-      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 14px system-ui,sans-serif;padding:10px">Not now</button></div>';
-    document.body.appendChild(card);
-    var help = card.querySelector("#ri-help");
-    function steps() {
-      help.style.display = "block";
-      help.innerHTML = inapp ? "This page is open inside another app. Tap the menu and choose <b>Open in browser</b> (Chrome or Safari), then install from there."
-        : ios ? "1. Tap the <b>Share</b> button in Safari (the square with an arrow).<br>2. Scroll and tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>."
-        : "Tap the <b>menu (three dots)</b> at the top of your browser, then tap <b>Install app</b> or <b>Add to Home screen</b>.";
-    }
-    card.querySelector("#ri-go").addEventListener("click", function () {
-      if (ev && !ios) { var p = ev; ev = null; ib.hidden = true; p.prompt(); if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === "accepted") { store(KEY + "-done", "1"); } hideCard(); }); }
-      else steps();
-    });
-    card.querySelector("#ri-later").addEventListener("click", function () { store(KEY + "-later", String(Date.now())); hideCard(); });
+  // ---- Seller front door: sign-in screen shown straight away when signed out ----
+  var gateOn = false, bd = document.getElementById("account-backdrop");
+  function gateUp() {
+    if (gateOn || window.__sbRecovery) return;
+    gateOn = true; document.body.classList.add("role-gate");
+    var card = bd.querySelector(".modal");
+    if (card && !document.getElementById("role-browse")) { var a = document.createElement("a"); a.id = "role-browse"; a.href = "../"; a.textContent = "Just looking? Browse the marketplace"; card.appendChild(a); }
+    var b = document.querySelector('[data-auth="signin"]'); if (b) b.click();
+    new MutationObserver(function () { if (gateOn && !bd.classList.contains("open")) { var x = document.querySelector('[data-auth="signin"]'); if (x) x.click(); } }).observe(bd, { attributes: true, attributeFilter: ["class"] });
   }
-  var formEl = document.getElementById("account-form");
-  if (formEl) formEl.addEventListener("submit", function () { formUsed = Date.now(); }, true);
-  function hook() {
+  function gateDown() { gateOn = false; document.body.classList.remove("role-gate"); }
+  var gt = 0, gi = setInterval(function () {
     var c = window.safeBuySupabase;
-    if (!c || !c.auth || hook.done) return;
-    hook.done = true;
-    c.auth.onAuthStateChange(function (event) {
-      if (event !== "SIGNED_IN" || window.__sbRecovery) return;
-      if (Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(open, 900); setTimeout(showCard, 1400); }
-      else if (!store(KEY + "-seen")) { setTimeout(showCard, 3000); }
-      store(KEY + "-seen", "1");
-    });
-  }
-  var ht = setInterval(function () { hook(); if (hook.done) clearInterval(ht); }, 300);
-  setTimeout(function () { clearInterval(ht); }, 20000);
+    if (c && c.auth && document.querySelector('[data-auth="signin"]')) {
+      clearInterval(gi);
+      c.auth.getSession().then(function (r) {
+        var s = r && r.data && r.data.session;
+        if (s) { setTimeout(open, 300); } else { gateUp(); }
+      });
+      var formUsed = 0, fe = document.getElementById("account-form");
+      if (fe) fe.addEventListener("submit", function () { formUsed = Date.now(); }, true);
+      c.auth.onAuthStateChange(function (event) {
+        if (event === "SIGNED_IN" && !window.__sbRecovery) { gateDown(); if (Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(open, 900); } }
+        if (event === "SIGNED_OUT") { gateUp(); }
+      });
+    } else if (++gt > 60) { clearInterval(gi); }
+  }, 250);
 
   // ---- Show whose app this is: "Signed in as <name>" ----
   var who = document.getElementById("role-who");
