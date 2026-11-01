@@ -344,6 +344,11 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
 /* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
 html::before,html::after,body::before,body::after{pointer-events:none!important}
 .quick-link,.path{position:relative;z-index:2}
+/* Switch between the Marketplace and the Rider app (shown to delivery partners) */
+#sw-bar{position:sticky;top:var(--header-h);z-index:29;display:flex;justify-content:center;padding:7px 10px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line)}
+.swx{display:inline-flex;padding:3px;border-radius:30px;background:#e6efea;border:1px solid #cfe0d7;font:800 13px Arial,Helvetica,sans-serif}
+.swx>*{display:inline-flex;align-items:center;padding:8px 14px;border-radius:30px;white-space:nowrap;text-decoration:none;color:#3b5a4d}
+.swx .swx-on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(8,127,91,.3)}
 </style>
 <script>
 /* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
@@ -382,6 +387,15 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
     if (L && Date.now() - L.t < 800 && L.b.isConnected) track(L.b, p);
     return p;
   };
+})();
+</script>
+<script>
+/* Password-reset link: remember it before the sign-in library cleans the address bar. */
+(function () {
+  var h = (location.hash || "") + "&" + (location.search || "");
+  window.__sbRecovery = /type=recovery/.test(h);
+  var m = /error_description=([^&]+)/.exec(h);
+  window.__sbLinkError = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
 })();
 </script>
 <script src="./pwa-install.js"></script>
@@ -450,6 +464,12 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
     </div>
   </div>
 </header>
+<div id="sw-bar" hidden>
+  <div class="swx" role="group" aria-label="Switch app">
+    <span class="swx-on" aria-current="page">🛍️ Marketplace</span>
+    <a id="sw-rider" href="./rider/">🏍️ Rider app</a>
+  </div>
+</div>
 
 <div class="delivery-bar" id="delivery-bar" role="status">
   <div class="container">
@@ -707,11 +727,20 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <label for="account-name" id="account-name-label">Full name</label>
       <input id="account-name" type="text" autocomplete="name" placeholder="Your full name">
 
-      <label for="account-email">Email address</label>
-      <input id="account-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <div id="account-email-wrap">
+        <label for="account-email">Email address</label>
+        <input id="account-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
 
-      <label for="account-password">Password</label>
-      <input id="account-password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required>
+      <div id="account-pw-wrap">
+        <label for="account-password" id="account-pw-label">Password</label>
+        <input id="account-password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required>
+      </div>
+
+      <div id="account-pw2-wrap" hidden>
+        <label for="account-pw2">Confirm new password</label>
+        <input id="account-pw2" type="password" autocomplete="new-password" minlength="8" placeholder="Type it again">
+      </div>
 
       <button class="button button-primary" type="submit" id="account-submit">Sign in</button>
     </form>
@@ -1636,17 +1665,33 @@ updateCartCount();
   window.openAccount = openAccount;
   window.say = say;
 
+  var emailWrap = document.getElementById("account-email-wrap");
+  var pwWrap = document.getElementById("account-pw-wrap");
+  var pw2Wrap = document.getElementById("account-pw2-wrap");
+  var pw2Input = document.getElementById("account-pw2");
+  var pwLabel = document.getElementById("account-pw-label");
+
   function setMode(next) {
     mode = next;
-    var signup = mode === "signup";
+    var signup = mode === "signup", forgot = mode === "forgot", newpass = mode === "newpass";
     nameInput.hidden = !signup;
     nameLabel.hidden = !signup;
     nameInput.required = signup;
-    passwordInput.autocomplete = signup ? "new-password" : "current-password";
-    submit.textContent = signup ? "Create account" : "Sign in";
-    toggle.textContent = signup ? "Already registered? Sign in" : "Need an account? Sign up";
-    document.getElementById("account-title").textContent = signup ? "Create your account" : "Welcome to SafeBuy NG";
-    say("");
+    emailWrap.hidden = newpass;
+    emailInput.required = !newpass;
+    pwWrap.hidden = forgot;
+    passwordInput.required = !forgot;
+    pw2Wrap.hidden = !newpass;
+    pw2Input.required = newpass;
+    pwLabel.textContent = newpass ? "New password" : "Password";
+    passwordInput.autocomplete = (signup || newpass) ? "new-password" : "current-password";
+    submit.textContent = signup ? "Create account" : forgot ? "Send reset link" : newpass ? "Save new password" : "Sign in";
+    toggle.textContent = signup ? "Already registered? Sign in" : forgot ? "Back to sign in" : "Need an account? Sign up";
+    toggle.hidden = newpass;
+    reset.hidden = forgot || newpass || signup;
+    document.getElementById("account-title").textContent =
+      signup ? "Create your account" : forgot ? "Reset your password" : newpass ? "Set a new password" : "Welcome to SafeBuy NG";
+    say(forgot ? "Enter your email and we will send you a link to reset your password." : newpass ? "Choose a new password. Use at least 8 characters." : "");
   }
 
   /* Account dropdown + drawer section, rebuilt on sign-in state changes */
@@ -1689,6 +1734,13 @@ updateCartCount();
   }
   renderAccountMenus(null);
 
+  if (window.__sbLinkError) {
+    setTimeout(function () {
+      setMode("forgot"); openAccount();
+      say("That reset link has expired or was already used. Enter your email to get a new one.");
+    }, 400);
+  }
+
   document.addEventListener("click", async function (e) {
     var b = e.target.closest("[data-auth]");
     if (!b) return;
@@ -1708,6 +1760,7 @@ updateCartCount();
     if (e.target === accountBackdrop) closeAccount();
   });
   toggle.addEventListener("click", function () {
+    if (mode === "forgot") { setMode("signin"); return; }
     setMode(mode === "signin" ? "signup" : "signin");
   });
 
@@ -1720,6 +1773,29 @@ updateCartCount();
     try {
       var email = emailInput.value.trim();
       var password = passwordInput.value;
+
+      if (mode === "forgot") {
+        if (!email) { say("Enter your email address first."); return; }
+        var rr = await client.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname
+        });
+        if (rr.error) throw rr.error;
+        say("If that email is registered, a reset link is on its way. Check your inbox and your spam folder, then tap the link.");
+        return;
+      }
+      if (mode === "newpass") {
+        if (password.length < 8) { say("Use at least 8 characters."); return; }
+        if (password !== pw2Input.value) { say("The two passwords do not match."); return; }
+        var up = await client.auth.updateUser({ password: password });
+        if (up.error) throw up.error;
+        window.__sbRecovery = false;
+        passwordInput.value = ""; pw2Input.value = "";
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+        say("Your password has been changed. You are signed in.");
+        logout.hidden = false;
+        setTimeout(function () { closeAccount(); setMode("signin"); }, 1600);
+        return;
+      }
 
       if (mode === "signup") {
         var result = await client.auth.signUp({
@@ -1748,19 +1824,9 @@ updateCartCount();
     }
   });
 
-  reset.addEventListener("click", async function () {
-    if (!client) { say(unavailable); return; }
-    var email = emailInput.value.trim();
-    if (!email) { say("Enter your email address first."); return; }
-    try {
-      var result = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname
-      });
-      if (result.error) throw result.error;
-      say("If the address is registered, a password-reset email will be sent.");
-    } catch (error) {
-      say(error.message || "Unable to request a password reset.");
-    }
+  reset.addEventListener("click", function () {
+    setMode("forgot");
+    emailInput.focus();
   });
 
   logout.addEventListener("click", async function () {
@@ -2148,6 +2214,13 @@ updateCartCount();
 
   if (client) {
     client.auth.onAuthStateChange(function (event, session) {
+      if (event === "PASSWORD_RECOVERY") {
+        currentApp = null;
+        setMode("newpass");
+        openAccount();
+        say("Choose a new password. Use at least 8 characters.");
+        return;
+      }
       currentApp = null;
       renderAccountMenus(session && session.user ? session.user : null);
       logout.hidden = !session;
@@ -2228,6 +2301,42 @@ document.addEventListener("click", function (e) {
   }
   [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
   window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
+})();
+</script>
+<script>
+/* Delivery partners get a switch to go back to the Rider app. */
+(function () {
+  "use strict";
+  if (/\/(seller|rider)\//.test(location.pathname)) return;
+  var bar = document.getElementById("sw-bar");
+  if (!bar) return;
+  function ls(k, v) {
+    try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+    return null;
+  }
+  var fromRider = /[?&]from=rider/.test(location.search);
+  if (fromRider) ls("sb-rider", "1");
+  bar.hidden = ls("sb-rider") !== "1";
+  function look(session) {
+    var c = window.safeBuySupabase;
+    if (!session || !session.user) { if (!fromRider) { ls("sb-rider", null); bar.hidden = true; } return; }
+    c.from("delivery_partners").select("id").eq("user_id", session.user.id).maybeSingle().then(function (r) {
+      var yes = !!(r && r.data);
+      ls("sb-rider", yes ? "1" : null);
+      bar.hidden = !yes && !fromRider;
+    }, function () {});
+  }
+  function hook() {
+    var c = window.safeBuySupabase;
+    if (!c || !c.auth) return false;
+    c.auth.getSession().then(function (r) { look(r && r.data && r.data.session); });
+    c.auth.onAuthStateChange(function (e, s) {
+      if (e === "SIGNED_OUT") { ls("sb-rider", null); bar.hidden = true; }
+      else if (e === "SIGNED_IN") look(s);
+    });
+    return true;
+  }
+  var n = 0, t = setInterval(function () { if (hook() || ++n > 40) clearInterval(t); }, 300);
 })();
 </script>
 </body>
