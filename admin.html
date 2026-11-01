@@ -746,6 +746,7 @@ td .button{padding:6px 11px;font-size:12px}
   }
 
   /* ---------- Delivery ---------- */
+  var VEH_NAMES = { foot: "Walking / On foot", bicycle: "Bicycle", bike: "Motorcycle / Bike", tricycle: "Keke (Tricycle)", car: "Car", taxi: "Taxi", suv: "SUV", van: "Van / Minibus", pickup: "Pickup Truck", small_truck: "Delivery Van / Small Truck", truck: "Truck / Lorry" };
   var DOC_LABEL = { id_card: "Government ID", selfie: "Selfie", vehicle_doc: "Vehicle papers", cac_certificate: "CAC certificate" };
   var ORDER_LABEL = { requested: "Waiting for fee payment", fee_paid: "Fee confirmed", dispatched: "Dispatched", cancelled: "Cancelled" };
 
@@ -802,7 +803,7 @@ td .button{padding:6px 11px;font-size:12px}
       var parent = p.company_id && pm[p.company_id] ? " · rides for " + esc(pName(pm[p.company_id])) : "";
       return '<div class="item' + (fresh["d" + p.id] ? " fresh" : "") + '">' +
         '<span class="pill ' + (p.status === "approved" ? "approved" : p.status === "pending" ? "" : "rejected") + '">' + esc(p.status) + "</span> " +
-        "<strong>" + esc(pName(p)) + "</strong> <span class=\"muted\">(" + esc(p.partner_type) + (p.vehicle_type ? ", " + esc(p.vehicle_type) : "") + ")</span><br>" +
+        "<strong>" + esc(pName(p)) + "</strong> <span class=\"muted\">(" + esc(p.partner_type) + (p.vehicle_type ? ", " + esc(VEH_NAMES[p.vehicle_type] || p.vehicle_type) : "") + ")</span><br>" +
         (p.paystack_recipient_code ? "Bank: " + esc(p.bank_name || "") + " ••••" + esc(p.bank_last4 || "") + " (" + esc(p.bank_account_name || "") + ")<br>" : "") + "Contact: " + esc(p.full_name) + " · " + esc(p.phone) + " · State: <span class=\"cap\">" + esc(p.state) + "</span>" + parent +
         (p.company_reg_no ? " · CAC: " + esc(p.company_reg_no) : "") + (p.invite_code ? " · Code: <strong>" + esc(p.invite_code) + "</strong>" : "") + "<br>" +
         '<span class="muted">Applied ' + esc(when(p.created_at)) + (p.is_online ? " · online now" : "") +
