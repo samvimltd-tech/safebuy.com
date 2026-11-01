@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fix SafeBuy NG</title>
+<style>body{font-family:system-ui,sans-serif;background:#f7f9f7;color:#172b24;margin:0;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px}
+.c{max-width:380px}h1{font-size:22px;margin:0 0 8px}p{color:#52645a;line-height:1.5}a{display:inline-block;margin-top:14px;background:#087f5b;color:#fff;text-decoration:none;font-weight:800;padding:14px 22px;border-radius:14px}</style></head>
+<body><div class="c"><h1 id="t">Fixing the app…</h1><p id="m">Removing old saved files. This takes a few seconds.</p><a id="go" href="./" hidden>Open SafeBuy NG</a></div>
+<script>
+(async function () {
+  var steps = [];
+  try { if ("serviceWorker" in navigator) { var rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(function (r) { return r.unregister(); })); steps.push("service workers"); } } catch (e) {}
+  try { if (window.caches) { var ks = await caches.keys(); await Promise.all(ks.map(function (k) { return caches.delete(k); })); steps.push("saved files"); } } catch (e) {}
+  try { Object.keys(localStorage).filter(function (k) { return /^sb-.*-auth-token/.test(k) || /^supabase\.auth\./.test(k); }).forEach(function (k) { localStorage.removeItem(k); }); steps.push("old login"); } catch (e) {}
+  try { sessionStorage.clear(); } catch (e) {}
+  document.getElementById("t").textContent = "All fixed";
+  document.getElementById("m").textContent = "Old saved files and the old login were removed. Open the app and sign in again.";
+  var g = document.getElementById("go"); g.hidden = false;
+  setTimeout(function () { location.replace("./?fixed=" + Date.now()); }, 2500);
+})();
+</script></body></html>
