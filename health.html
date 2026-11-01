@@ -56,8 +56,8 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
   }
   // [file, strings that must be inside it (proves it is the latest version), what to do]
   var FILES = [
-    ["./index.html", ["sc-notice-text", "about.html", "site_content"], "Upload the latest index.html to the main folder."],
-    ["./delivery.js", ["dp-pcode"], "Upload the latest rider file, named delivery.js (replace the old one)."],
+    ["./index.html", ["sc-notice-text", "about.html", "site_content", "sw-bar"], "Upload the latest index.html to the main folder."],
+    ["./delivery.js", ["dp-pcode", "vh-picker"], "Upload the latest rider file, named delivery.js (replace the old one)."],
     ["./delivery-orders.js", ["rate_delivery", "order_tracking"], "Upload the latest delivery-orders.js."],
     ["./orders.js", [], "orders.js is missing. It is part of your original site."],
     ["./admin.html", ["partnerSummary", "data-adel", "admin-plus.js"], "Upload the latest admin.html."],
@@ -125,7 +125,8 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["rate_delivery", { p_order: "00000000-0000-0000-0000-000000000000", p_stars: 5 }, "Rider ratings", "Run connect_roles.sql in Supabase."],
     ["alerts_mark_read", {}, "In-app updates", "Run delivery_automation_paste.sql in Supabase."],
     ["partner_update_job", { p_job: "00000000-0000-0000-0000-000000000000", p_status: "x" }, "Rider pickup and delivery", "Run connect_roles.sql in Supabase."],
-    ["admin_delete", { p_kind: "x", p_id: "x" }, "Admin delete", "Run admin_delete.sql in Supabase."]
+    ["admin_delete", { p_kind: "x", p_id: "x" }, "Admin delete", "Run admin_delete.sql in Supabase."],
+    ["partner_set_vehicle", { p_type: "x" }, "Rider vehicle types", "Run vehicles.sql in Supabase."]
   ];
   function checkDb() {
     section("3. Database tables");
