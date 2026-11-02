@@ -1,4 +1,4 @@
-/* SafeBuy NG: embedded install reminder for Android and iPhone.
+/* SafeBuy NG: embedded install reminder for Android and iPhone (shown after the first sign-in).
    One script does everything: registers the app files, shows an install banner on every visit,
    keeps a small "Get the app" button on screen after the banner is closed, and shows step-by-step help
    (Android menu steps, iPhone Share steps, or "open in Safari/Chrome" for in-app browsers).
@@ -88,7 +88,14 @@
     document.body.appendChild(bar);
   }
 
-  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; drop(bar); bar = null; showBanner(); });
+  /* The install offer appears only once the person has signed in (first sign-in or later). */
+  function signedIn() {
+    if (demo) return true;
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)) return true; } } catch (e) {}
+    return false;
+  }
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; if (signedIn()) { drop(bar); bar = null; showBanner(); } });
   window.addEventListener("appinstalled", function () { try { localStorage.setItem("sb-installed", "1"); } catch (e) {} removeAll(); });
-  setTimeout(showBanner, 600);
+  var gate = setInterval(function () { if (signedIn()) { clearInterval(gate); showBanner(); } }, 1200);
+  if (signedIn()) { clearInterval(gate); setTimeout(showBanner, 600); }
 })();
