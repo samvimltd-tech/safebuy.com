@@ -387,7 +387,47 @@ body:not(.rd-out) #rd-auth{display:none}
 })();
 </script>
 <script src="../supabase-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* Loads the Supabase library WITHOUT blocking the page (3 sources, first one that answers wins),
+   so the cards and buttons work while it downloads. */
+(function () {
+  var ROOT = location.pathname.replace(/\/(seller|rider)\/[^\/]*$/, "/").replace(/[^\/]*$/, "");
+  var SRC = [ROOT + "vendor/supabase-2.45.4.js",     // our own copy first: fast and cannot go down
+             "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
+             "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
+             "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"];
+  var libQ = [], readyQ = [], ready = false, tried = {};
+  function run(q) { while (q.length) { try { q.shift()(); } catch (e) { console.error(e); } } }
+  window.__sbLibLoaded = function (fn) { if (window.supabase) fn(); else libQ.push(fn); };
+  window.__sbWhenReady = function (fn) { if (ready) fn(); else readyQ.push(fn); };
+  window.__sbMarkReady = function () { if (ready) return; ready = true; run(readyQ); };
+  function add(n) {
+    if (window.supabase || n >= SRC.length || tried[n]) return; tried[n] = 1;
+    var s = document.createElement("script"); s.src = SRC[n]; s.async = true;
+    s.onload = function () { if (window.supabase) run(libQ); };
+    s.onerror = function () { add(n + 1); };
+    document.head.appendChild(s);
+    setTimeout(function () { if (!window.supabase) add(n + 1); }, 6000);
+  }
+  add(0);
+  /* Watchdog: if one of our own files fails to load, offer a one-tap repair instead of a silently dead page. */
+  var shown = false;
+  function repairBar() {
+    if (shown || !document.body) return; shown = true;
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:99998;background:#b91c1c;color:#fff;border-radius:14px;padding:12px 14px;font:700 14px/1.4 system-ui,sans-serif;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    d.innerHTML = '<span style="flex:1">Part of the page did not load.</span><a href="' + ROOT + 'reset.html" style="background:#fff;color:#b91c1c;border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:800">Tap to repair</a><button type="button" aria-label="Close" style="border:0;background:transparent;color:#fff;font-size:18px">\u2715</button>';
+    d.querySelector("button").onclick = function () { d.remove(); };
+    document.body.appendChild(d);
+  }
+  window.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t.tagName === "SCRIPT" && t.src && t.src.indexOf(location.origin) === 0 && !/vendor\//.test(t.src)) setTimeout(repairBar, 1500);
+  }, true);
+  setTimeout(function () { if (!window.supabase) repairBar(); }, 20000);
+  setTimeout(function () { if (!window.supabase) window.__sbMarkReady(); }, 25000);
+})();
+</script>
 </head>
 <body class="rd-out">
 
@@ -412,6 +452,7 @@ body:not(.rd-out) #rd-auth{display:none}
     <div class="modal" id="rd-card">
       <span class="brand-mark" style="display:grid;place-items:center;color:#fff;font-weight:800">R</span>
       <h1 id="rd-title">Rider sign in</h1>
+      <p id="rd-conn" class="lead" style="color:#b45309">Connecting…</p>
       <p class="lead" id="rd-lead">Deliver for SafeBuy NG and get paid for every trip.</p>
       <form id="rd-form" novalidate>
         <div id="rd-name-wrap" hidden>
@@ -451,8 +492,28 @@ body:not(.rd-out) #rd-auth{display:none}
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
 <script>
+/* The page scripts start as soon as the database connection is ready (or has failed), in order. */
+(function () {
+  var started = false;
+  function go() {
+    if (started) return; started = true;
+    var list = Array.prototype.slice.call(document.querySelectorAll('script[type="text/sb-defer"]'));
+    var note = document.getElementById("rd-conn"); if (note) note.remove();
+    (function next() {
+      var o = list.shift(); if (!o) return;
+      var n = document.createElement("script");
+      if (o.getAttribute("src")) { n.src = o.getAttribute("src"); n.async = false; n.onload = n.onerror = next; document.body.appendChild(n); }
+      else { n.textContent = o.textContent; document.body.appendChild(n); next(); }
+    })();
+  }
+  window.__sbLibLoaded(function () { setTimeout(go, 0); });
+  window.__sbWhenReady(go);
+  setTimeout(function () { if (window.__sbMarkReady) window.__sbMarkReady(); }, 0 + 26000);
+})();
+</script>
+
+<script type="text/sb-defer">
 /* Connect to Supabase (same project and same login as the marketplace). */
 (function () {
   "use strict";
@@ -466,8 +527,8 @@ body:not(.rd-out) #rd-auth{display:none}
   }
 })();
 </script>
-<script src="../delivery.js"></script>
-<script>
+<script type="text/sb-defer" src="../delivery.js"></script>
+<script type="text/sb-defer">
 (function () {
   "use strict";
   var c = window.safeBuySupabase;
@@ -580,9 +641,8 @@ body:not(.rd-out) #rd-auth{display:none}
     if (session && !recovering) {
       var viaForm = Date.now() - formUsed < 30000;
       enter();
-      if (viaForm) { formUsed = 0; setTimeout(showInstall, 1500); }
-      else if (!store("rd-seen")) setTimeout(showInstall, 3500);
-      store("rd-seen", "1");
+      if (viaForm) { formUsed = 0; setTimeout(function () { showInstall(true, true); }, 1500); }
+      else setTimeout(function () { showInstall(false, true); }, 1500);
     } else if (!session) { leave(); }
   });
   c.auth.getSession().then(function (r) {
@@ -635,17 +695,17 @@ body:not(.rd-out) #rd-auth{display:none}
   window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; });
   window.addEventListener("appinstalled", function () { store(KEY + "-done", "1"); hideInstall(); });
   function hideInstall() { if (card) { card.remove(); card = null; } }
-  function showInstall() {
+  function showInstall(force, ready) {
     if (card || standalone() || store(KEY + "-done")) return;
     var later = Number(store(KEY + "-later") || 0);
-    if (later && Date.now() - later < 3 * 86400000) return;
+    if (!force && later && Date.now() - later < 3 * 86400000) return;
     var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
     card = document.createElement("div");
     card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(10,42,31,.62);display:flex;align-items:flex-end;justify-content:center";
     card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
       '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:#12372a;color:#fff;font:800 34px/64px system-ui,sans-serif">R</div>' +
       '<h2 style="margin:0 0 6px;font-size:21px">Install SafeBuy Rider</h2>' +
-      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">Add the app to your home screen to open your deliveries in one tap, with no browser bar.</p>' +
+      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">' + (ready ? 'Your account is ready. ' : '') + 'Add the app to your home screen to open your deliveries in one tap, with no browser bar.</p>' +
       '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:15px;background:#12372a;color:#fff;font:800 16px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
       '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:14px;line-height:1.55;text-align:left"></div>' +
       '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 14px system-ui,sans-serif;padding:10px">Not now</button></div>';
