@@ -1536,7 +1536,47 @@ updateCartCount();
 })();
 </script>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* Loads the Supabase library WITHOUT blocking the page (3 sources, first one that answers wins),
+   so the cards and buttons work while it downloads. */
+(function () {
+  var ROOT = location.pathname.replace(/\/(seller|rider)\/[^\/]*$/, "/").replace(/[^\/]*$/, "");
+  var SRC = [ROOT + "vendor/supabase-2.45.4.js",     // our own copy first: fast and cannot go down
+             "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
+             "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
+             "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"];
+  var libQ = [], readyQ = [], ready = false, tried = {};
+  function run(q) { while (q.length) { try { q.shift()(); } catch (e) { console.error(e); } } }
+  window.__sbLibLoaded = function (fn) { if (window.supabase) fn(); else libQ.push(fn); };
+  window.__sbWhenReady = function (fn) { if (ready) fn(); else readyQ.push(fn); };
+  window.__sbMarkReady = function () { if (ready) return; ready = true; run(readyQ); };
+  function add(n) {
+    if (window.supabase || n >= SRC.length || tried[n]) return; tried[n] = 1;
+    var s = document.createElement("script"); s.src = SRC[n]; s.async = true;
+    s.onload = function () { if (window.supabase) run(libQ); };
+    s.onerror = function () { add(n + 1); };
+    document.head.appendChild(s);
+    setTimeout(function () { if (!window.supabase) add(n + 1); }, 6000);
+  }
+  add(0);
+  /* Watchdog: if one of our own files fails to load, offer a one-tap repair instead of a silently dead page. */
+  var shown = false;
+  function repairBar() {
+    if (shown || !document.body) return; shown = true;
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:99998;background:#b91c1c;color:#fff;border-radius:14px;padding:12px 14px;font:700 14px/1.4 system-ui,sans-serif;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    d.innerHTML = '<span style="flex:1">Part of the page did not load.</span><a href="' + ROOT + 'reset.html" style="background:#fff;color:#b91c1c;border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:800">Tap to repair</a><button type="button" aria-label="Close" style="border:0;background:transparent;color:#fff;font-size:18px">\u2715</button>';
+    d.querySelector("button").onclick = function () { d.remove(); };
+    document.body.appendChild(d);
+  }
+  window.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t.tagName === "SCRIPT" && t.src && t.src.indexOf(location.origin) === 0 && !/vendor\//.test(t.src)) setTimeout(repairBar, 1500);
+  }, true);
+  setTimeout(function () { if (!window.supabase) repairBar(); }, 20000);
+  setTimeout(function () { if (!window.supabase) window.__sbMarkReady(); }, 25000);
+})();
+</script>
 <script>
 (function () {
   "use strict";
@@ -1545,19 +1585,23 @@ updateCartCount();
   var client = null;
   var failReason = "";
 
-  if (!window.supabase) {
-    failReason = "The Supabase library did not load.";
-  } else if (!cfg || !cfg.url || !cfg.publishableKey) {
-    failReason = "supabase-config.js is missing, not loaded, or incomplete.";
-  } else {
-    try {
-      client = window.supabase.createClient(cfg.url, cfg.publishableKey);
-      window.safeBuySupabase = client;
-    } catch (e) {
-      failReason = "Could not create the Supabase client: " + e.message;
-      console.error("SafeBuy: could not create Supabase client.", e);
+  function makeClient() {
+    if (client) return;
+    if (!window.supabase) {
+      failReason = "The Supabase library did not load.";
+    } else if (!cfg || !cfg.url || !cfg.publishableKey) {
+      failReason = "supabase-config.js is missing, not loaded, or incomplete.";
+    } else {
+      try {
+        client = window.supabase.createClient(cfg.url, cfg.publishableKey);
+        window.safeBuySupabase = client;
+      } catch (e) {
+        failReason = "Could not create the Supabase client: " + e.message;
+        console.error("SafeBuy: could not create Supabase client.", e);
+      }
     }
   }
+  if (window.supabase) makeClient();   // library already here (fast connection or saved copy)
 
   /* ---------- Load products ---------- */
   function fail(message) {
@@ -1614,7 +1658,19 @@ updateCartCount();
   }
 
   function loadProducts() {
-    if (!client) { restFallback(failReason); return; }
+    if (!client) {
+      // library still downloading: the early request (started at page load) already has the products
+      var e0 = window.__earlyProducts;
+      if (e0) {
+        window.__earlyProducts = null;
+        e0.then(function (r) {
+          if (r.error) restFallback("Supabase error: " + r.error.message);
+          else if (!window.__earlyRendered) setProducts(mapRows(r.data), "supabase");
+        });
+        return;
+      }
+      restFallback(failReason); return;
+    }
 
     var timeout = new Promise(function (_, reject) {
       setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
@@ -1770,9 +1826,9 @@ updateCartCount();
 
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
-    if (!client) { say(unavailable); return; }
+    if (!client) { say(window.supabase ? unavailable : "Still connecting. Please try again in a few seconds."); return; }
     submit.disabled = true;
-    say("Please wait…");
+   say("Please wait…");
 
     try {
       var email = emailInput.value.trim();
@@ -2216,7 +2272,7 @@ updateCartCount();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  if (client) {
+  function startAuth() {
     client.auth.onAuthStateChange(function (event, session) {
       if (event === "PASSWORD_RECOVERY") {
         currentApp = null;
@@ -2242,6 +2298,12 @@ updateCartCount();
   }
 
   setMode("signin");
+  if (client) { startAuth(); if (window.__sbMarkReady) window.__sbMarkReady(); }
+  else if (window.__sbLibLoaded) window.__sbLibLoaded(function () {
+    makeClient();
+    if (client) startAuth();
+    if (window.__sbMarkReady) window.__sbMarkReady();
+  });
 })();
 </script>
 
@@ -2263,22 +2325,18 @@ document.addEventListener("click", function (e) {
 </script>
 <!-- Feature scripts (unchanged) -->
 <script src="./shop-extras.js"></script>
-<script src="./messages.js"></script>
-<script src="./notify.js"></script>
-<script src="./verify.js"></script>
-<script src="./lead-capture.js"></script>
-<script src="./buyer-account.js"></script>
-<script src="./orders.js"></script>
-<script src="./account-settings.js"></script>
-<script src="./delivery.js"></script>
-<script src="./delivery-orders.js"></script>
-<script src="./delivery-boost.js"></script>
-<script src="./bottom-sheet.js"></script>
-<script src="./pwa.js"></script>
-<script src="./protect-core.js"></script>
-<script src="./protected-option.js"></script>
-<script src="./theme.js"></script>
-<script src="./admin-plus.js"></script>
+<script>
+/* The remaining feature files load in order as soon as the connection to the database is ready (or has failed). */
+(function () {
+  var L = ["./messages.js", "./notify.js", "./verify.js", "./lead-capture.js", "./buyer-account.js", "./orders.js", "./account-settings.js", "./delivery.js", "./delivery-orders.js", "./delivery-boost.js", "./bottom-sheet.js", "./pwa.js", "./protect-core.js", "./protected-option.js", "./theme.js", "./admin-plus.js"];
+  function next() {
+    if (!L.length) return;
+    var s = document.createElement("script"); s.src = L.shift(); s.async = false;
+    s.onload = s.onerror = next; document.body.appendChild(s);
+  }
+  (window.__sbWhenReady || function (f) { f(); })(next);
+})();
+</script>
 <script>
 /* Safety net: if any invisible decorative layer ends up on top of the main cards, let taps pass through it. */
 (function () {
