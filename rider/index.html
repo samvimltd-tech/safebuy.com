@@ -376,6 +376,47 @@ body:not(.rd-out) #rd-auth{display:none}
 .rd-shop p{margin:0 0 10px;color:var(--muted);font-size:14px}
 .rd-shop .button{width:100%}
 .toast{bottom:calc(24px + env(safe-area-inset-bottom))}
+.rd-set{margin-top:12px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:0 14px}
+.rd-set summary{cursor:pointer;padding:14px 0;font-weight:800;list-style:none}
+.rd-set summary::-webkit-details-marker{display:none}
+.rd-set .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.rd-set select,.rd-set input[type=range]{max-width:55%}
+.rd-set select{padding:8px;border-radius:10px;border:1px solid var(--line);font:inherit}
+.rd-set .mini{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:700 13px system-ui,sans-serif;cursor:pointer}
+.rd-set small{color:var(--muted)}
+/* the vehicle scene stands still until the rider goes online */
+body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh-t *{animation:none!important}
+#rd-live{position:fixed;inset:0;z-index:99990;background:linear-gradient(#06281c,#0b3d2c 55%,#06281c);color:#fff;display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;text-align:center}
+#rd-live .top{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:15px}
+#rd-live .top .dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:#34d399;margin-right:8px;animation:rdblink 1.2s infinite}
+@keyframes rdblink{50%{opacity:.25}}
+#rd-live .top button,#rd-live .foot button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:9px 13px;font:700 13px system-ui,sans-serif}
+#rd-live .scene{position:relative;flex:1;margin:14px 0;min-height:260px;display:grid;align-items:center}
+#rd-live .vh-prev{height:min(52vh,420px);margin:0;border-radius:26px}
+#rd-live .vh-ride{font-size:128px;width:180px;margin-left:-90px;bottom:76px}
+#rd-live .vh-road{bottom:68px}
+#rd-live .vh-name{font-size:20px}
+#rd-live h2{margin:0 0 4px;font-size:26px}
+#rd-live .sub{color:#b7e7d2;font-size:15px;line-height:1.5}
+#rd-live .timer{margin-top:8px;font-size:30px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
+#rd-live .dots span{animation:rdblink 1.2s infinite}#rd-live .dots span:nth-child(2){animation-delay:.25s}#rd-live .dots span:nth-child(3){animation-delay:.5s}
+#rd-live .foot{display:flex;gap:10px;margin-top:14px}
+#rd-live .foot button{flex:1;padding:16px 10px;font-size:16px}
+#rd-live .foot .off{background:#b91c1c;border-color:#b91c1c}
+#rd-live-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:99980;border:0;border-radius:30px;padding:13px 20px;background:#0b3d2c;color:#fff;font:800 14px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#rd-call{position:fixed;inset:0;z-index:99999;background:radial-gradient(circle at 50% 30%,#0f5a3f,#06281c);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(34px + env(safe-area-inset-top)) 22px calc(30px + env(safe-area-inset-bottom));text-align:center;font-family:system-ui,sans-serif}
+#rd-call .ring{position:relative;width:150px;height:150px;margin:6px auto 0;display:grid;place-items:center;font-size:64px}
+#rd-call .ring i{position:absolute;inset:0;border-radius:50%;border:3px solid rgba(255,255,255,.55);animation:rdcall 1.8s ease-out infinite}
+#rd-call .ring i:nth-child(2){animation-delay:.6s}#rd-call .ring i:nth-child(3){animation-delay:1.2s}
+@keyframes rdcall{0%{transform:scale(.45);opacity:.9}100%{transform:scale(1.5);opacity:0}}
+#rd-call h2{margin:10px 0 6px;font-size:28px}
+#rd-call .info{font-size:20px;line-height:1.5;max-width:420px}
+#rd-call .info strong{font-size:30px;color:#9df5c9}
+#rd-call .cd{margin-top:10px;font-size:18px;opacity:.9}
+#rd-call .btns{display:flex;gap:14px;width:100%;max-width:440px}
+#rd-call button{flex:1;border:0;border-radius:20px;padding:22px 10px;font:800 21px system-ui,sans-serif;color:#fff}
+#rd-call .acc{background:#16a34a;animation:rdpulse 1.1s ease-in-out infinite}#rd-call .dec{background:#b91c1c}
+@keyframes rdpulse{50%{transform:scale(1.05);box-shadow:0 0 0 14px rgba(22,163,74,.25)}}
 </style>
 <script>
 /* Password-reset link: remember it before the sign-in library cleans the address bar. */
@@ -441,6 +482,7 @@ body:not(.rd-out) #rd-auth{display:none}
       <span class="sw-on" aria-current="page">🏍️ Deliveries</span>
       <a href="../?from=rider" id="rd-market">🛍️ Marketplace</a>
     </div>
+    <button class="button button-outline" type="button" id="rd-fs" hidden aria-label="Full screen">⛶</button>
     <button class="button button-outline" type="button" id="rd-signout" hidden>Sign out</button>
   </div>
 </header>
@@ -484,6 +526,17 @@ body:not(.rd-out) #rd-auth{display:none}
     <button type="button" id="rd-go" data-action="deliver" hidden></button>
     <div id="rd-slot"></div>
     <div class="rd-actions" style="justify-content:center;margin-top:12px"><button class="button button-outline" type="button" id="rd-refresh">↻ Refresh</button></div>
+    <details class="rd-set" id="rd-set"><summary>🔔 Alert sound &amp; full-screen</summary>
+      <div class="row"><span>Ringtone</span><select id="rd-tone"><option value="bell">Bell</option><option value="phone">Phone ring</option><option value="siren">Siren</option><option value="pulse">Beeps</option><option value="custom" id="rd-tone-custom" disabled>My own sound</option></select></div>
+      <div class="row"><span>Your own sound<br><small id="rd-file-name">No file chosen (max 2 MB)</small></span><span><label class="mini" for="rd-file">Choose</label><input id="rd-file" type="file" accept="audio/*" hidden> <button class="mini" type="button" id="rd-file-del" hidden>Remove</button></span></div>
+      <div class="row"><span>Volume</span><input id="rd-vol" type="range" min="20" max="100" value="100"></div>
+      <div class="row"><span>Vibrate</span><input id="rd-vib" type="checkbox" checked></div>
+      <div class="row"><span>Full-screen online display<br><small>Big moving vehicle while you wait for jobs</small></span><input id="rd-live-on" type="checkbox" checked></div>
+      <div class="row"><span>Full-screen alert</span><input id="rd-full" type="checkbox" checked></div>
+      <div class="row"><span>Go full screen when I go online</span><input id="rd-fsauto" type="checkbox" checked></div>
+      <div class="row"><span>Keep screen on while I am online</span><input id="rd-awake" type="checkbox" checked></div>
+      <div class="row"><span><small>The sound rings until you answer. Tap Test once so your phone allows sound.</small></span><button class="mini" type="button" id="rd-test">▶ Test</button></div>
+    </details>
     <div class="rd-shop">
       <p>Want to buy something? You use the same login on the marketplace.</p>
       <a class="button button-light" href="../">🛍️ Open the marketplace</a>
@@ -622,11 +675,13 @@ body:not(.rd-out) #rd-auth{display:none}
     try { localStorage.setItem("sb-rider", "1"); } catch (e) {}
     document.body.classList.remove("rd-out");
     $("rd-signout").hidden = false;
+    if (window.__rdAwake) window.__rdAwake.on();
     if (!started) { started = true; $("rd-go").click(); }
   }
   function leave() {
     document.body.classList.add("rd-out");
     $("rd-signout").hidden = true;
+    if (window.__rdAwake) window.__rdAwake.off();
     started = false;
   }
   $("rd-refresh").addEventListener("click", function () { $("rd-go").click(); });
@@ -656,34 +711,203 @@ body:not(.rd-out) #rd-auth{display:none}
   }
   if (recovering) setMode("newpass"); else if (!window.__sbLinkError) setMode("signin");
 
-  /* ---------- new job request: sound + vibration ---------- */
-  var audio = null;
+  /* ---------- new job request: full-screen alert + ringing sound (until answered) ---------- */
+  var audio = null, silent = null, ringStop = null, call = null, callTimer = null;
+  var SIL = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQAAAAA=";
+  function getS(k, d) { var v = store("rd-" + k); return v === null ? d : v; }
   function unlockAudio() {
     try { if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch (e) {}
+    try { if (!silent) { silent = new Audio(SIL); silent.play().then(function () { silent.pause(); }).catch(function () {}); } } catch (e) {}
   }
   document.addEventListener("click", unlockAudio);
   document.addEventListener("touchstart", unlockAudio, { passive: true });
-  function ding() {
-    try {
-      if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]);
-      if (!audio) return;
-      [0, 0.28, 0.56].forEach(function (d, i) {
-        var o = audio.createOscillator(), g = audio.createGain();
-        o.type = "sine"; o.frequency.value = i === 1 ? 1175 : 880;
-        g.gain.setValueAtTime(0.0001, audio.currentTime + d);
-        g.gain.exponentialRampToValueAtTime(0.35, audio.currentTime + d + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d + 0.24);
-        o.connect(g); g.connect(audio.destination); o.start(audio.currentTime + d); o.stop(audio.currentTime + d + 0.26);
-      });
-    } catch (e) {}
+
+  // the person's own sound file lives in the phone's browser storage (IndexedDB)
+  function idb(mode, fn) {
+    return new Promise(function (res) {
+      try {
+        var rq = indexedDB.open("sb-rider", 1);
+        rq.onupgradeneeded = function () { rq.result.createObjectStore("tone"); };
+        rq.onerror = function () { res(null); };
+        rq.onsuccess = function () {
+          var tx = rq.result.transaction("tone", mode), st = tx.objectStore("tone"), out = fn(st);
+          tx.oncomplete = function () { res(out && out.result !== undefined ? out.result : true); }; tx.onerror = function () { res(null); };
+        };
+      } catch (e) { res(null); }
+    });
   }
-  var hadOffer = false, baseTitle = document.title;
+  var customUrl = null;
+  function loadCustom() {
+    return idb("readonly", function (st) { return st.get("custom"); }).then(function (blob) {
+      if (customUrl) { URL.revokeObjectURL(customUrl); customUrl = null; }
+      if (blob && blob.size) { customUrl = URL.createObjectURL(blob); }
+      $("rd-tone-custom").disabled = !customUrl;
+      $("rd-file-del").hidden = !customUrl;
+      $("rd-file-name").textContent = customUrl ? "Your sound is saved on this phone" : "No file chosen (max 2 MB)";
+      if (!customUrl && $("rd-tone").value === "custom") { $("rd-tone").value = "bell"; store("rd-tone", "bell"); }
+    });
+  }
+  $("rd-file").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    if (f.size > 2 * 1024 * 1024) { window.showToast("That file is too big. Choose a sound under 2 MB."); this.value = ""; return; }
+    if (f.type && f.type.indexOf("audio") !== 0) { window.showToast("Please choose an audio file."); this.value = ""; return; }
+    idb("readwrite", function (st) { return st.put(f, "custom"); }).then(function (ok) {
+      if (!ok) { window.showToast("Could not save the sound on this phone."); return; }
+      loadCustom().then(function () { $("rd-tone").value = "custom"; store("rd-tone", "custom"); window.showToast("Your sound is saved."); });
+    });
+  });
+  $("rd-file-del").addEventListener("click", function () { idb("readwrite", function (st) { return st.delete("custom"); }).then(loadCustom); });
+  $("rd-tone").value = getS("tone", "bell");
+  $("rd-vol").value = getS("vol", "100");
+  ["vib", "full", "awake"].forEach(function (k) { $("rd-" + k).checked = getS(k, "1") === "1"; $("rd-" + k).addEventListener("change", function () { store("rd-" + k, this.checked ? "1" : "0"); if (k === "awake") { this.checked ? keepAwake() : releaseAwake(); } }); });
+  $("rd-tone").addEventListener("change", function () { store("rd-tone", this.value); });
+  $("rd-vol").addEventListener("input", function () { store("rd-vol", this.value); });
+  loadCustom().then(function () { if ($("rd-tone").value === "custom" && !customUrl) $("rd-tone").value = "bell"; });
+
+  // one burst of a built-in tone
+  function burst(kind, vol) {
+    if (!audio) return;
+    var t0 = audio.currentTime;
+    function note(freq, start, dur, type, v, f2) {
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0 + start); if (f2) o.frequency.linearRampToValueAtTime(f2, t0 + start + dur);
+      g.gain.setValueAtTime(0.0001, t0 + start); g.gain.exponentialRampToValueAtTime(Math.max(0.001, (v || 0.4) * vol), t0 + start + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + start + dur);
+      o.connect(g); g.connect(audio.destination); o.start(t0 + start); o.stop(t0 + start + dur + 0.02);
+    }
+    if (kind === "siren") { note(650, 0, 0.5, "square", 0.25, 1050); note(1050, 0.5, 0.5, "square", 0.25, 650); }
+    else if (kind === "pulse") { [0, 0.2, 0.4, 0.6].forEach(function (d) { note(1000, d, 0.12, "square", 0.25); }); }
+    else if (kind === "phone") { [0, 0.55].forEach(function (d) { note(440, d, 0.4, "sine", 0.35); note(480, d, 0.4, "sine", 0.35); }); }
+    else { note(880, 0, 0.26, "sine", 0.45); note(1175, 0.28, 0.26, "sine", 0.45); note(880, 0.56, 0.26, "sine", 0.45); }
+  }
+  var PERIOD = { bell: 1800, phone: 2400, siren: 1000, pulse: 1500 };
+  function startRing(forcedTone) {
+    stopRing();
+    var tone = forcedTone || $("rd-tone").value, vol = Number($("rd-vol").value || 100) / 100, vib = $("rd-vib").checked, timers = [], el = null;
+    unlockAudio();
+    if (tone === "custom" && customUrl) {
+      try { el = new Audio(customUrl); el.loop = true; el.volume = vol; el.play().catch(function () { tone = "bell"; el = null; fallback(); }); } catch (e) { el = null; fallback(); }
+    } else fallback();
+    function fallback() { var k = PERIOD[tone] ? tone : "bell"; burst(k, vol); timers.push(setInterval(function () { burst(k, vol); }, PERIOD[k])); }
+    if (vib && navigator.vibrate) { navigator.vibrate([500, 200, 500, 200, 500]); timers.push(setInterval(function () { navigator.vibrate([500, 200, 500, 200, 500]); }, 2200)); }
+    ringStop = function () { timers.forEach(clearInterval); if (el) { try { el.pause(); } catch (e) {} } if (navigator.vibrate) navigator.vibrate(0); ringStop = null; };
+  }
+  function stopRing() { if (ringStop) ringStop(); }
+  var testT = 0;
+  $("rd-test").addEventListener("click", function () { unlockAudio(); startRing(); clearTimeout(testT); testT = setTimeout(function () { if (!call) stopRing(); }, 3500); });
+
+  // full-screen call-style screen
+  function offerEl() { return document.querySelector("#rd-slot .dp-offer"); }
+  function showCall() {
+    if (call || !$("rd-full").checked) return;
+    call = document.createElement("div"); call.id = "rd-call"; call.setAttribute("role", "alertdialog"); call.setAttribute("aria-modal", "true");
+    call.innerHTML = '<div><div class="ring"><i></i><i></i><i></i><span>🏍️</span></div><h2>New delivery request</h2><div class="info" id="rd-call-info"></div><div class="cd" id="rd-call-cd"></div></div>' +
+      '<div class="btns"><button type="button" class="dec" id="rd-call-dec">✕ Decline</button><button type="button" class="acc" id="rd-call-acc">✓ Accept</button></div>';
+    document.body.appendChild(call);
+    document.body.style.overflow = "hidden";
+    function fill() {
+      var o = offerEl(); if (!o) return;
+      var p = o.querySelector("p"), c = o.querySelector("#dp-count");
+      if (p) $("rd-call-info").innerHTML = p.innerHTML;
+      if (c) $("rd-call-cd").textContent = c.textContent;
+    }
+    fill(); callTimer = setInterval(fill, 500);
+    function press(id) { stopRing(); hideCall(); var b = document.getElementById(id); if (b) b.click(); }
+    $("rd-call-acc").addEventListener("click", function () { press("dp-acc"); });
+    $("rd-call-dec").addEventListener("click", function () { press("dp-dec"); });
+    try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) {}
+  }
+  function hideCall() {
+    clearInterval(callTimer); callTimer = null;
+    if (call) { call.remove(); call = null; document.body.style.overflow = ""; }
+    try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); } catch (e) {}
+  }
+
+  /* ---------- full-screen "online" display: starts only when the rider goes online ---------- */
+  var live = null, livePill = null, liveTimer = null, liveSince = 0, liveMin = false;
+  $("rd-live-on").checked = getS("live", "1") === "1";
+  $("rd-live-on").addEventListener("change", function () { store("rd-live", this.checked ? "1" : "0"); syncLive(); });
+  function isOnline() { return !!document.querySelector("#rd-slot #dp-off"); }
+  function jobActive() { var j = document.querySelector("#rd-slot #dp-job"); return !!(j && j.children.length); }
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function tickLive() {
+    var t = $("rd-live-time"); if (!t) return;
+    var sec = Math.floor((Date.now() - liveSince) / 1000), h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60);
+    t.textContent = (h ? h + ":" : "") + two(m) + ":" + two(sec % 60);
+  }
+  function goFull() { try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {}); } catch (e) {} }
+  function showLive() {
+    if (live) return;
+    var prev = document.querySelector("#dp-vehcard .vh-prev");
+    live = document.createElement("div"); live.id = "rd-live";
+    live.innerHTML = '<div class="top"><span><i class="dot"></i>You are online</span><span><button type="button" id="rd-live-fs">⛶ Full screen</button> <button type="button" id="rd-live-min">Minimise</button></span></div>' +
+      '<div class="scene"><div class="vh-prev">' + (prev ? prev.innerHTML : '<div class="vh-ride" style="position:static;font-size:96px">🏍️</div>') + '</div></div>' +
+      '<div><h2>Looking for deliveries<span class="dots"><span>.</span><span>.</span><span>.</span></span></h2><div class="sub">Keep this screen open. A new job rings here.</div><div class="timer" id="rd-live-time">00:00</div></div>' +
+      '<div class="foot"><button type="button" class="off" id="rd-live-off">Go offline</button></div>';
+    document.body.appendChild(live);
+    if (!liveSince) liveSince = Date.now();
+    tickLive(); clearInterval(liveTimer); liveTimer = setInterval(tickLive, 1000);
+    $("rd-live-fs").addEventListener("click", goFull);
+    $("rd-live-min").addEventListener("click", function () { liveMin = true; syncLive(); });
+    $("rd-live-off").addEventListener("click", function () { var b = document.getElementById("dp-off"); hideLive(); if (b) b.click(); });
+    goFull();
+  }
+  function hideLive() {
+    clearInterval(liveTimer); liveTimer = null;
+    if (live) { live.remove(); live = null; }
+    if (!call) { try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); } catch (e) {} }
+  }
+  function pill(on) {
+    if (on && !livePill) {
+      livePill = document.createElement("button"); livePill.type = "button"; livePill.id = "rd-live-pill"; livePill.textContent = "🟢 Online · tap to open";
+      livePill.addEventListener("click", function () { liveMin = false; syncLive(); });
+      document.body.appendChild(livePill);
+    } else if (!on && livePill) { livePill.remove(); livePill = null; }
+  }
+  function syncLive() {
+    var online = isOnline();
+    document.body.classList.toggle("rd-online", online);
+    if (!online) { liveMin = false; liveSince = 0; hideLive(); pill(false); return; }
+    if (!liveSince) liveSince = Date.now();
+    var want = $("rd-live-on").checked && !liveMin && !jobActive();
+    if (want) { showLive(); pill(false); } else { hideLive(); pill($("rd-live-on").checked && (liveMin || jobActive())); }
+  }
+  new MutationObserver(function () { clearTimeout(syncLive.t); syncLive.t = setTimeout(syncLive, 120); }).observe($("rd-slot"), { childList: true, subtree: true });
+
+  // full screen: a button in the header, and automatically when going online (a tap is needed by the browser)
+  var rdfs = $("rd-fs"), canFS = !!(document.documentElement.requestFullscreen) && !standalone();
+  function inFS() { return !!document.fullscreenElement; }
+  function goFS() { try { if (canFS && !inFS()) document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(function () {}); } catch (e) {} }
+  function endFS() { try { if (inFS()) document.exitFullscreen().catch(function () {}); } catch (e) {} }
+  if (canFS) { rdfs.hidden = false; }
+  rdfs.addEventListener("click", function () { inFS() ? endFS() : goFS(); });
+  document.addEventListener("fullscreenchange", function () { rdfs.textContent = inFS() ? "✕" : "⛶"; });
+  $("rd-fsauto").checked = getS("fsauto", "1") === "1";
+  $("rd-fsauto").addEventListener("change", function () { store("rd-fsauto", this.checked ? "1" : "0"); });
+  document.addEventListener("click", function (e) {
+    if (e.target.closest("#dp-on") && $("rd-fsauto").checked) goFS();
+    if (e.target.closest("#dp-off")) endFS();
+  }, true);
+
+  // keep the screen on while online, so the phone does not freeze the app
+  var wl = null;
+  function keepAwake() {
+    if (!$("rd-awake").checked || wl || !("wakeLock" in navigator) || document.visibilityState !== "visible" || document.body.classList.contains("rd-out")) return;
+    navigator.wakeLock.request("screen").then(function (l) { wl = l; l.addEventListener("release", function () { wl = null; }); }).catch(function () {});
+  }
+  function releaseAwake() { if (wl) { try { wl.release(); } catch (e) {} wl = null; } }
+  document.addEventListener("visibilitychange", keepAwake);
+  window.__rdAwake = { on: keepAwake, off: releaseAwake };
+
+  var hadOffer = false, baseTitle = document.title, flashT = 0;
   new MutationObserver(function () {
-    var has = !!document.querySelector("#dp-offer .dp-offer, .dp-offer");
+    var has = !!offerEl();
     if (has && !hadOffer) {
-      ding();
+      startRing(); showCall();
       document.title = "🔔 New delivery request!";
-      setTimeout(function () { document.title = baseTitle; }, 8000);
+      clearInterval(flashT); flashT = setInterval(function () { document.title = document.title.charAt(0) === "🔔" ? "🏍️ Answer now!" : "🔔 New delivery request!"; }, 900);
+    } else if (!has && hadOffer) {
+      stopRing(); hideCall(); clearInterval(flashT); document.title = baseTitle;
     }
     hadOffer = has;
   }).observe($("rd-slot"), { childList: true, subtree: true });
