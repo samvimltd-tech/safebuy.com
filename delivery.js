@@ -102,6 +102,8 @@
     "@keyframes vh-fast{0%,100%{transform:translateX(5px) translateY(0)}50%{transform:translateX(-5px) translateY(-4px)}}" +
     "@keyframes vh-glide{0%,100%{transform:translateX(-6px)}50%{transform:translateX(6px) translateY(-2px)}}" +
     "@keyframes vh-heavy{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}" +
+    "html:not(.dp-live) #dp-vehcard .vh-sun,html:not(.dp-live) #dp-vehcard .vh-cloud,html:not(.dp-live) #dp-vehcard .vh-road,html:not(.dp-live) #dp-vehcard .vh-sl i,html:not(.dp-live) #dp-vehcard .vh-t .vh-r,html:not(.dp-live) #dp-vehcard .m-walk>span,html:not(.dp-live) #dp-vehcard .m-pedal>span,html:not(.dp-live) #dp-vehcard .m-fast>span,html:not(.dp-live) #dp-vehcard .m-glide>span,html:not(.dp-live) #dp-vehcard .m-heavy>span{animation-play-state:paused!important}" +
+    ".vh-live{margin:6px 0 0;font-size:13px;font-weight:700}.vh-live.on{color:#15803d}.vh-live.off{color:#718078}" +
     "@media (prefers-reduced-motion:reduce){.vh-prev *,.vh-t *{animation:none!important}.vh-t .vh-r{animation:none}}";
   document.head.appendChild(vstyle);
 
@@ -383,7 +385,7 @@
         : '<label class="check"><input type="checkbox" id="dp-consent"' + (p.location_consent ? " checked" : "") + '> I agree to share my live location while I am online.</label>' +
           '<button class="button button-primary" type="button" id="dp-on">' + (p.is_online ? "Resume sharing location" : "Go online") + "</button>") +
       "</div>" +
-      '<h3>My vehicle</h3><div class="dp-card" id="dp-vehcard">' + vehPicker(p.vehicle_type) +
+      '<h3>My vehicle</h3><div class="dp-card" id="dp-vehcard"><p class="vh-live ' + (online ? "on" : "off") + '">' + (online ? "🟢 You are online: your vehicle is on the move" : "⚪ Go online to see your vehicle ride") + "</p>" + vehPicker(p.vehicle_type) +
       '<button class="button button-light" type="button" id="dp-save-veh">Save vehicle</button></div>' +
       "<h3>Service areas</h3>" + areaBoxes(S.areas) +
       '<button class="button button-light" type="button" id="dp-save-areas">Save areas</button>' +
@@ -485,6 +487,7 @@
 
   function startTracking() {
     tracking = true;
+    document.documentElement.classList.add("dp-live");
     watchId = navigator.geolocation.watchPosition(function (p) { lastPos = p.coords; }, function () {}, { enableHighAccuracy: true });
     pingTimer = setInterval(sendPing, 20000);
     pollTimer = setInterval(poll, 8000);
@@ -499,6 +502,7 @@
   }
   function stopTracking() {
     tracking = false;
+    document.documentElement.classList.remove("dp-live");
     if (watchId != null && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
     clearInterval(pingTimer); clearInterval(pollTimer); clearInterval(countTimer);
     watchId = null;
