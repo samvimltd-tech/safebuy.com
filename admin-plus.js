@@ -154,14 +154,19 @@
   $("main-tabs").appendChild(launchTab);
   var launchPanel = document.createElement("div");
   launchPanel.id = "launch-panel"; launchPanel.hidden = true; list.parentNode.insertBefore(launchPanel, list.nextSibling);
+  var backupTab = document.createElement("button");
+  backupTab.type = "button"; backupTab.className = "tab"; backupTab.dataset.plustab = "backup"; backupTab.textContent = "Backup";
+  $("main-tabs").appendChild(backupTab);
+  var backupPanel = document.createElement("div");
+  backupPanel.id = "backup-panel"; backupPanel.hidden = true; list.parentNode.insertBefore(backupPanel, list.nextSibling);
   function closeSite() {
-    if (panel.hidden && launchPanel.hidden) return;
-    panel.hidden = true; launchPanel.hidden = true; siteTab.classList.remove("active"); launchTab.classList.remove("active");
+    if (panel.hidden && launchPanel.hidden && backupPanel.hidden) return;
+    panel.hidden = true; launchPanel.hidden = true; backupPanel.hidden = true; siteTab.classList.remove("active"); launchTab.classList.remove("active"); backupTab.classList.remove("active");
     covered.forEach(function (i) { $(i).hidden = false; });
   }
   async function openSite() {
     document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
-    siteTab.classList.add("active"); launchTab.classList.remove("active"); launchPanel.hidden = true;
+    siteTab.classList.add("active"); launchTab.classList.remove("active"); launchPanel.hidden = true; backupPanel.hidden = true; backupTab.classList.remove("active");
     covered.forEach(function (i) { $(i).hidden = true; });
     panel.hidden = false; panel.innerHTML = '<p class="muted">Loading…</p>';
     var v = {};
@@ -190,7 +195,7 @@
   /* ---- Launch check: a live list of what is ready before real customers arrive ---- */
   async function openLaunch() {
     document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
-    launchTab.classList.add("active"); siteTab.classList.remove("active"); panel.hidden = true;
+    launchTab.classList.add("active"); siteTab.classList.remove("active"); panel.hidden = true; backupPanel.hidden = true; backupTab.classList.remove("active");
     covered.forEach(function (i) { $(i).hidden = true; });
     launchPanel.hidden = false; launchPanel.innerHTML = '<p class="muted">Checking…</p>';
     var r = await Promise.all([get("seller_applications"), get("seller_products"), get("delivery_partners"), get("delivery_supported_areas"), get("site_content"), get("delivery_settings")]);
@@ -225,6 +230,55 @@
   }
   launchTab.addEventListener("click", openLaunch);
   launchPanel.addEventListener("click", function (e) { if (e.target.id === "launch-again") openLaunch(); });
+
+  /* ---- Backup: saves your data to this phone as one file (read-only: it never changes anything) ---- */
+  function rpcRead(name, args) {
+    return fetch(base + "/rest/v1/rpc/" + name, { method: "POST", headers: headers({ "Content-Type": "application/json" }), body: JSON.stringify(args || {}) })
+      .then(function (r) { return r.text().then(function (t) { if (!r.ok) throw new Error(t.slice(0, 160) || "Request failed"); return t ? JSON.parse(t) : null; }); });
+  }
+  function lastBackup() { try { return localStorage.getItem("sb-last-backup") || ""; } catch (e) { return ""; } }
+  async function openBackup() {
+    document.querySelectorAll("#main-tabs .tab").forEach(function (t) { t.classList.remove("active"); });
+    backupTab.classList.add("active"); siteTab.classList.remove("active"); launchTab.classList.remove("active"); panel.hidden = true; launchPanel.hidden = true;
+    covered.forEach(function (i) { $(i).hidden = true; });
+    backupPanel.hidden = false; backupPanel.innerHTML = '<p class="muted">Checking…</p>';
+    var tables;
+    try { tables = await rpcRead("admin_backup_tables"); }
+    catch (e) { backupPanel.innerHTML = '<div class="empty">Backup is not switched on yet. Run backup_and_speed.sql in Supabase, then refresh this page.<br><small>' + esc(e.message) + "</small></div>"; return; }
+    var total = tables.reduce(function (s, t) { return s + Number(t.rows || 0); }, 0), lb = lastBackup();
+    var age = lb ? Math.floor((Date.now() - new Date(lb).getTime()) / 86400000) : null;
+    backupPanel.innerHTML = '<p class="muted">Saves all your marketplace data (accounts, shops, products, orders, deliveries) to this phone as one file. Product photos and passwords are not included. Keep the file private: it contains customers\' personal details.</p>' +
+      '<div class="item"><strong>' + (lb ? "Last backup: " + esc(new Date(lb).toLocaleString()) + (age >= 7 ? ' <span class="pill rejected">' + age + " days ago: back up now</span>" : "") : '<span class="pill rejected">No backup yet</span>') + "</strong><br>" +
+      '<span class="muted">' + tables.length + " tables, " + total.toLocaleString() + " rows</span></div>" +
+      '<button class="button full" type="button" id="bk-go">Download backup now</button><p class="msg" id="bk-msg" role="status"></p>' +
+      '<div class="item muted" style="font-size:13px">' + tables.map(function (t) { return esc(t.table) + " (" + t.rows + ")"; }).join(" · ") + "</div>";
+    $("bk-go").addEventListener("click", function () { runBackup(tables); });
+  }
+  async function runBackup(tables) {
+    var btn = $("bk-go"), msg = $("bk-msg"); btn.disabled = true; msg.className = "msg";
+    var parts = ['{"app":"SafeBuy NG","saved_at":"' + new Date().toISOString() + '","tables":{'], first = true, done = 0, all = tables.reduce(function (s, t) { return s + Number(t.rows || 0); }, 0);
+    try {
+      for (var i = 0; i < tables.length; i++) {
+        var t = tables[i], off = 0, rows = [];
+        while (off < Number(t.rows || 0)) {
+          var chunk = await rpcRead("admin_backup_table", { p_table: t.table, p_offset: off, p_limit: 500 });
+          if (!chunk || !chunk.length) break;
+          rows.push(JSON.stringify(chunk).slice(1, -1)); off += chunk.length; done += chunk.length;
+          msg.textContent = "Saving… " + t.table + " (" + Math.min(100, Math.round(done / Math.max(all, 1) * 100)) + "%)";
+        }
+        parts.push((first ? "" : ",") + JSON.stringify(t.table) + ":[" + rows.join(",") + "]"); first = false;
+      }
+      parts.push("}}");
+      var blob = new Blob(parts, { type: "application/json" }), a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "safebuy-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 60000);
+      try { localStorage.setItem("sb-last-backup", new Date().toISOString()); } catch (e) {}
+      msg.textContent = "Done. " + done.toLocaleString() + " rows saved to your phone's Downloads. Keep the file somewhere safe and private.";
+    } catch (e) { msg.className = "msg err"; msg.textContent = "Backup stopped: " + e.message; }
+    btn.disabled = false;
+  }
+  backupTab.addEventListener("click", openBackup);
   siteTab.addEventListener("click", openSite);
   document.addEventListener("click", function (e) { if (e.target.closest("[data-tab],[data-go]")) closeSite(); });
   panel.addEventListener("submit", function (e) {
