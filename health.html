@@ -56,7 +56,7 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
   }
   // [file, strings that must be inside it (proves it is the latest version), what to do]
   var FILES = [
-    ["./index.html", ["sc-notice-text", "about.html", "site_content", "sw-bar", "data-door", "__sbWhenReady"], "Upload the latest index.html to the main folder."],
+    ["./index.html", ["sc-notice-text", "about.html", "site_content", "data-door", "__sbWhenReady"], "Upload the latest index.html to the main folder."],
     ["./vendor/supabase-2.45.4.js", ["createClient"], "Upload the Supabase library copy into a folder named vendor (see the steps I gave you). Without it the site still works but loads slower."],
     ["./reset.html", ["serviceWorker"], "Upload reset.html to the main folder."],
     ["./sw.js", ["safebuy-v4", "no-cache"], "Upload the new sw.js to the main folder (replaces the old one)."],
