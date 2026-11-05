@@ -335,11 +335,6 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
 /* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
 html::before,html::after,body::before,body::after{pointer-events:none!important}
 .quick-link,.path{position:relative;z-index:2}
-/* Switch between the Marketplace and the Rider app (shown to delivery partners) */
-#sw-bar{position:sticky;top:var(--header-h);z-index:29;display:flex;justify-content:center;padding:7px 10px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line)}
-.swx{display:inline-flex;padding:3px;border-radius:30px;background:#e6efea;border:1px solid #cfe0d7;font:800 13px Arial,Helvetica,sans-serif}
-.swx>*{display:inline-flex;align-items:center;padding:8px 14px;border-radius:30px;white-space:nowrap;text-decoration:none;color:#3b5a4d}
-.swx .swx-on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(8,127,91,.3)}
 
 /* ---------- Rider app (delivery only) ---------- */
 :root{--green:#12372a;--green-dark:#0a2a1f;--green-light:#e6f3ed;--header-h:60px}
@@ -952,5 +947,6 @@ body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(function () {});
 })();
 </script>
+<script src="../switches.js?v=1" defer></script>
 </body>
 </html>
