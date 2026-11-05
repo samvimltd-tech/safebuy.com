@@ -344,11 +344,6 @@ button.button-primary.busy::after,button.busy.sb-dark::after{border-color:rgba(2
 /* Decorative layers must never catch taps (fixes cards that looked fine but did not respond) */
 html::before,html::after,body::before,body::after{pointer-events:none!important}
 .quick-link,.path{position:relative;z-index:2}
-/* Switch between the Marketplace and the Rider app (shown to delivery partners) */
-#sw-bar{position:sticky;top:var(--header-h);z-index:29;display:flex;justify-content:center;padding:7px 10px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line)}
-.swx{display:inline-flex;padding:3px;border-radius:30px;background:#e6efea;border:1px solid #cfe0d7;font:800 13px Arial,Helvetica,sans-serif}
-.swx>*{display:inline-flex;align-items:center;padding:8px 14px;border-radius:30px;white-space:nowrap;text-decoration:none;color:#3b5a4d}
-.swx .swx-on{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(8,127,91,.3)}
 </style>
 <script>
 /* Spinner on any button that starts a network request. It watches fetch(): a request that starts right
@@ -467,12 +462,6 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
     </div>
   </div>
 </header>
-<div id="sw-bar" hidden>
-  <div class="swx" role="group" aria-label="Switch app">
-    <span class="swx-on" aria-current="page">🛍️ Marketplace</span>
-    <a id="sw-rider" href="./rider/">🏍️ Rider app</a>
-  </div>
-</div>
 
 <div class="delivery-bar" id="delivery-bar" role="status">
   <div class="container">
@@ -1585,6 +1574,49 @@ updateCartCount();
   var client = null;
   var failReason = "";
 
+  /* Photos are shrunk on the phone before upload (max 1280 px, WebP): pages load faster and the free data allowance lasts. */
+  function sbShrink(file) {
+    return new Promise(function (res) {
+      try {
+        if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) { res(file); return; }
+        var url = URL.createObjectURL(file), img = new Image();
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (!w || !h) { res(file); return; }
+          var sc = Math.min(1, 1280 / Math.max(w, h));
+          if (sc === 1 && file.size < 250 * 1024) { res(file); return; }
+          var cv = document.createElement("canvas"); cv.width = Math.round(w * sc); cv.height = Math.round(h * sc);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          cv.toBlob(function (b) {
+            if (!b || b.type !== "image/webp" || b.size >= file.size) { res(file); return; }
+            try { res(new File([b], (file.name || "photo").replace(/\.\w+$/, "") + ".webp", { type: "image/webp" })); } catch (e) { res(b); }
+          }, "image/webp", 0.8);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); res(file); };
+        img.src = url;
+      } catch (e) { res(file); }
+    });
+  }
+  /* Every upload to the product-images bucket (main photo and gallery photos) goes through sbShrink. The file path is kept as it was. */
+  function wrapStorage(c) {
+    try {
+      var orig = c.storage.from.bind(c.storage);
+      c.storage.from = function (bucket) {
+        var b = orig(bucket);
+        if (bucket === "product-images" && b && b.upload) {
+          var up = b.upload.bind(b);
+          b.upload = async function (path, file, opts) {
+            var small = await sbShrink(file);
+            return up(path, small, Object.assign({}, opts || {}, { contentType: small.type || (opts && opts.contentType) }));
+          };
+        }
+        return b;
+      };
+    } catch (e) { console.warn("SafeBuy: photo shrinking not active.", e); }
+  }
+  window.__sbShrink = sbShrink; window.__sbWrapStorage = wrapStorage;
+
   function makeClient() {
     if (client) return;
     if (!window.supabase) {
@@ -1595,6 +1627,7 @@ updateCartCount();
       try {
         client = window.supabase.createClient(cfg.url, cfg.publishableKey);
         window.safeBuySupabase = client;
+        wrapStorage(client);
       } catch (e) {
         failReason = "Could not create the Supabase client: " + e.message;
         console.error("SafeBuy: could not create Supabase client.", e);
@@ -1828,7 +1861,7 @@ updateCartCount();
     event.preventDefault();
     if (!client) { say(window.supabase ? unavailable : "Still connecting. Please try again in a few seconds."); return; }
     submit.disabled = true;
-   say("Please wait…");
+    say("Please wait…");
 
     try {
       var email = emailInput.value.trim();
@@ -2364,42 +2397,6 @@ document.addEventListener("click", function (e) {
   }
   [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
   window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
-})();
-</script>
-<script>
-/* Delivery partners get a switch to go back to the Rider app. */
-(function () {
-  "use strict";
-  if (/\/(seller|rider)\//.test(location.pathname)) return;
-  var bar = document.getElementById("sw-bar");
-  if (!bar) return;
-  function ls(k, v) {
-    try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
-    return null;
-  }
-  var fromRider = /[?&]from=rider/.test(location.search);
-  if (fromRider) ls("sb-rider", "1");
-  bar.hidden = ls("sb-rider") !== "1";
-  function look(session) {
-    var c = window.safeBuySupabase;
-    if (!session || !session.user) { if (!fromRider) { ls("sb-rider", null); bar.hidden = true; } return; }
-    c.from("delivery_partners").select("id").eq("user_id", session.user.id).maybeSingle().then(function (r) {
-      var yes = !!(r && r.data);
-      ls("sb-rider", yes ? "1" : null);
-      bar.hidden = !yes && !fromRider;
-    }, function () {});
-  }
-  function hook() {
-    var c = window.safeBuySupabase;
-    if (!c || !c.auth) return false;
-    c.auth.getSession().then(function (r) { look(r && r.data && r.data.session); });
-    c.auth.onAuthStateChange(function (e, s) {
-      if (e === "SIGNED_OUT") { ls("sb-rider", null); bar.hidden = true; }
-      else if (e === "SIGNED_IN") look(s);
-    });
-    return true;
-  }
-  var n = 0, t = setInterval(function () { if (hook() || ++n > 40) clearInterval(t); }, 300);
 })();
 </script>
 </body>
