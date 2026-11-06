@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["reports", "Reports"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["reports", "Reports"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, reports: pReports, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -131,6 +131,40 @@
       });
     }
     draw("open");
+  }
+
+  /* ---- Plans: Verified badge subscriptions (N1,000 monthly / N12,000 yearly) ---- */
+  async function pPlans(my) {
+    var d;
+    try { d = await rpc("admin_subscriptions"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "seller_plans.sql")); return; }
+    if (stale(my)) return;
+    var P = d.plans || {}, rows = d.rows || [], active = rows.filter(function (r) { return r.active; }).length;
+    body('<div class="ops-grid">' + card(active, "Active badges") + card(money(d.paid_total_kobo), "Collected so far") + "</div>" +
+      '<form id="pl-form" class="ops-row"><label><input type="checkbox" id="pl-req"' + (P.required ? " checked" : "") + "><span>Verified badge needs a paid subscription<br><small class=\"muted\">OFF = every verified shop keeps its badge (nothing changes). ON = only shops with an active plan show the badge. Listing stays free either way.</small></span></label>" +
+      '<input type="text" id="pl-m" inputmode="numeric" value="' + Math.round((P.monthly_kobo || 100000) / 100) + '" placeholder="Monthly price in naira"><input type="text" id="pl-y" inputmode="numeric" value="' + Math.round((P.yearly_kobo || 1200000) / 100) + '" placeholder="12-month price in naira">' +
+      '<button class="button full" type="submit" style="margin-top:8px">Save plans</button><p id="pl-msg" class="muted"></p></form>' +
+      "<h3>Sellers</h3>" + (rows.length ? rows.map(function (r) {
+        return '<div class="ops-row" data-app="' + esc(r.app) + '"><b>' + esc(r.shop) + "</b> · " + (r.verification === "approved" ? "verified" : "not verified") + "<br>" +
+          (r.active ? '<span class="ops-ok">Badge active until ' + new Date(r.expires_at).toLocaleDateString("en-NG") + " (" + esc(r.plan) + (r.auto_renew ? ", auto-renew" : ", no renewal") + ")</span>" : '<span class="muted">No active plan</span>') +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input type="text" class="pl-ref" maxlength="60" placeholder="Payment reference (optional)" style="flex:1;min-width:140px;padding:8px;border:1px solid #cfd5da;border-radius:9px">' +
+          '<button class="button outline" data-pay="monthly">Mark paid · 1 month</button><button class="button outline" data-pay="yearly">Mark paid · 12 months</button></div></div>';
+      }).join("") : '<p class="muted">No shops yet.</p>') + '<p id="pl-msg2" class="muted"></p>');
+    $("pl-form").onsubmit = async function (e) {
+      e.preventDefault(); var m = $("pl-msg"), mo = Number($("pl-m").value), yr = Number($("pl-y").value);
+      if (!(mo >= 0) || !(yr >= 0)) { m.textContent = "Enter prices as numbers."; return; }
+      if ($("pl-req").checked && !P.required && !window.confirm("Turn ON? Verified shops WITHOUT an active plan will lose their badge straight away.")) return;
+      try { await rpc("admin_set_plans", { p_required: $("pl-req").checked, p_monthly_kobo: Math.round(mo * 100), p_yearly_kobo: Math.round(yr * 100) }); m.className = "ops-ok"; m.textContent = "Saved."; }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+    panel.querySelectorAll("[data-pay]").forEach(function (b) {
+      b.onclick = async function () {
+        var row = b.closest(".ops-row"), plan = b.dataset.pay;
+        if (!window.confirm("Record a " + (plan === "yearly" ? "12-month" : "1-month") + " payment for " + row.querySelector("b").textContent + "?")) return;
+        b.disabled = true;
+        try { await rpc("admin_record_payment", { p_app: row.dataset.app, p_plan: plan, p_reference: row.querySelector(".pl-ref").value }); pPlans(my); }
+        catch (er) { b.disabled = false; $("pl-msg2").textContent = "Failed: " + er.message; }
+      };
+    });
   }
 
   /* ---- Switches ---- */
