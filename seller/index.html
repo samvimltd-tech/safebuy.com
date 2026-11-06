@@ -392,6 +392,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 })();
 </script>
 <script src="../switches.js?v=1" defer></script>
+<script src="../seller-plan.js?v=1" defer></script>
 <script>window.__sbWords={signinTitle:"Seller sign in",signupTitle:"Open your seller account",signupBtn:"Create seller account",toggleSignup:"New seller? Create an account",menuSignup:"Create seller account"};</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////w3c7Edz20UwmGl+YyAAACC0lEQVR42u2YO04DMRCGf0MeSBRJAxLZSHADuAHLDagooKChSihyAzhCCuhSEhoKaqrkCHS0KbK8RJECCVjQmiLsI1l7ZyxBgTSuLPnL2DOe+T0bpeEwFiC00EILLbTQQgstNJ/WlzsLe+2hCdf50QUAlK/yKwZ6HBs6YNCRn+x7SNPj9JS1+bW8l72CmKj5XjP7+9qEimDoFO9HJ3pUeJnzbvsoiMm8lzNBIr3UTln1CQBoDcI+59yvAOBprfWTz7lLAEcAsHpD254AUHHGkLYnGV+8LmV7BKCqbcNku/RPFeLLif50oqNTp3P3uHQdAIJjZu38FFrbfJemrAKAfRb9Gu+5ysmTJEeePYaX5WR236GVLbOZikjbKtUTvUXfTkZ97mityirbgFT79wy9TipEJTN/Ic+tbtP5G/k2IKzaY5jP2EqqInpIv64f6eI2rYOV8Yy6ULXjXdhoGPO4b3lKzLQOpvQyR7+BxthJqxo+6+WOR9AEUH1n0tGigbaqpnLSWOX/oX672y4R9EMyGzJshx2X/mRUiRs9U1bl+6pmpr+qk14GnYL+Ki8+6jrpODeJ/B4BUK1BeAYAOGHQdmkrpjWvdiwhKKTLTvSSE73hRHeZb/FU4sj3cs0yt4Q0SCtzwPgmCaxfJEYdfJpWZEOzaB2e72KlZRJTJf9/Cy200EILLbTQQv8K/Q1+aubmT9k2pAAAAABJRU5ErkJggg==">
@@ -825,7 +826,7 @@ function normalizeProduct(p, i) {
     background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
     tag: p.tag || "",
     description: p.description || "",
-    verified: !!p.verified,
+    verified: !!p.verified && !(window.__sbNoBadge && window.__sbNoBadge[p.seller]),
     inStock: p.inStock !== false,
     slug: /^[a-z0-9][a-z0-9-]{0,99}$/.test(p.slug || "") ? p.slug : "",
     condition: p.condition || "new"
@@ -1496,12 +1497,16 @@ updateCartCount();
   if (!c || !c.url || !c.publishableKey) return;
   var base = String(c.url).replace(/\/+$/, "");
   try { var l = document.createElement("link"); l.rel = "preconnect"; l.href = base; l.crossOrigin = ""; document.head.appendChild(l); } catch (e) {}
-  window.__earlyProducts = fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+  window.__sbNoBadge = {};
+  var nb = fetch(base + "/rest/v1/rpc/shops_without_badge", { method: "POST", headers: { apikey: c.publishableKey, "Content-Type": "application/json" }, body: "{}" })
+    .then(function (r) { return r.ok ? r.json() : []; }).then(function (a) { (a || []).forEach(function (n) { window.__sbNoBadge[n] = 1; }); }).catch(function () {});
+  var nbWait = Promise.race([nb, new Promise(function (ok) { setTimeout(ok, 2500); })]);
+  window.__earlyProducts = Promise.all([fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
     headers: { apikey: c.publishableKey, Accept: "application/json" }
   }).then(function (r) {
     return r.ok ? r.json().then(function (d) { return { data: d, error: null }; })
                 : r.text().then(function (t) { return { data: null, error: { message: "HTTP " + r.status + " " + t.slice(0, 120) } }; });
-  }).catch(function (e) { return { data: null, error: { message: e.message } }; })
+  }).catch(function (e) { return { data: null, error: { message: e.message } }; }), nbWait]).then(function (a) { return a[0]; })
   .then(function (res) {
     // Show the products right away; do not wait for the Supabase library.
     if (!res.error && Array.isArray(res.data) && typeof setProducts === "function" && typeof normalizeProduct === "function") {
@@ -1800,9 +1805,6 @@ updateCartCount();
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
-        '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
-        '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
-        '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
         '<hr><button type="button" data-auth="signout"><span class="ico">🚪</span>Sign out</button>';
       drawerAcc.innerHTML =
         '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
