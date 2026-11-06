@@ -395,6 +395,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 </script>
 <script src="./pwa-install.js"></script>
 <script src="./switches.js?v=1" defer></script>
+<script src="./seller-plan.js?v=1" defer></script>
 <!--WORDS-->
 <script>window.__sbWords={signinTitle:"Buyer sign in",signupTitle:"Create your buyer account",signupBtn:"Create buyer account",toggleSignup:"New buyer? Create an account",menuSignup:"Create buyer account"};</script>
 <!--/WORDS-->
@@ -554,7 +555,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
-      <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>Open your shop free</small></span><span class="path-go">→</span></a>
+      <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>List your products for free</small></span><span class="path-go">→</span></a>
       <a class="path path-ride" href="./rider/" data-door="rider" style="text-decoration:none;color:inherit"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></a>
     </div>
     <div class="prototype-notice" id="sc-notice">
@@ -831,7 +832,7 @@ function normalizeProduct(p, i) {
     background: /^#[0-9a-fA-F]{3,8}$/.test(p.background || "") ? p.background : "#edf6ef",
     tag: p.tag || "",
     description: p.description || "",
-    verified: !!p.verified,
+    verified: !!p.verified && !(window.__sbNoBadge && window.__sbNoBadge[p.seller]),
     inStock: p.inStock !== false,
     slug: /^[a-z0-9][a-z0-9-]{0,99}$/.test(p.slug || "") ? p.slug : "",
     condition: p.condition || "new"
@@ -1502,12 +1503,16 @@ updateCartCount();
   if (!c || !c.url || !c.publishableKey) return;
   var base = String(c.url).replace(/\/+$/, "");
   try { var l = document.createElement("link"); l.rel = "preconnect"; l.href = base; l.crossOrigin = ""; document.head.appendChild(l); } catch (e) {}
-  window.__earlyProducts = fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
+  window.__sbNoBadge = {};
+  var nb = fetch(base + "/rest/v1/rpc/shops_without_badge", { method: "POST", headers: { apikey: c.publishableKey, "Content-Type": "application/json" }, body: "{}" })
+    .then(function (r) { return r.ok ? r.json() : []; }).then(function (a) { (a || []).forEach(function (n) { window.__sbNoBadge[n] = 1; }); }).catch(function () {});
+  var nbWait = Promise.race([nb, new Promise(function (ok) { setTimeout(ok, 2500); })]);
+  window.__earlyProducts = Promise.all([fetch(base + "/rest/v1/seller_products_public?select=*&order=created_at.desc", {
     headers: { apikey: c.publishableKey, Accept: "application/json" }
   }).then(function (r) {
     return r.ok ? r.json().then(function (d) { return { data: d, error: null }; })
                 : r.text().then(function (t) { return { data: null, error: { message: "HTTP " + r.status + " " + t.slice(0, 120) } }; });
-  }).catch(function (e) { return { data: null, error: { message: e.message } }; })
+  }).catch(function (e) { return { data: null, error: { message: e.message } }; }), nbWait]).then(function (a) { return a[0]; })
   .then(function (res) {
     // Show the products right away; do not wait for the Supabase library.
     if (!res.error && Array.isArray(res.data) && typeof setProducts === "function" && typeof normalizeProduct === "function") {
