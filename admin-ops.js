@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["reports", "Reports"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -131,6 +131,109 @@
       });
     }
     draw("open");
+  }
+
+  function wa(p) { var d = String(p || "").replace(/\D/g, ""); return d.indexOf("234") === 0 ? d : d.charAt(0) === "0" ? "234" + d.slice(1) : d.length === 10 ? "234" + d : d; }
+  function when(t) { return t ? new Date(t).toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""; }
+  var INP = 'style="flex:1;min-width:150px;padding:9px;border:1px solid #cfd5da;border-radius:9px;font:inherit"';
+  function searchBar(ph, val) { return '<div style="display:flex;gap:8px;margin-bottom:10px"><input type="text" id="q-in" ' + INP + ' placeholder="' + ph + '" value="' + esc(val || "") + '"><button class="button" type="button" id="q-go">Search</button></div>'; }
+  function wireSearch(fn) { var i = $("q-in"); $("q-go").onclick = function () { fn(i.value); }; i.onkeydown = function (e) { if (e.key === "Enter") fn(i.value); }; }
+
+  /* ---- Orders ---- */
+  async function pOrders(my, q) {
+    var rows;
+    try { rows = await rpc("admin_orders", { p_search: q || null, p_limit: 100 }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "admin_control.sql")); return; }
+    if (stale(my)) return;
+    body(searchBar("Search order, buyer, shop, product, city, status", q) + ((rows || []).length ? rows.map(function (o) {
+      var done = o.status === "cancelled";
+      return '<div class="ops-row" data-id="' + esc(o.id) + '"><b>' + esc(o.product) + "</b> × " + esc(o.qty) + " · " + money(o.total_kobo) + ' · <span class="' + (done ? "ops-bad" : "ops-ok") + '">' + esc(o.status) + "</span><br>" +
+        '<span class="muted">Buyer ' + esc(o.buyer) + " · Shop " + esc(o.shop) + (o.rider ? " · Rider " + esc(o.rider) : "") + (o.city ? " · " + esc(o.city) : "") + (o.job_status ? " · delivery: " + esc(o.job_status) : "") + " · " + when(o.created_at) + " · #" + esc(String(o.id).slice(0, 8)) + "</span>" +
+        '<div class="o-tl muted" style="font-size:13px"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="button outline" data-o="tl">Timeline</button>' + (done ? "" : '<button class="button outline" data-o="cancel" style="color:#b42318;border-color:#b42318">Cancel order</button>') + "</div></div>";
+    }).join("") : '<p class="muted">No orders found.</p>') + '<p id="o-msg" class="muted"></p>');
+    wireSearch(function (v) { pOrders(my, v); });
+    panel.querySelectorAll("[data-o]").forEach(function (b) {
+      b.onclick = async function () {
+        var row = b.closest(".ops-row");
+        try {
+          if (b.dataset.o === "tl") { var t = await rpc("admin_order_timeline", { p_order: row.dataset.id }); row.querySelector(".o-tl").innerHTML = (t || []).length ? (t || []).map(function (x) { return "• " + esc(x.label) + " <small>(" + when(x.at) + ")</small>"; }).join("<br>") : "No events yet."; }
+          else {
+            var why = window.prompt("Reason for cancelling (the buyer and seller will see it):", "");
+            if (why === null) return; if (!window.confirm("Cancel this order? This cannot be undone.")) return;
+            b.disabled = true; await rpc("admin_cancel_order", { p_order: row.dataset.id, p_reason: why }); pOrders(my, q);
+          }
+        } catch (e) { b.disabled = false; $("o-msg").className = "ops-bad"; $("o-msg").textContent = e.message; }
+      };
+    });
+  }
+
+  /* ---- Users (buyers and riders) ---- */
+  var ukind = "buyers";
+  async function pUsers(my, q) {
+    var rows;
+    try { rows = await rpc("admin_people", { p_kind: ukind, p_search: q || null }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "admin_control.sql")); return; }
+    if (stale(my)) return;
+    body('<div class="ops-nav" style="margin-top:-4px">' + ["buyers", "riders"].map(function (k) { return '<button type="button" data-k="' + k + '" class="' + (k === ukind ? "on" : "") + '">' + k[0].toUpperCase() + k.slice(1) + "</button>"; }).join("") + "</div>" +
+      searchBar("Search name or phone", q) + ((rows || []).length ? rows.map(function (u) {
+        var ph = u.phone ? ' · <a href="https://wa.me/' + wa(u.phone) + '" target="_blank" rel="noopener">' + esc(u.phone) + "</a>" : "";
+        if (ukind === "buyers") return '<div class="ops-row" data-u="' + esc(u.user_id) + '"><b>' + esc(u.name || "Buyer") + "</b>" + ph + (u.blocked ? ' · <b class="ops-bad">BLOCKED</b>' : "") + '<br><span class="muted">' + u.orders + " orders · paid " + money(u.spent_kobo) + " · last " + when(u.last_order) + '</span><div style="margin-top:8px"><button class="button outline" data-b="' + (u.blocked ? "0" : "1") + '">' + (u.blocked ? "Unblock" : "Block from ordering") + "</button></div></div>";
+        return '<div class="ops-row"><b>' + esc(u.name) + "</b>" + ph + ' · <span class="' + (u.status === "approved" ? "ops-ok" : "ops-warn") + '">' + esc(u.status) + "</span>" + (u.online ? " · 🟢 online" : "") + '<br><span class="muted">' + esc(u.vehicle || "") + " · " + esc(u.state || "") + " · " + (u.done || 0) + " deliveries · " + (u.rating ? "★ " + u.rating + " (" + u.ratings + ")" : "no ratings") + " · earned " + money(u.earned_kobo) + " · owed " + money(u.owed_kobo) + "</span></div>";
+      }).join("") : '<p class="muted">Nobody found.</p>') + '<p class="muted" style="font-size:12px">Block stops a buyer placing new orders. To suspend a rider or seller, use the Delivery or Sellers tab.</p><p id="u-msg" class="muted"></p>');
+    panel.querySelectorAll("[data-k]").forEach(function (b) { b.onclick = function () { ukind = b.dataset.k; go("users"); }; });
+    wireSearch(function (v) { pUsers(my, v); });
+    panel.querySelectorAll("[data-b]").forEach(function (b) {
+      b.onclick = async function () {
+        var blockIt = b.dataset.b === "1", reason = "";
+        if (blockIt) { reason = window.prompt("Reason (optional):", ""); if (reason === null) return; }
+        if (!window.confirm(blockIt ? "Block this buyer from placing orders?" : "Let this buyer order again?")) return;
+        b.disabled = true;
+        try { await rpc("admin_block_user", { p_user: b.closest(".ops-row").dataset.u, p_block: blockIt, p_reason: reason }); pUsers(my, q); }
+        catch (e) { b.disabled = false; $("u-msg").className = "ops-bad"; $("u-msg").textContent = e.message; }
+      };
+    });
+  }
+
+  /* ---- Reviews ---- */
+  async function pReviews(my) {
+    var rows;
+    try { rows = await rpc("admin_reviews", { p_limit: 100 }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "admin_control.sql")); return; }
+    if (stale(my)) return;
+    body(((rows || []).length ? rows.map(function (r) {
+      var stars = r.rating != null ? r.rating : r.stars, text = r.comment || r.body || r.text || r.review || "";
+      return '<div class="ops-row" data-id="' + esc(r.id) + '"><b>' + esc(r.product_name || "Product") + "</b>" + (stars != null ? " · " + "★".repeat(Math.max(0, Math.min(5, Number(stars) || 0))) : "") + '<p style="margin:6px 0">' + esc(text) + '</p><span class="muted" style="font-size:12px">' + when(r.created_at) + '</span><div style="margin-top:8px"><button class="button outline" data-del style="color:#b42318;border-color:#b42318">Delete review</button></div></div>';
+    }).join("") : '<p class="muted">No reviews yet.</p>') + '<p id="rv-msg" class="muted"></p>');
+    panel.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = async function () {
+        if (!window.confirm("Delete this review for good?")) return; b.disabled = true;
+        try { await rpc("admin_delete_review", { p_review: b.closest(".ops-row").dataset.id }); b.closest(".ops-row").remove(); $("rv-msg").textContent = "Deleted."; }
+        catch (e) { b.disabled = false; $("rv-msg").className = "ops-bad"; $("rv-msg").textContent = e.message; }
+      };
+    });
+  }
+
+  /* ---- Message everyone (in-app alert) ---- */
+  function pMessage() {
+    body('<form id="ms-form" class="ops-row"><b>Send an in-app alert</b><p class="muted" style="margin:4px 0">People see it in their alerts next time they open the app. It is not an SMS or email.</p>' +
+      '<select id="ms-aud"><option value="all">Everyone</option><option value="buyers">Buyers</option><option value="sellers">Sellers</option><option value="riders">Riders</option></select>' +
+      '<input type="text" id="ms-t" maxlength="80" placeholder="Title (required)"><textarea id="ms-b" maxlength="300" rows="3" placeholder="Message (up to 300 letters)"></textarea>' +
+      '<button class="button full" type="submit" style="margin-top:8px">Send</button><p id="ms-msg" class="muted"></p></form>');
+    $("ms-form").onsubmit = async function (e) {
+      e.preventDefault(); var m = $("ms-msg"), aud = $("ms-aud").value, t = $("ms-t").value.trim();
+      if (!t) { m.className = "ops-bad"; m.textContent = "Write a title first."; return; }
+      if (!window.confirm("Send this to " + $("ms-aud").selectedOptions[0].text.toLowerCase() + " now? You cannot take it back.")) return;
+      m.className = "muted"; m.textContent = "Sending…";
+      try { var n = await rpc("admin_broadcast", { p_audience: aud, p_title: t, p_body: $("ms-b").value.trim() }); rpc("admin_log", { p_action: "Announcement sent", p_detail: aud + " · " + n + " people · " + t.slice(0, 60) }).catch(function () {}); m.className = "ops-ok"; m.textContent = "Sent to " + n + " people."; $("ms-t").value = ""; $("ms-b").value = ""; }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not sent: " + er.message; }
+    };
+  }
+
+  /* ---- Audit log ---- */
+  async function pAudit(my) {
+    var rows;
+    try { rows = await rpc("admin_audit_list", { p_limit: 150 }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "admin_extra.sql")); return; }
+    if (stale(my)) return;
+    body('<p class="muted">Every admin change, newest first. Only changes made while signed in as an admin are recorded.</p>' + ((rows || []).length ? rows.map(function (r) {
+      return '<div class="ops-row"><b>' + esc(r.action) + '</b><br><span class="muted">' + esc(r.who) + " · " + when(r.at) + (r.detail ? " · " + esc(r.detail) : "") + "</span></div>";
+    }).join("") : '<p class="muted">Nothing logged yet.</p>'));
   }
 
   /* ---- Plans: Verified badge subscriptions (N1,000 monthly / N12,000 yearly) ---- */
