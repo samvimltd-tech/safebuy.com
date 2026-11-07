@@ -396,6 +396,8 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script src="./pwa-install.js"></script>
 <script src="./switches.js?v=1" defer></script>
 <script src="./seller-plan.js?v=1" defer></script>
+<script src="./seller-growth.js?v=1" defer></script>
+<script src="./growth.js?v=1" defer></script>
 <!--WORDS-->
 <script>window.__sbWords={signinTitle:"Buyer sign in",signupTitle:"Create your buyer account",signupBtn:"Create buyer account",toggleSignup:"New buyer? Create an account",menuSignup:"Create buyer account"};</script>
 <!--/WORDS-->
@@ -1548,7 +1550,7 @@ updateCartCount();
   function add(n) {
     if (window.supabase || n >= SRC.length || tried[n]) return; tried[n] = 1;
     var s = document.createElement("script"); s.src = SRC[n]; s.async = true;
-    s.onload = function () { if (window.supabase) run(libQ); };
+    s.onload = function () { if (window.supabase) run(libQ); else add(n + 1); };   // file loaded but is broken/cut off: go to the next source at once
     s.onerror = function () { add(n + 1); };
     document.head.appendChild(s);
     setTimeout(function () { if (!window.supabase) add(n + 1); }, 6000);
