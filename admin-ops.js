@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, promote: pPromote, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -188,6 +188,26 @@
         b.disabled = true;
         try { await rpc("admin_block_user", { p_user: b.closest(".ops-row").dataset.u, p_block: blockIt, p_reason: reason }); pUsers(my, q); }
         catch (e) { b.disabled = false; $("u-msg").className = "ops-bad"; $("u-msg").textContent = e.message; }
+      };
+    });
+  }
+
+  /* ---- Promote: choose Featured and Hot products shown on the home page ---- */
+  async function pPromote(my, q) {
+    var rows;
+    try { rows = await rpc("admin_find_products", { p_q: q || null }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "growth.sql")); return; }
+    if (stale(my)) return;
+    body('<p class="muted">Featured and Hot products appear in their own rows at the top of the shop page. Trending and Best sellers fill in by themselves from real views and orders.</p>' + searchBar("Search product or shop", q) +
+      ((rows || []).length ? rows.map(function (r) {
+        return '<div class="ops-row" data-id="' + esc(r.id) + '"><b>' + esc(r.name) + "</b> · " + esc(r.shop || "") + (r.in_stock ? "" : ' <span class="ops-warn">· sold out</span>') + '<br><span class="muted">' + (r.views7 || 0) + " views this week" + (r.kind ? " · currently <b>" + esc(r.kind) + "</b>" : "") + '</span><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' +
+          ["featured", "hot"].map(function (k) { return '<button class="button ' + (r.kind === k ? "" : "outline") + '" data-k="' + k + '">' + (k === "hot" ? "🔥 Hot" : "⭐ Featured") + "</button>"; }).join("") + (r.kind ? '<button class="button outline" data-k="">Remove</button>' : "") + "</div></div>";
+      }).join("") : '<p class="muted">No products found.</p>') + '<p id="pm-msg" class="muted"></p>');
+    wireSearch(function (v) { pPromote(my, v); });
+    panel.querySelectorAll(".ops-row [data-k]").forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true;
+        try { await rpc("admin_set_featured", { p_product: b.closest(".ops-row").dataset.id, p_kind: b.dataset.k || null }); pPromote(my, q); }
+        catch (e) { b.disabled = false; $("pm-msg").className = "ops-bad"; $("pm-msg").textContent = e.message; }
       };
     });
   }
