@@ -65,7 +65,7 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["./delivery-orders.js", ["rate_delivery", "order_tracking"], "Upload the latest delivery-orders.js."],
     ["./orders.js", [], "orders.js is missing. It is part of your original site."],
     ["./admin.html", ["partnerSummary", "data-adel", "admin-plus.js"], "Upload the latest admin.html."],
-    ["./admin-ops.js", ["ops-panel", "admin_set_switches"], "Upload admin-ops.js next to admin.html."],
+    ["./admin-ops.js", ["ops-panel", "admin_set_switches", "admin_audit_list", "admin_broadcast"], "Upload admin-ops.js next to admin.html."],
     ["./seller-plan.js", ["plan-card", "seller_subscription"], "Upload seller-plan.js to the main folder."],
     ["./switches.js", ["sb-maint", "signups_open"], "Upload switches.js to the main folder."],
     ["./admin-plus.js", ["openLaunch", "refund_text", "openBackup"], "Upload the latest admin-plus.js to the same folder as admin.html."],
@@ -134,6 +134,8 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["partner_update_job", { p_job: "00000000-0000-0000-0000-000000000000", p_status: "x" }, "Rider pickup and delivery", "Run connect_roles.sql in Supabase."],
     ["admin_delete", { p_kind: "x", p_id: "x" }, "Admin delete", "Run admin_delete.sql in Supabase."],
     ["shops_without_badge", {}, "Seller plans", "Run seller_plans.sql in Supabase."],
+    ["admin_orders", {}, "Admin Orders and Users", "Run admin_control.sql in Supabase."],
+    ["admin_audit_list", {}, "Admin action log", "Run admin_extra.sql in Supabase (last)."],
     ["admin_live", {}, "Admin Control tab", "Run admin_ops.sql in Supabase."],
     ["partner_set_vehicle", { p_type: "x" }, "Rider vehicle types", "Run vehicles.sql in Supabase."],
     ["admin_backup_tables", {}, "Admin backup", "Run backup_and_speed.sql in Supabase."]
