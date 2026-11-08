@@ -241,7 +241,8 @@
       } else if (inf.delivery_status === "requested") {
         inner = '<p><span class="status-pill">Waiting for your payment</span></p><p>Delivery fee: <strong>' + N(inf.fee_kobo) + "</strong></p>" +
           (ONLINE_PAYMENTS ? '<div class="seller-actions"><button class="button button-primary" type="button" data-dpay="' + E(o.id) + '">Pay ' + N(inf.fee_kobo) + ' now</button></div><p class="form-message do-paymsg"></p>' : "") +
-          "<p class=\"muted\">" + (ONLINE_PAYMENTS ? "Your payment is confirmed automatically. Cannot pay online? " : "") + E(inf.instructions) + " Quote order #" + E(String(o.id).slice(0, 8)) + " when you pay.</p>";
+          "<p class=\"muted\">" + (ONLINE_PAYMENTS ? "Your payment is confirmed automatically. Cannot pay online? " : "") + E(inf.instructions) + " Quote order #" + E(String(o.id).slice(0, 8)) + " when you pay.</p>" +
+          '<div class="seller-actions"><button class="button button-outline" type="button" data-dcancel="' + E(o.id) + '">Cancel or change this request</button></div>';
       } else if (inf.delivery_status === "fee_paid") {
         inner = '<p><span class="status-pill ok">Fee confirmed</span></p>' + (o.status === "paid" ? radar(o.id, true, null, "fee") : "") + '<p class="muted">' + (o.status === "paid" ? "We are finding a rider for you." : "We will find a rider as soon as the seller marks your order Paid.") + "</p>";
       } else if (inf.delivery_status === "dispatched") {
@@ -285,6 +286,12 @@
     if (s) sendRequest(s);
     var pay = e.target.closest("[data-dpay]");
     if (pay) payFee(pay);
+    var cn = e.target.closest("[data-dcancel]");
+    if (cn) {
+      if (!window.confirm("Cancel this delivery request? You can request delivery again with the right address.")) return;
+      cn.disabled = true;
+      rpc("buyer_cancel_delivery_request", { p_order: cn.dataset.dcancel }).then(function () { T("Delivery request cancelled."); showBuyer(); }, function (err) { cn.disabled = false; T(err.message); });
+    }
     var star = e.target.closest(".cx-star");
     if (star) rateRider(star);
   });
@@ -367,6 +374,16 @@
       : '<p class="modal-note">Set your pickup location so buyers can request delivery on your products.</p><button class="button button-primary" type="button" data-dpick="1">Set pickup location</button>';
 
     var rows = o.data || [];
+    var waiting = await c.from("marketplace_orders").select("id,product_name,quantity,status,buyer_name,created_at")
+      .eq("seller_application_id", app.id).in("status", ["placed", "paid"]).or("delivery_status.is.null,delivery_status.eq.cancelled")
+      .order("created_at", { ascending: false }).limit(20);
+    var waitBlock = (waiting.data || []).length && app.dp_address
+      ? "<h3>Orders with no delivery yet</h3><p class=\"muted\">Request a rider for the buyer. Enter the address the buyer gave you. The buyer is notified, can cancel if it is wrong, and is the only one who gets the delivery code.</p>" +
+        waiting.data.map(function (w) {
+          return '<div class="seller-item"><strong>' + E(w.product_name || "Product") + "</strong> × " + w.quantity + '<br><span class="muted">' + E(w.buyer_name || "Buyer") + " · #" + E(String(w.id).slice(0, 8)) +
+            '</span><div class="seller-actions"><button class="button button-primary" type="button" data-sreq="' + E(w.id) + '">Request delivery for buyer</button></div><div class="so-form"></div></div>';
+        }).join("")
+      : "";
     var trks = await Promise.all(rows.map(function (x) { return track(x.id); }));
     var list = rows.map(function (x, i) {
       var trk = trks[i], extra = "";
@@ -386,14 +403,38 @@
       var st = x.delivery_status, act = "";
       if (st === "fee_paid" && x.status === "paid") act = '<button class="button button-primary" type="button" data-ddisp="' + E(x.id) + '">Ready for rider pickup</button>';
       else if (st === "fee_paid") act = '<span class="muted">Mark the order Paid. A rider is requested automatically.</span>';
+      else if (st === "requested" && x.delivery_requested_by === "seller") act = '<button class="button button-outline" type="button" data-sreq="' + E(x.id) + '">Change address</button>';
       return '<div class="seller-item"><strong>' + E(x.product_name || "Product") + "</strong> × " + x.quantity +
-        '<br><span class="muted">' + (st === "requested" ? "Buyer must pay the delivery fee first" : st === "fee_paid" ? "Delivery fee confirmed" : "With the rider network") +
-        " · #" + E(String(x.id).slice(0, 8)) + '</span><div class="seller-actions">' + act + "</div>" + extra + "</div>";
+        '<br><span class="muted">' + (st === "requested" ? (x.delivery_requested_by === "seller" ? "You requested this delivery. The fee must be paid before a rider is sent. The buyer sees how to pay in their Deliveries window" : "Buyer must pay the delivery fee first") : st === "fee_paid" ? "Delivery fee confirmed" : "With the rider network") +
+        " · #" + E(String(x.id).slice(0, 8)) + '</span><div class="seller-actions">' + act + '</div><div class="so-form"></div>' + extra + "</div>";
     }).join("");
-    el.innerHTML = pick + '<div id="do-pickform"></div><h3>Delivery orders</h3>' + (list || '<p class="muted">No delivery orders yet.</p>');
+    el.innerHTML = pick + '<div id="do-pickform"></div>' + waitBlock + '<h3>Delivery orders</h3>' + (list || '<p class="muted">No delivery orders yet.</p>');
   }
 
   sb.addEventListener("click", async function (e) {
+    var q = e.target.closest("[data-sreq]");
+    if (q) {
+      var box = q.closest(".seller-item").querySelector(".so-form");
+      box.innerHTML =
+        '<label>Buyer\'s state</label><select class="so-state">' + stateOpts("lagos") + "</select>" +
+        '<label>Buyer\'s city / area</label><input class="so-city" maxlength="60" placeholder="e.g. Ikeja">' +
+        '<label>Buyer\'s full delivery address</label><textarea class="so-addr" maxlength="200" placeholder="House number, street, landmark"></textarea>' +
+        '<label>Buyer\'s phone (the rider may call)</label><input class="so-phone" type="tel" placeholder="08012345678">' +
+        '<button class="button button-primary" type="button" data-ssend="' + E(q.dataset.sreq) + '">Get delivery quote and notify buyer</button><p class="form-message so-msg"></p>';
+      return;
+    }
+    var sd = e.target.closest("[data-ssend]");
+    if (sd) {
+      var bx = sd.closest(".so-form"), m = bx.querySelector(".so-msg"), ph = phone(bx.querySelector(".so-phone").value);
+      if (!ph) { m.textContent = "Enter a valid Nigerian phone number for the buyer."; m.style.color = "#8a1f1f"; return; }
+      sd.disabled = true; m.style.color = ""; m.textContent = "Checking coverage…";
+      try {
+        var fee = await rpc("seller_request_delivery", { p_order: sd.dataset.ssend, p_state: bx.querySelector(".so-state").value, p_city: bx.querySelector(".so-city").value, p_address: bx.querySelector(".so-addr").value, p_phone: ph });
+        T("Delivery requested. Fee " + N(fee) + ". The buyer has been notified.");
+        loadSeller();
+      } catch (err) { m.textContent = err.message; m.style.color = "#8a1f1f"; sd.disabled = false; }
+      return;
+    }
     var p = e.target.closest("[data-dpick]"), d = e.target.closest("[data-ddisp]");
     if (p) {
       var f = document.getElementById("do-pickform");
