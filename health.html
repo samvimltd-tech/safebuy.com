@@ -66,6 +66,7 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["./orders.js", [], "orders.js is missing. It is part of your original site."],
     ["./admin.html", ["partnerSummary", "data-adel", "admin-plus.js"], "Upload the latest admin.html."],
     ["./admin-ops.js", ["ops-panel", "admin_set_switches", "admin_audit_list", "admin_broadcast"], "Upload admin-ops.js next to admin.html."],
+    ["./guard.js", ["log_client_error", "unhandledrejection"], "Upload guard.js to the main folder."],
     ["./growth.js", ["home_sections", "sb-recent"], "Upload growth.js to the main folder."],
     ["./seller-growth.js", ["seller_growth", "growth-host"], "Upload seller-growth.js to the main folder."],
     ["./seller-plan.js", ["plan-card", "seller_subscription"], "Upload seller-plan.js to the main folder."],
@@ -126,7 +127,8 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["seller_products_public", "Products shown to shoppers", ""], ["site_content", "Admin-edited site text", "Run site_content.sql in Supabase."],
     ["user_alerts", "In-app updates", "Run delivery_automation_paste.sql in Supabase."], ["order_events", "Order progress list", "Run connect_roles.sql in Supabase."],
     ["delivery_ratings", "Rider ratings", "Run connect_roles.sql in Supabase."], ["admin_deleted_log", "Deleted-records log", "Run admin_delete.sql in Supabase."],
-    ["delivery_supported_areas", "Delivery areas", ""], ["delivery_partners", "Delivery partners", ""], ["delivery_jobs", "Delivery jobs", ""], ["delivery_payouts", "Payouts", ""]
+    ["delivery_supported_areas", "Delivery areas", ""], ["delivery_partners", "Delivery partners", ""], ["delivery_jobs", "Delivery jobs", ""], ["delivery_payouts", "Payouts", ""],
+    ["marketplace_orders", "Orders", "", "private"], ["seller_applications", "Seller applications", "", "private"], ["reports", "Product reports", "", "private"], ["admin_kv", "Admin notes", "", "private"], ["admin_audit", "Admin log", "", "private"], ["client_errors", "Crash log", "", "private"], ["subscription_payments", "Subscription payments", "", "private"], ["rate_hits", "Abuse counters", "", "private"]
   ];
   var RPCS = [
     ["list_delivery_coverage", {}, "Delivery areas list", "Run: grant execute on function public.list_delivery_coverage() to anon, authenticated;"],
@@ -139,6 +141,7 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
     ["shops_without_badge", {}, "Seller plans", "Run seller_plans.sql in Supabase."],
     ["admin_orders", {}, "Admin Orders and Users", "Run admin_control.sql in Supabase."],
     ["admin_audit_list", {}, "Admin action log", "Run admin_extra.sql in Supabase (last)."],
+    ["admin_security_audit", {}, "Admin Security check and Errors", "Run hardening.sql in Supabase (last)."],
     ["admin_live", {}, "Admin Control tab", "Run admin_ops.sql in Supabase."],
     ["partner_set_vehicle", { p_type: "x" }, "Rider vehicle types", "Run vehicles.sql in Supabase."],
     ["admin_backup_tables", {}, "Admin backup", "Run backup_and_speed.sql in Supabase."]
@@ -153,7 +156,9 @@ button.o{background:#fff;color:var(--ink);border:1px solid var(--line)}
       }
       rs.forEach(function (r, i) {
         var t = TABLES[i], code = r.json && r.json.code;
-        if (r.status === 200) row("ok", t[0], t[1]);
+        if (r.status === 200 && t[3] === "private" && r.json && r.json.length) row("bad", t[0], "SECURITY PROBLEM: a signed-out visitor can read rows of " + t[1], "Tell Claude right away. Row security needs fixing on this table.");
+        else if (r.status === 200 && t[3] === "private") row("ok", t[0], t[1] + " (private, as it should be)");
+        else if (r.status === 200) row("ok", t[0], t[1]);
         else if (r.status === 401 || r.status === 403 || code === "42501") row("ok", t[0], t[1] + " (private, as it should be)");
         else if (r.status === 404 || code === "42P01" || code === "PGRST205") row("bad", t[0], "table not found: " + t[1], t[2] || "Table is missing. Tell Claude.");
         else row("warn", t[0], "unexpected answer (" + r.status + ")", "");
