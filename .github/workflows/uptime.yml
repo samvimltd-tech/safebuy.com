@@ -1,0 +1,30 @@
+# SafeBuy NG uptime watch: every 15 minutes it checks the site and the database. If anything is wrong the run FAILS,
+# and GitHub emails you about the failed run (make sure Settings > Notifications > Actions is on for your account).
+name: Uptime watch
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check site, files and database
+        run: |
+          set -u
+          SITE="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+          FAIL=0
+          check() { CODE=$(curl -s -o /dev/null -m 20 -w "%{http_code}" "$SITE/$1"); if [ "$CODE" != "200" ]; then echo "PROBLEM: $1 answered $CODE"; FAIL=1; else echo "ok: $1"; fi; }
+          for f in "" seller/ rider/ supabase-config.js sw.js vendor/supabase-2.45.4.js; do check "$f"; done
+          SIZE=$(curl -s -m 30 "$SITE/vendor/supabase-2.45.4.js" | wc -c)
+          if [ "$SIZE" -lt 100000 ]; then echo "PROBLEM: vendor library is only $SIZE bytes (should be about 110798)"; FAIL=1; fi
+          URL=$(grep -o 'https://[A-Za-z0-9-]*\.supabase\.co' supabase-config.js | head -1)
+          KEY=$(grep -oE 'sb_publishable_[A-Za-z0-9_-]+|eyJ[A-Za-z0-9._-]+' supabase-config.js | head -1)
+          T0=$(date +%s%N)
+          CODE=$(curl -s -o /dev/null -m 20 -w "%{http_code}" "$URL/rest/v1/site_content?select=key&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          MS=$(( ($(date +%s%N) - T0) / 1000000 ))
+          echo "database answered $CODE in ${MS} ms"
+          case "$CODE" in 2*) ;; *) echo "PROBLEM: database not answering"; FAIL=1 ;; esac
+          if [ "$MS" -gt 5000 ]; then echo "PROBLEM: database is very slow (${MS} ms)"; FAIL=1; fi
+          exit $FAIL
