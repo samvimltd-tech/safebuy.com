@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, promote: pPromote, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -190,6 +190,39 @@
         catch (e) { b.disabled = false; $("u-msg").className = "ops-bad"; $("u-msg").textContent = e.message; }
       };
     });
+  }
+
+  /* ---- Errors: crashes reported by the pages (needs guard.js on the pages and hardening.sql) ---- */
+  async function pErrors(my) {
+    var rows;
+    try { rows = await rpc("admin_errors"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "hardening.sql")); return; }
+    if (stale(my)) return;
+    body('<p class="muted">Crashes found by real visitors, newest first. The same error is counted once with a number. Send me the text of any that keep coming back.</p>' +
+      ((rows || []).length ? rows.map(function (r) {
+        return '<div class="ops-row"><b class="ops-bad">' + esc(r.msg) + "</b><br><span class=\"muted\">" + esc(r.page) + (r.src ? " · " + esc(r.src) + (r.line ? ":" + r.line : "") : "") + " · " + r.n + " time" + (r.n > 1 ? "s" : "") + " · last " + when(r.last_at) + "<br>" + esc(r.ua || "") + "</span></div>";
+      }).join("") + '<button class="button outline full" type="button" id="er-clear">Clear the list</button>' : '<p class="ops-ok">✓ No crashes reported.</p>') + '<p id="er-msg" class="muted"></p>');
+    var c = $("er-clear");
+    if (c) c.onclick = async function () { if (!window.confirm("Clear all error records?")) return; try { await rpc("admin_clear_errors"); pErrors(my); } catch (e) { $("er-msg").textContent = e.message; } };
+  }
+
+  /* ---- Security audit ---- */
+  var EXPECT_FN = ["track_product", "log_client_error", "home_sections", "shops_without_badge", "list_delivery_coverage", "order_tracking", "rate_delivery"];
+  async function pSecurity(my) {
+    var a;
+    try { a = await rpc("admin_security_audit"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "hardening.sql")); return; }
+    if (stale(my)) return;
+    function list(x) { return (x || []).map(esc).join(", "); }
+    function row(good, title, detail, fix) { return '<div class="ops-row"><b class="' + (good ? "ops-ok" : "ops-bad") + '">' + (good ? "✓ " : "⚠ ") + esc(title) + "</b>" + (detail ? "<p style=\"margin:6px 0 0\">" + detail + "</p>" : "") + (!good && fix ? '<p class="muted" style="margin:6px 0 0">' + esc(fix) + "</p>" : "") + "</div>"; }
+    var unexpected = (a.open_functions || []).filter(function (f) { return EXPECT_FN.indexOf(f) < 0; });
+    var badBuckets = (a.public_buckets || []).filter(function (b) { return b !== "product-images"; });
+    body('<p class="muted">An automatic check of your database rules. It lists names only. Tell me about any ⚠ and I will give you the exact fix.</p>' +
+      row(!(a.no_rls || []).length, (a.no_rls || []).length ? "Row security is OFF on: " + list(a.no_rls) : "Row security is on for every table", "", "Anyone with your public key could read or change these. Do not ignore this one.") +
+      row(!(a.open_write_policies || []).length, (a.open_write_policies || []).length ? "Rules that let ANYONE write: " + list(a.open_write_policies) : "No rule lets anonymous visitors write freely", "", "Replace the rule with one that checks who the user is.") +
+      row(!(a.anon_can_write || []).length, (a.anon_can_write || []).length ? "Signed-out visitors have write permission on: " + list(a.anon_can_write) + " (safe only if row security and rules are strict)" : "Signed-out visitors cannot write to any table", "", "Remove the permission if signed-out writes are not needed.") +
+      row(!unexpected.length, unexpected.length ? "Functions callable by anyone that I do not recognise: " + list(unexpected) : "Only the expected public functions are open", "Expected open: " + list((a.open_functions || []).filter(function (f) { return EXPECT_FN.indexOf(f) >= 0; })), "Check each one cannot expose private data or change records.") +
+      row(!badBuckets.length, badBuckets.length ? "Public file buckets: " + list(badBuckets) : "Only the product photo bucket is public", "", "Make private buckets (documents, IDs) private in Supabase Storage.") +
+      '<button class="button outline full" type="button" id="sc-again">Check again</button>');
+    $("sc-again").onclick = function () { go("security"); };
   }
 
   /* ---- Promote: choose Featured and Hot products shown on the home page ---- */
@@ -328,8 +361,15 @@
       '<div class="ops-row"><b>Security</b><p class="' + (rls.length ? "ops-bad" : "ops-ok") + '">' + (rls.length ? "⚠ Row security is OFF on: " + esc(rls.join(", ")) + ". Anyone with your public key can read these. Tell me and I will give you the SQL to turn it on safely." : "✓ Row security is on for every table.") + "</p>" +
       (pub.length ? '<p class="ops-bad">⚠ The delivery-docs bucket is PUBLIC. Rider ID documents should be private.</p>' : '<p class="ops-ok">✓ Rider documents bucket is not public.</p>') +
       (h.slow_policies ? '<p class="ops-warn">' + h.slow_policies + " access rules can be made faster (run backup_and_speed.sql).</p>" : '<p class="ops-ok">✓ Access rules are speed-optimised.</p>') + "</div>" +
+      '<div class="ops-row" id="hl-bk"><b>Backups</b><p id="hl-bk-t" class="muted" style="margin:6px 0">Checking…</p><button class="button outline" type="button" id="hl-bk-btn">I just downloaded a backup</button></div>' +
       '<div class="ops-row"><b>Biggest tables</b><br>' + (h.biggest || []).map(function (b) { return esc(b.table) + " · " + mb(b.bytes); }).join("<br>") + '</div><button class="button outline full" type="button" id="hl-again">Check again</button>');
     $("hl-again").onclick = function () { go("health"); };
+    rpc("admin_kv_get", { p_key: "last_backup" }).then(function (k) {
+      var d = k && k.at ? Math.floor((Date.now() - new Date(k.at).getTime()) / 86400000) : null, t = $("hl-bk-t"); if (!t) return;
+      t.className = d === null || d > 7 ? "ops-bad" : "ops-ok";
+      t.textContent = d === null ? "⚠ No backup recorded yet. Open the Backup tab and download one now." : d > 7 ? "⚠ Your last backup was " + d + " days ago. Download a fresh one from the Backup tab." : "✓ Last backup " + (d === 0 ? "today" : d + " day(s) ago") + ".";
+    }).catch(function () {});
+    $("hl-bk-btn").onclick = function () { rpc("admin_kv_set", { p_key: "last_backup", p_value: { at: new Date().toISOString() } }).then(function () { go("health"); }).catch(function () {}); };
   }
 
   /* ---- Checklist (progress is saved in the database, so it is the same on every device) ---- */
