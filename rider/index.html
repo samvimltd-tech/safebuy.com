@@ -440,7 +440,7 @@ body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh
   function add(n) {
     if (window.supabase || n >= SRC.length || tried[n]) return; tried[n] = 1;
     var s = document.createElement("script"); s.src = SRC[n]; s.async = true;
-    s.onload = function () { if (window.supabase) run(libQ); };
+    s.onload = function () { if (window.supabase) run(libQ); else add(n + 1); };   // file loaded but is broken/cut off: go to the next source at once
     s.onerror = function () { add(n + 1); };
     document.head.appendChild(s);
     setTimeout(function () { if (!window.supabase) add(n + 1); }, 6000);
@@ -947,6 +947,7 @@ body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(function () {});
 })();
 </script>
+<script src="../guard.js?v=1"></script>
 <script src="../switches.js?v=1" defer></script>
 </body>
 </html>
