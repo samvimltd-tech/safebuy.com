@@ -58,6 +58,25 @@
     });
   }
 
+  /* ---- Overview: promotion / boost / advert requests waiting (opens Control > Requests) ---- */
+  var promoAt = 0;
+  function promoTile() {
+    if (!stats.children.length) return;
+    var t = $("plus-promo-tile");
+    if (!t) {
+      t = document.createElement("button"); t.type = "button"; t.className = "stat"; t.id = "plus-promo-tile"; t.hidden = true;
+      t.innerHTML = "<b>0</b><span>Promotion requests waiting</span>"; stats.appendChild(t);
+      t.addEventListener("click", function () {
+        var c = document.querySelector('#main-tabs [data-plustab="ops"]'); if (!c) return; c.click();
+        setTimeout(function () { var v = document.querySelector('#ops-panel [data-v="requests"]'); if (v) v.click(); }, 400);
+      });
+    }
+    if (Date.now() - promoAt < 30000) return; promoAt = Date.now();
+    rpcRead("admin_promos", { p_status: "pending" }).then(function (rows) {
+      var n = (rows || []).length; t.hidden = false; t.firstChild.textContent = n; t.classList.toggle("alert", n > 0);
+    }, function () { t.hidden = true; });
+  }
+
   /* ---- Products: category filter ---- */
   var cat = document.createElement("select");
   cat.id = "catf-plus"; cat.hidden = true; cat.setAttribute("aria-label", "Category");
@@ -207,6 +226,11 @@
     var onAreas = areas.filter(function (a) { return a.is_active; }).length;
     var hasFees = settings && settings.length && settings[0] && Number(settings[0].fee_same_city_kobo || settings[0].same_city_fee_kobo || 1) > 0;
     var sup = !!(site.support_whatsapp || site.support_email);
+    var pl = null, rq = null, ga = null, rf = null;
+    try { pl = await rpcRead("admin_subscriptions"); } catch (e) {}
+    try { rq = await rpcRead("admin_promos", { p_status: "pending" }); } catch (e) {}
+    try { ga = await rpcRead("admin_growth_auto"); } catch (e) {}
+    var P = (pl && pl.plans) || null;
     var items = [
       [apps.length > 0, "Shops on the platform", apps.length + " shop" + (apps.length === 1 ? "" : "s") + ", " + verified + " verified", "Sellers tab"],
       [prods.length > 0, "Products listed", prods.length + " product" + (prods.length === 1 ? "" : "s"), "Products tab"],
@@ -215,6 +239,9 @@
       [!!hasFees, "Delivery fees set", hasFees ? "Fees are set. Check they are the amounts you want" : "Open Delivery > Settings and set your fees", "Delivery > Settings"],
       [sup, "Support contact entered", sup ? "Shown in the footer and on the policy pages" : "Add a WhatsApp number or email", "Site content"],
       [!!(site.privacy_text || site.terms_text || site.refund_text || site.about_text), "Policy pages reviewed", (site.privacy_text || site.terms_text || site.refund_text || site.about_text) ? "You have edited at least one page" : "Pages use the built-in draft text. Read and edit them before launch", "Site content"],
+      [P ? Number(P.monthly_kobo) > 0 && Number(P.yearly_kobo) > 0 : false, "Verified badge plan prices", P ? "Monthly " + money(P.monthly_kobo) + ", 12 months " + money(P.yearly_kobo) + (P.required ? ". The badge needs a paid plan." : ". The badge is free for now.") : "Run seller_plans.sql in Supabase", "Control > Plans"],
+      [rq ? rq.length === 0 : false, "Promotion requests", rq ? (rq.length ? rq.length + " waiting for your reply" : "Nothing waiting") : "Run growth2.sql in Supabase", "Control > Requests"],
+      [ga ? ga.enabled !== false : false, "Automatic seller growth", ga ? (ga.enabled !== false ? "On. " + (ga.sent_30d || 0) + " messages sent in the last 30 days" : "Switched off") : "Run growth3.sql in Supabase", "Control > Requests"],
       [null, "Paystack online payments", "Cannot be checked from here. Follow SETUP.md, then test a full order in Paystack test mode", "SETUP.md"],
       [null, "Database security", "Run: select tablename from pg_tables where schemaname='public' and not rowsecurity; and fix anything listed", "Supabase SQL"],
       [null, "Rider documents are private", "In Supabase Storage, the delivery-docs bucket must not be public", "Supabase Storage"],
@@ -299,7 +326,7 @@
     if (e.target.id === "site-reset" && window.confirm("Remove all your changes and go back to the page's own wording?")) saveSite({}).then(openSite);
   });
 
-  function run() { fillCats(); decorateStats(); decorateItems(); applyCat(); }
+  function run() { fillCats(); decorateStats(); promoTile(); decorateItems(); applyCat(); }
   function refresh() {
     run();
     if (Date.now() - loadedAt > 20000) load().then(run);
