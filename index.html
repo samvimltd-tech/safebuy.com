@@ -510,6 +510,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
         <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
         <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
         <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
+        <button type="button" data-feature="notifications"><span class="lbl">🔔 Notifications</span></button>
         <button type="button" data-action="delivery">📍 Delivery areas</button>
         <button type="button" data-action="deliver">🏍️ Deliver with us</button>
       </div>
@@ -555,6 +556,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
       <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
+      <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
@@ -1262,7 +1264,7 @@ updateCartCount();
      messages.js). Menu items click those buttons, so behaviour stays identical to the originals. */
   var FEATURE_BTN = {
     orders: "mp-orders-btn", "delivery-orders": "do-btn", neworders: "mp-shop-btn",
-    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab"
+    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab", notifications: "sbn-fab"
   };
   function signedIn() { return document.body.classList.contains("sb-in"); }
   function sellerMode() { return document.body.classList.contains("sb-seller"); }
@@ -1276,6 +1278,7 @@ updateCartCount();
     }
     var btn = $(FEATURE_BTN[name]);
     if (name === "messages") { if (btn) btn.click(); else showToast("Messages are loading. Try again in a moment."); return; }
+    if (name === "notifications") { if (!signedIn()) { window.openAccount(); window.say("Sign in to see notifications."); return; } if (btn) btn.click(); else showToast("Notifications are loading. Try again in a moment."); return; }
     if (!signedIn() && name !== "mode") { window.openAccount(); window.say("Sign in to use this feature."); return; }
     if (sellerMode() && (name === "orders" || name === "delivery-orders")) {
       showToast("You are in seller mode. Switch to buyer mode to see your purchases.");
@@ -1814,6 +1817,7 @@ updateCartCount();
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
+        '<button type="button" data-feature="notifications"><span class="ico">🔔</span><span class="lbl">Notifications</span></button>' +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
         '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
@@ -2406,6 +2410,23 @@ document.addEventListener("click", function (e) {
   }
   [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
   window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
+})();
+</script>
+<script>
+/* Bell and chat bubble appear only when something is new (their red count badge is showing). */
+(function () {
+  "use strict";
+  var pairs = [["sbn-fab", ".sbn-badge"], ["sbm-fab", ".sbm-badge"]];
+  function sync() {
+    pairs.forEach(function (p) {
+      var f = document.getElementById(p[0]); if (!f) return;
+      var b = f.querySelector(p[1]), t = b ? (b.textContent || "").trim() : "";
+      var show = !!b && !b.hidden && t !== "" && t !== "0";
+      if (show) f.style.removeProperty("display"); else f.style.setProperty("display", "none", "important");
+    });
+  }
+  new MutationObserver(sync).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden"], characterData: true });
+  setInterval(sync, 1500); sync();
 })();
 </script>
 </body>
