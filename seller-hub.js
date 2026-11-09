@@ -71,7 +71,7 @@
   async function open(view) {
     cur = view || "home"; show(); titleEl.textContent = TITLES[cur] || "Grow my business"; backBtn.hidden = cur === "home";
     bodyEl.scrollTop = 0;
-    if (cur === "home") { bodyEl.innerHTML = '<p style="color:#52675c;font-size:14px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); return; }
+    if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><p style="color:#52675c;font-size:14px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
     bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
     var v = cur;
     try {
@@ -188,6 +188,27 @@
   }
   document.addEventListener("click", function (e) { var b = e.target.closest("[data-hub]"); if (b) { e.preventDefault(); open(b.dataset.hub); } });
 
+
+  /* ---- "Next steps" coach: live checklist for this seller ---- */
+  var COACH_CSS = "<style>.sh-coach{background:#fff;border:1px solid #e6ece8;border-radius:16px;padding:14px;margin:0 0 14px}.sh-coach h3{margin:0 0 4px;font-size:16px}.sh-bar{height:8px;border-radius:6px;background:#e6efe9;margin:8px 0 10px;overflow:hidden}.sh-bar i{display:block;height:100%;background:#087f5b}.sh-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-top:1px solid #eef2ef;background:none;padding:10px 0;font:14px Arial,sans-serif;color:#172b24;cursor:pointer}.sh-step:first-of-type{border-top:0}.sh-step .c{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #b8c7bd;display:grid;place-items:center;font-size:13px;color:#fff}.sh-step.done .c{background:#087f5b;border-color:#087f5b}.sh-step.done b{text-decoration:line-through;color:#8a9a90}.sh-step small{display:block;color:#718078;font-size:12px}</style>";
+  async function drawCoach(host) {
+    var c = client(); if (!host || !c) return;
+    try {
+      var r = await c.rpc("seller_coach"); if (r.error || !r.data || !r.data.app) { host.innerHTML = ""; return; }
+      var steps = r.data.steps || [], done = steps.filter(function (x) { return x.done; }).length;
+      var todo = steps.filter(function (x) { return !x.done; }).slice(0, 4);
+      if (!todo.length) { host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>🎉 You have done every growth step</h3><p style="margin:4px 0 0;font-size:14px;color:#52675c">Keep your stock updated and reply fast to customers.</p></div>'; return; }
+      host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>Your next steps</h3><div style="font-size:13px;color:#718078">' + done + " of " + steps.length + ' done</div><div class="sh-bar"><i style="width:' + Math.round(done / steps.length * 100) + '%"></i></div>' +
+        todo.map(function (x) { return '<button type="button" class="sh-step" data-coach="' + esc(x.go) + '"><span class="c"></span><span><b>' + esc(x.title) + "</b><small>" + esc(x.hint) + "</small></span></button>"; }).join("") + "</div>";
+    } catch (e) { host.innerHTML = ""; }
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-coach]"); if (!b) return; e.preventDefault();
+    var go = b.dataset.coach;
+    if (go === "sell") { var sell = document.querySelector('[data-action="sell"]'); hide(); if (sell) sell.click(); } else open(go);
+  });
+  function coachAll() { var h = $("sa-coach"); if (h) drawCoach(h); }
+
   /* ---- a card inside the seller panel ---- */
   function inject() {
     var body = $("account-body") || document.querySelector("#sell-body, .modal-body");
@@ -202,5 +223,9 @@
   var ci = setInterval(function () { var c = client(); if (c && c.auth) { clearInterval(ci); claim(); c.auth.onAuthStateChange(function (ev) { if (ev === "SIGNED_IN") setTimeout(claim, 1500); }); } }, 600);
   setTimeout(function () { clearInterval(ci); }, 30000);
 
-  window.__sbHub = { open: open, close: hide };
+  setTimeout(coachAll, 2500);
+  var ci2 = setInterval(function () { var c = client(); if (c && c.auth) { clearInterval(ci2); c.auth.onAuthStateChange(function (ev) { if (ev === "SIGNED_IN") setTimeout(coachAll, 1500); }); } }, 700);
+  setTimeout(function () { clearInterval(ci2); }, 30000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) coachAll(); });
+  window.__sbHub = { open: open, close: hide, coach: coachAll };
 })();
