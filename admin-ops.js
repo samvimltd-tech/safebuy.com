@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -290,6 +290,46 @@
   }
 
   /* ---- Plans: Verified badge subscriptions (N1,000 monthly / N12,000 yearly) ---- */
+
+  /* ---- Requests: seller promotion / boost / advert requests + invite reward settings ---- */
+  async function pRequests(my) {
+    var rows, ref = null;
+    try { rows = await rpc("admin_promos", { p_status: "pending" }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "growth2.sql")); return; }
+    try { var rs = await rpc("admin_promos", { p_status: "approved" }); window.__opsApproved = rs; } catch (e) { window.__opsApproved = []; }
+    if (stale(my)) return;
+    rows = rows || [];
+    var kindName = { product: "Promote product", shop: "Boost shop", ad: "Advertise business" };
+    body('<h3>Waiting for you (' + rows.length + ')</h3>' + (rows.length ? rows.map(function (r) {
+      return '<div class="ops-row" data-id="' + esc(r.id) + '"><b>' + esc(kindName[r.kind] || r.kind) + "</b> · " + esc(r.shop || "") + (r.product ? "<br>Product: " + esc(r.product) : "") +
+        (r.business ? "<br>Business: " + esc(r.business) : "") + (r.phone ? "<br>Phone: " + esc(r.phone) : "") + (r.note ? "<br><i>" + esc(r.note) + "</i>" : "") +
+        '<br><span class="muted">Asked for ' + r.days + " days · " + new Date(r.created_at).toLocaleDateString("en-NG") + "</span>" +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input type="text" class="rq-days" inputmode="numeric" value="' + r.days + '" style="width:70px;padding:8px;border:1px solid #cfd5da;border-radius:8px" aria-label="Days">' +
+        '<input type="text" class="rq-note" maxlength="200" placeholder="Note to seller (optional)" style="flex:1;min-width:140px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
+        '<button class="button" data-ok="1">Approve</button><button class="button outline" data-ok="0">Decline</button></div></div>';
+    }).join("") : '<p class="muted">Nothing waiting. New requests show here.</p>') +
+      '<h3>Running now</h3>' + ((window.__opsApproved || []).filter(function (r) { return r.ends_at && new Date(r.ends_at) > new Date(); }).map(function (r) {
+        return '<div class="ops-row"><b>' + esc(kindName[r.kind] || r.kind) + "</b> · " + esc(r.shop || "") + (r.product ? " · " + esc(r.product) : "") + '<br><span class="muted">Ends ' + new Date(r.ends_at).toLocaleDateString("en-NG") + "</span></div>";
+      }).join("") || '<p class="muted">No promotions running.</p>') +
+      '<h3>Invite rewards</h3><form id="rf-form" class="ops-row"><label><input type="checkbox" id="rf-on" checked><span>Reward sellers who invite other sellers</span></label>' +
+      '<input type="text" id="rf-days" inputmode="numeric" value="30" aria-label="Free badge days per approved invite" placeholder="Free badge days per approved invite" style="width:100%;margin-top:8px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
+      '<input type="text" id="rf-max" inputmode="numeric" value="20" aria-label="Most rewards per seller" placeholder="Most rewards per seller" style="width:100%;margin-top:8px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
+      '<button class="button full" type="submit" style="margin-top:8px">Save reward settings</button><p id="rf-msg" class="muted"></p></form><p id="rq-msg" class="muted"></p>');
+    panel.querySelectorAll("[data-ok]").forEach(function (b) {
+      b.onclick = async function () {
+        var row = b.closest(".ops-row"), ok = b.dataset.ok === "1", d = Number(row.querySelector(".rq-days").value);
+        if (!window.confirm((ok ? "Approve" : "Decline") + " this request?")) return;
+        b.disabled = true;
+        try { await rpc("admin_decide_promo", { p_id: row.dataset.id, p_approve: ok, p_days: d >= 1 ? d : null, p_note: row.querySelector(".rq-note").value || null }); pRequests(my); }
+        catch (er) { b.disabled = false; $("rq-msg").textContent = "Failed: " + er.message; }
+      };
+    });
+    $("rf-form").onsubmit = async function (e) {
+      e.preventDefault(); var m = $("rf-msg");
+      try { await rpc("admin_set_referral", { p_enabled: $("rf-on").checked, p_days: Number($("rf-days").value), p_max: Number($("rf-max").value) }); m.className = "ops-ok"; m.textContent = "Saved."; }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+  }
+
   async function pPlans(my) {
     var d;
     try { d = await rpc("admin_subscriptions"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "seller_plans.sql")); return; }
