@@ -465,6 +465,75 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 </header>
 <div id="role-ribbon" role="note" style="background:#b45309;color:#fff;padding:7px 14px;font:800 12px/1.35 system-ui,sans-serif;letter-spacing:.3px;text-align:center">🏪 SELLER APP · your shop and orders <span id="role-who" style="font-weight:600;opacity:.92"></span></div>
 
+<!--SELLER-MODE-->
+<style>
+#sa-bar{background:#fff;border-bottom:1px solid #f0dcc3;padding:8px 14px}
+#sa-bar .sa-seg{display:flex;max-width:420px;margin:0 auto;background:#fff1de;border-radius:14px;padding:4px;gap:4px}
+#sa-bar button{flex:1;border:0;border-radius:11px;padding:11px 8px;background:transparent;color:#7a4a05;font:800 14px system-ui,sans-serif}
+#sa-bar button[aria-pressed="true"]{background:#b45309;color:#fff;box-shadow:0 2px 8px rgba(180,83,9,.35)}
+#sa-home{max-width:560px;margin:0 auto;padding:22px 16px 120px;font-family:system-ui,sans-serif;color:#172b24}
+#sa-home h1{font-size:24px;margin:6px 0 4px}
+#sa-home p.sa-sub{margin:0 0 18px;color:#52645a;font-size:15px;line-height:1.5}
+#sa-home .sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#sa-home .sa-tile{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border:1px solid #f0dcc3;border-radius:18px;background:#fff7ed;padding:18px 14px;color:#172b24;font:800 16px system-ui,sans-serif;min-height:104px}
+#sa-home .sa-tile small{font:500 13px/1.35 system-ui,sans-serif;color:#7a5a30}
+#sa-home .sa-tile .e{font-size:28px;line-height:1}
+#sa-home .sa-wide{grid-column:1/-1;background:#b45309;color:#fff;border-color:#b45309}
+#sa-home .sa-wide small{color:#ffe9cf}
+#sa-home .sa-note{margin-top:18px;padding:12px 14px;border-radius:14px;background:#f1f7f3;color:#2f4a3f;font-size:14px;line-height:1.5}
+/* strict seller mode: no marketplace anywhere on screen */
+body.sa-seller main#home,body.sa-seller footer,body.sa-seller .announcement,body.sa-seller .delivery-bar,body.sa-seller #mobile-nav,body.sa-seller .cart-button,body.sa-seller #desktop-nav,body.sa-seller .delivery-btn,body.sa-seller .sell-header,body.sa-seller #sc-hero{display:none!important}
+body:not(.sa-seller) #sa-home{display:none!important}
+body.sa-seller #role-open{display:none!important}
+</style>
+<div id="sa-bar"><div class="sa-seg" role="group" aria-label="Choose mode">
+<button type="button" id="sa-m-seller" aria-pressed="true">🏪 Seller mode</button>
+<button type="button" id="sa-m-market" aria-pressed="false">🛒 Marketplace</button></div></div>
+<section id="sa-home" aria-label="Seller home">
+<h1>Your shop</h1>
+<p class="sa-sub">Everything for selling is here. Tap <b>Marketplace</b> above any time to browse and buy like a customer.</p>
+<div class="sa-grid">
+<button type="button" class="sa-tile sa-wide" data-action="sell"><span class="e">🏪</span>My shop &amp; listings<small>Add products, edit prices, stock and photos</small></button>
+<button type="button" class="sa-tile" data-feature="neworders"><span class="e">📦</span>Orders<small>Orders from your customers</small></button>
+<button type="button" class="sa-tile" data-feature="delivery-orders"><span class="e">🚚</span>Deliveries<small>Request and track riders</small></button>
+<button type="button" class="sa-tile" data-feature="messages"><span class="e">💬</span>Messages<small>Chat with buyers</small></button>
+<button type="button" class="sa-tile" data-feature="settings"><span class="e">⚙️</span>Account<small>Profile and settings</small></button>
+</div>
+<div class="sa-note" id="sa-hint">Sign in to see your shop.</div>
+</section>
+<script>
+(function () {
+  "use strict";
+  var KEY = "sa-mode";
+  function get() { try { return sessionStorage.getItem(KEY) === "market" ? "market" : "seller"; } catch (e) { return "seller"; } }
+  function save(m) { try { sessionStorage.setItem(KEY, m); } catch (e) {} }
+  function apply(m) {
+    document.body.classList.toggle("sa-seller", m === "seller");
+    document.getElementById("sa-m-seller").setAttribute("aria-pressed", m === "seller");
+    document.getElementById("sa-m-market").setAttribute("aria-pressed", m === "market");
+    window.scrollTo(0, 0);
+  }
+  window.__saSet = function (m) { save(m); apply(m); };
+  // Seller mode every time the app is opened (strict). Marketplace only when the seller taps the toggle.
+  try { sessionStorage.removeItem(KEY); } catch (e) {}
+  apply("seller");
+  document.getElementById("sa-m-seller").addEventListener("click", function () {
+    window.__saSet("seller");
+    var b = document.querySelector('[data-action="sell"]'); if (b && document.body.classList.contains("sb-in")) b.click();
+  });
+  document.getElementById("sa-m-market").addEventListener("click", function () {
+    // close any open seller sheet first, then show the marketplace
+    document.querySelectorAll(".modal-backdrop.open").forEach(function (x) { x.classList.remove("open"); });
+    document.body.classList.remove("locked");
+    window.__saSet("market");
+  });
+  var hint = document.getElementById("sa-hint");
+  function sync() { hint.textContent = document.body.classList.contains("sb-in") ? "Tap My shop & listings to add or edit products." : "Sign in to see your shop."; }
+  new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ["class"] }); sync();
+})();
+</script>
+<!--/SELLER-MODE-->
+
 <div class="delivery-bar" id="delivery-bar" role="status">
   <div class="container">
     <span id="delivery-bar-text">🚚 Delivery is not available in your area yet.</span>
@@ -1707,7 +1776,7 @@ updateCartCount();
       restFallback(failReason); return;
     }
 
-    var timeout = new Promise(function (_, reject) {
+  var timeout = new Promise(function (_, reject) {
       setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
 
