@@ -395,6 +395,8 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script src="../switches.js?v=1" defer></script>
 <script src="../seller-plan.js?v=1" defer></script>
 <script src="../seller-growth.js?v=1" defer></script>
+<script src="../impressions.js?v=1" defer></script>
+<script src="../seller-hub.js?v=1" defer></script>
 <script>window.__sbWords={signinTitle:"Seller sign in",signupTitle:"Open your seller account",signupBtn:"Create seller account",toggleSignup:"New seller? Create an account",menuSignup:"Create seller account"};</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////w3c7Edz20UwmGl+YyAAACC0lEQVR42u2YO04DMRCGf0MeSBRJAxLZSHADuAHLDagooKChSihyAzhCCuhSEhoKaqrkCHS0KbK8RJECCVjQmiLsI1l7ZyxBgTSuLPnL2DOe+T0bpeEwFiC00EILLbTQQgstNJ/WlzsLe+2hCdf50QUAlK/yKwZ6HBs6YNCRn+x7SNPj9JS1+bW8l72CmKj5XjP7+9qEimDoFO9HJ3pUeJnzbvsoiMm8lzNBIr3UTln1CQBoDcI+59yvAOBprfWTz7lLAEcAsHpD254AUHHGkLYnGV+8LmV7BKCqbcNku/RPFeLLif50oqNTp3P3uHQdAIJjZu38FFrbfJemrAKAfRb9Gu+5ysmTJEeePYaX5WR236GVLbOZikjbKtUTvUXfTkZ97mityirbgFT79wy9TipEJTN/Ic+tbtP5G/k2IKzaY5jP2EqqInpIv64f6eI2rYOV8Yy6ULXjXdhoGPO4b3lKzLQOpvQyR7+BxthJqxo+6+WOR9AEUH1n0tGigbaqpnLSWOX/oX672y4R9EMyGzJshx2X/mRUiRs9U1bl+6pmpr+qk14GnYL+Ki8+6jrpODeJ/B4BUK1BeAYAOGHQdmkrpjWvdiwhKKTLTvSSE73hRHeZb/FU4sj3cs0yt4Q0SCtzwPgmCaxfJEYdfJpWZEOzaB2e72KlZRJTJf9/Cy200EILLbTQQv8K/Q1+aubmT9k2pAAAAABJRU5ErkJggg==">
@@ -500,6 +502,17 @@ body.sa-seller #role-open{display:none!important}
 <button type="button" class="sa-tile" id="sa-bell"><span class="e">🔔</span>Notifications<small>Order and account alerts</small></button>
 <button type="button" class="sa-tile" data-feature="settings"><span class="e">⚙️</span>Account<small>Profile and settings</small></button>
 </div>
+<h2 style="font-size:18px;margin:22px 0 10px">Grow my business</h2>
+<div class="sa-grid">
+<button type="button" class="sa-tile" data-hub="promote"><span class="e">📣</span>Promote my products<small>Get a product featured</small></button>
+<button type="button" class="sa-tile" data-hub="boost"><span class="e">🚀</span>Boost my shop<small>Feature your whole shop</small></button>
+<button type="button" class="sa-tile" data-hub="impressions"><span class="e">👁️</span>Product impressions<small>Times your products were shown</small></button>
+<button type="button" class="sa-tile" data-hub="enquiries"><span class="e">💬</span>Product enquiries<small>Customers who asked</small></button>
+<button type="button" class="sa-tile" data-hub="clicks"><span class="e">👆</span>Customer clicks<small>Times products were opened</small></button>
+<button type="button" class="sa-tile" data-hub="upgrade"><span class="e">⭐</span>Upgrade my subscription<small>Verified badge plan</small></button>
+<button type="button" class="sa-tile" data-hub="advertise"><span class="e">📢</span>Advertise my business<small>We advertise your shop</small></button>
+<button type="button" class="sa-tile" data-hub="invite"><span class="e">🎁</span>Invite sellers, earn<small>Free badge days</small></button>
+</div>
 <div class="sa-note" id="sa-hint">Sign in to see your shop.</div>
 </section>
 <script>
@@ -593,6 +606,7 @@ body.sa-seller #role-open{display:none!important}
         <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
         <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
         <button type="button" data-feature="messages"><span class="lbl">💬 Messages</span></button>
+        <button type="button" data-feature="notifications"><span class="lbl">🔔 Notifications</span></button>
         <button type="button" data-action="delivery">📍 Delivery areas</button>
         <button type="button" data-action="deliver">🏍️ Deliver with us</button>
       </div>
@@ -638,6 +652,7 @@ body.sa-seller #role-open{display:none!important}
       <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
       <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
+      <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
         <div class="prototype-notice" id="sc-notice">
@@ -1341,7 +1356,7 @@ updateCartCount();
      messages.js). Menu items click those buttons, so behaviour stays identical to the originals. */
   var FEATURE_BTN = {
     orders: "mp-orders-btn", "delivery-orders": "do-btn", neworders: "mp-shop-btn",
-    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab"
+    settings: "account-settings-btn", mode: "account-mode-btn", messages: "sbm-fab", notifications: "sbn-fab"
   };
   function signedIn() { return document.body.classList.contains("sb-in"); }
   function sellerMode() { return document.body.classList.contains("sb-seller"); }
@@ -1355,6 +1370,7 @@ updateCartCount();
     }
     var btn = $(FEATURE_BTN[name]);
     if (name === "messages") { if (btn) btn.click(); else showToast("Messages are loading. Try again in a moment."); return; }
+    if (name === "notifications") { if (!signedIn()) { window.openAccount(); window.say("Sign in to see notifications."); return; } if (btn) btn.click(); else showToast("Notifications are loading. Try again in a moment."); return; }
     if (!signedIn() && name !== "mode") { window.openAccount(); window.say("Sign in to use this feature."); return; }
     if (sellerMode() && (name === "orders" || name === "delivery-orders")) {
       showToast("You are in seller mode. Switch to buyer mode to see your purchases.");
@@ -1893,6 +1909,7 @@ updateCartCount();
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
+        '<button type="button" data-feature="notifications"><span class="ico">🔔</span><span class="lbl">Notifications</span></button>' +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
         '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
@@ -2485,6 +2502,23 @@ document.addEventListener("click", function (e) {
   }
   [800, 2000, 4500].forEach(function (t) { setTimeout(fix, t); });
   window.addEventListener("scroll", function () { clearTimeout(fix.t); fix.t = setTimeout(fix, 250); }, { passive: true });
+})();
+</script>
+<script>
+/* Bell and chat bubble appear only when something is new (their red count badge is showing). */
+(function () {
+  "use strict";
+  var pairs = [["sbn-fab", ".sbn-badge"], ["sbm-fab", ".sbm-badge"]];
+  function sync() {
+    pairs.forEach(function (p) {
+      var f = document.getElementById(p[0]); if (!f) return;
+      var b = f.querySelector(p[1]), t = b ? (b.textContent || "").trim() : "";
+      var show = !!b && !b.hidden && t !== "" && t !== "0";
+      if (show) f.style.removeProperty("display"); else f.style.setProperty("display", "none", "important");
+    });
+  }
+  new MutationObserver(sync).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden"], characterData: true });
+  setInterval(sync, 1500); sync();
 })();
 </script>
 <button id="role-open" type="button" style="position:fixed;left:14px;bottom:86px;z-index:60;border:0;border-radius:30px;padding:12px 18px;background:#b45309;color:#fff;font:800 15px system-ui,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.25)">🏪 My shop</button>
