@@ -497,6 +497,7 @@ body.sa-seller #role-open{display:none!important}
 <button type="button" class="sa-tile" data-feature="neworders"><span class="e">📦</span>Orders<small>Orders from your customers</small></button>
 <button type="button" class="sa-tile" data-feature="delivery-orders"><span class="e">🚚</span>Deliveries<small>Request and track riders</small></button>
 <button type="button" class="sa-tile" data-feature="messages"><span class="e">💬</span>Messages<small>Chat with buyers</small></button>
+<button type="button" class="sa-tile" id="sa-bell"><span class="e">🔔</span>Notifications<small>Order and account alerts</small></button>
 <button type="button" class="sa-tile" data-feature="settings"><span class="e">⚙️</span>Account<small>Profile and settings</small></button>
 </div>
 <div class="sa-note" id="sa-hint">Sign in to see your shop.</div>
@@ -527,6 +528,22 @@ body.sa-seller #role-open{display:none!important}
     document.body.classList.remove("locked");
     window.__saSet("market");
   });
+
+  // Bell and chat bubble appear only when there is something new (their red count badge is showing).
+  var pairs = [["sbn-fab", ".sbn-badge"], ["sbm-fab", ".sbm-badge"]];
+  function fabSync() {
+    pairs.forEach(function (p) {
+      var f = document.getElementById(p[0]); if (!f) return;
+      var b = f.querySelector(p[1]);
+      var show = !!b && !b.hidden && (b.textContent || "").trim() !== "" && (b.textContent || "").trim() !== "0";
+      var want = show ? "" : "none";
+      if (f.style.display !== want) f.style.setProperty("display", want, want ? "important" : "");
+      if (!want) f.style.removeProperty("display");
+    });
+  }
+  new MutationObserver(fabSync).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["hidden"], characterData: true });
+  setInterval(fabSync, 1500); fabSync();
+  document.getElementById("sa-bell").addEventListener("click", function () { var f = document.getElementById("sbn-fab"); if (f) f.click(); });
   var hint = document.getElementById("sa-hint");
   function sync() { hint.textContent = document.body.classList.contains("sb-in") ? "Tap My shop & listings to add or edit products." : "Sign in to see your shop."; }
   new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ["class"] }); sync();
@@ -1776,7 +1793,7 @@ updateCartCount();
       restFallback(failReason); return;
     }
 
-  var timeout = new Promise(function (_, reject) {
+    var timeout = new Promise(function (_, reject) {
       setTimeout(function () { reject(new Error("The request timed out.")); }, 10000);
     });
 
@@ -2432,7 +2449,7 @@ document.addEventListener("click", function (e) {
 <script>
 /* The remaining feature files load in order as soon as the connection to the database is ready (or has failed). */
 (function () {
-  var L = ["../messages.js", "../notify.js", "../verify.js", "../lead-capture.js", "../buyer-account.js", "../orders.js", "../account-settings.js", "../delivery.js", "../delivery-orders.js", "../delivery-boost.js", "../bottom-sheet.js", "../protect-core.js", "../protected-option.js", "../theme.js", "../admin-plus.js"];
+  var L = ["../messages.js", "../notify.js", "../verify.js", "../buyer-account.js", "../orders.js", "../account-settings.js", "../delivery.js", "../delivery-orders.js", "../delivery-boost.js", "../bottom-sheet.js", "../protect-core.js", "../protected-option.js", "../theme.js", "../admin-plus.js"];
   function next() {
     if (!L.length) return;
     var s = document.createElement("script"); s.src = L.shift(); s.async = false;
