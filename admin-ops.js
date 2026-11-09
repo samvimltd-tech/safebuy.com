@@ -296,6 +296,7 @@
     var rows, ref = null;
     try { rows = await rpc("admin_promos", { p_status: "pending" }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "growth2.sql")); return; }
     try { var rs = await rpc("admin_promos", { p_status: "approved" }); window.__opsApproved = rs; } catch (e) { window.__opsApproved = []; }
+    var ga = null; try { ga = await rpc("admin_growth_auto"); } catch (e) { ga = null; }
     if (stale(my)) return;
     rows = rows || [];
     var kindName = { product: "Promote product", shop: "Boost shop", ad: "Advertise business" };
@@ -313,7 +314,10 @@
       '<h3>Invite rewards</h3><form id="rf-form" class="ops-row"><label><input type="checkbox" id="rf-on" checked><span>Reward sellers who invite other sellers</span></label>' +
       '<input type="text" id="rf-days" inputmode="numeric" value="30" aria-label="Free badge days per approved invite" placeholder="Free badge days per approved invite" style="width:100%;margin-top:8px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
       '<input type="text" id="rf-max" inputmode="numeric" value="20" aria-label="Most rewards per seller" placeholder="Most rewards per seller" style="width:100%;margin-top:8px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
-      '<button class="button full" type="submit" style="margin-top:8px">Save reward settings</button><p id="rf-msg" class="muted"></p></form><p id="rq-msg" class="muted"></p>');
+      '<button class="button full" type="submit" style="margin-top:8px">Save reward settings</button><p id="rf-msg" class="muted"></p></form>' +
+      '<h3>Automatic growth</h3>' + (ga ? '<form id="ga-form" class="ops-row"><label><input type="checkbox" id="ga-on"' + (ga.enabled !== false ? " checked" : "") + '><span>Run daily: boost new shops, remind empty shops, send weekly results<br><small class="muted">' + (ga.sent_30d || 0) + ' messages sent in the last 30 days</small></span></label>' +
+        '<input type="text" id="ga-days" inputmode="numeric" value="' + (ga.welcome_days || 7) + '" aria-label="Days a new shop stays featured" placeholder="Days a new shop stays featured" style="width:100%;margin-top:8px;padding:8px;border:1px solid #cfd5da;border-radius:8px">' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button class="button" type="submit" style="flex:1">Save</button><button class="button outline" type="button" id="ga-run" style="flex:1">Run now</button></div><p id="ga-msg" class="muted"></p></form>' : '<div class="ops-row"><b class="ops-bad">Setup needed</b><p>Run growth3.sql once in Supabase, then open this tab again.</p></div>') + '<p id="rq-msg" class="muted"></p>');
     panel.querySelectorAll("[data-ok]").forEach(function (b) {
       b.onclick = async function () {
         var row = b.closest(".ops-row"), ok = b.dataset.ok === "1", d = Number(row.querySelector(".rq-days").value);
@@ -323,6 +327,19 @@
         catch (er) { b.disabled = false; $("rq-msg").textContent = "Failed: " + er.message; }
       };
     });
+    if ($("ga-form")) {
+      $("ga-form").onsubmit = async function (e) {
+        e.preventDefault(); var m = $("ga-msg");
+        try { await rpc("admin_set_growth_auto", { p_enabled: $("ga-on").checked, p_days: Number($("ga-days").value) || 7 }); m.className = "ops-ok"; m.textContent = "Saved."; }
+        catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+      };
+      $("ga-run").onclick = async function () {
+        var m = $("ga-msg"); this.disabled = true; m.className = "muted"; m.textContent = "Running…";
+        try { var r = await rpc("admin_run_growth"); m.className = "ops-ok"; m.textContent = r && r.enabled === false ? "It is switched off. Turn it on and save first." : "Done. New shops boosted: " + (r.boosted || 0) + " · empty-shop reminders: " + (r.first_product || 0) + " · weekly results sent: " + (r.weekly || 0); }
+        catch (er) { m.className = "ops-bad"; m.textContent = "Failed: " + er.message; }
+        this.disabled = false;
+      };
+    }
     $("rf-form").onsubmit = async function (e) {
       e.preventDefault(); var m = $("rf-msg");
       try { await rpc("admin_set_referral", { p_enabled: $("rf-on").checked, p_days: Number($("rf-days").value), p_max: Number($("rf-max").value) }); m.className = "ops-ok"; m.textContent = "Saved."; }
