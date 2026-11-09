@@ -698,7 +698,7 @@ body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh
   c.auth.getSession().then(function (r) {
     var s = r && r.data && r.data.session;
     showWho(s ? s.user : null);
-    if (s && !recovering) enter();
+    if (s && !recovering) { enter(); setTimeout(function () { if (typeof showInstall === "function") showInstall(false, false); }, 1800); }
   });
   if (window.__sbLinkError) {
     setMode("forgot");
@@ -920,6 +920,7 @@ body:not(.rd-online) #dp-vehcard .vh-prev *,body:not(.rd-online) #dp-vehcard .vh
     if (!force && later && Date.now() - later < 3 * 86400000) return;
     var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
     card = document.createElement("div");
+    card.id = "role-install-card";
     card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(10,42,31,.62);display:flex;align-items:flex-end;justify-content:center";
     card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
       '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:#12372a;color:#fff;font:800 34px/64px system-ui,sans-serif">R</div>' +
