@@ -44,19 +44,20 @@
   var sh = document.createElement("div"); sh.id = "sh"; sh.setAttribute("role", "dialog"); sh.setAttribute("aria-modal", "true");
   sh.innerHTML = '<div class="sh-top"><button type="button" id="sh-back" aria-label="Back" hidden>‹</button><strong id="sh-title">Grow my business</strong><button type="button" id="sh-x" aria-label="Close">✕</button></div><div class="sh-body" id="sh-body"></div>';
   document.body.appendChild(sh);
-  var bodyEl = $("sh-body"), titleEl = $("sh-title"), backBtn = $("sh-back"), cur = "";
+  var bodyEl = $("sh-body"), titleEl = $("sh-title"), backBtn = $("sh-back"), cur = "", payBack = "";
   function show() { sh.classList.add("open"); document.body.style.overflow = "hidden"; }
   function hide() { sh.classList.remove("open"); document.body.style.overflow = ""; }
-  $("sh-x").addEventListener("click", hide); backBtn.addEventListener("click", function () { open("home"); });
+  $("sh-x").addEventListener("click", hide); backBtn.addEventListener("click", function () { open(cur === "pay" ? (payBack || "home") : "home"); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && sh.classList.contains("open")) hide(); });
 
   var TILES = [
     ["promote", "📣", "Promote my products", "Get a product featured"], ["boost", "🚀", "Boost my shop", "Feature your whole shop"],
     ["impressions", "👁️", "Product impressions", "Times your products were shown"], ["enquiries", "💬", "Product enquiries", "Customers who asked about you"],
     ["clicks", "👆", "Customer clicks", "Times your products were opened"], ["upgrade", "⭐", "Upgrade my subscription", "Verified badge plan"],
-    ["advertise", "📢", "Advertise my business", "Ask us to advertise your shop"], ["invite", "🎁", "Invite sellers, earn rewards", "Free badge days for every shop"]
+    ["advertise", "📢", "Advertise my business", "Ask us to advertise your shop"], ["invite", "🎁", "Invite sellers, earn rewards", "Free badge days for every shop"],
+    ["billing", "💳", "Payments & fees", "Pay for promotions, fees and plans"]
   ];
-  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn" };
+  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", pay: "Pay now" };
   function tilesHtml() { return '<div class="sh-grid">' + TILES.map(function (t) { return '<button type="button" class="sh-tile" data-hub="' + t[0] + '"><span class="e">' + t[1] + "</span>" + t[2] + "<small>" + t[3] + "</small></button>"; }).join("") + "</div>"; }
 
   var growth = null;
@@ -75,7 +76,7 @@
     bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
     var v = cur;
     try {
-      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite })[v](v);
+      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling })[v](v);
       if (cur === v) { bodyEl.innerHTML = html; wire(v); }
     } catch (e) { if (cur === v) bodyEl.innerHTML = err(e); }
   }
@@ -99,49 +100,103 @@
       '<button type="button" class="sh-btn alt" data-hub="promote">📣 Get more ' + M.label.toLowerCase() + ": promote a product</button>";
   }
 
-  /* ---- promote / boost / advertise (requests the SafeBuy team approves) ---- */
+  /* ---- money helpers ---- */
+  function naira(k) { return "₦" + (Number(k || 0) / 100).toLocaleString("en-NG"); }
+  var prices = null;
+  async function loadPrices() { if (prices) return prices; var r = await client().rpc("money_prices"); prices = (r && r.data) || {}; return prices; }
+  function bankHtml(b) {
+    b = b || {};
+    if (!b.account_number) return '<p class="sh-bad">Payment details are not ready yet. Please contact SafeBuy NG support to pay.</p>';
+    return '<div class="sh-row"><div><small>Bank</small><b>' + esc(b.bank_name) + '</b></div></div><div class="sh-row"><div><small>Account number</small><b style="font-size:20px;letter-spacing:1px">' + esc(b.account_number) + '</b></div><button type="button" class="sh-cp" data-v="' + esc(b.account_number) + '" style="border:0;background:#edf6ef;color:#066548;border-radius:10px;padding:8px 12px;font:700 13px Arial;cursor:pointer">Copy</button></div><div class="sh-row"><div><small>Account name</small><b>' + esc(b.account_name) + "</b></div></div>" + (b.note ? '<p style="font-size:13px;color:#52675c">' + esc(b.note) + "</p>" : "");
+  }
+  /* the "send the money and tell us" panel, used by every payment */
+  function showPay(p, back) {
+    cur = "pay"; payBack = back || cur; show(); titleEl.textContent = "Pay now"; backBtn.hidden = false; bodyEl.scrollTop = 0;
+    var done = p.status === "confirmed", rep = p.status === "reported", bad = p.status === "rejected" || p.status === "cancelled";
+    bodyEl.innerHTML = '<div class="sh-card"><h3>Pay ' + naira(p.amount_kobo) + '</h3>' +
+      (done ? '<p class="sh-ok"><b>Payment confirmed. Thank you.</b></p>' : bad ? '<p class="sh-bad">This payment is ' + esc(p.status) + ".</p>" :
+      "<p>Transfer <b>exactly " + naira(p.amount_kobo) + '</b> to the account below. Put this reference in the transfer remark:</p><div class="sh-code" id="sh-ref">' + esc(p.reference) + "</div>" + bankHtml(p.bank)) + "</div>" +
+      (rep ? '<div class="sh-card"><p class="sh-ok"><b>Thanks. We are checking your payment.</b> You will get a notification once it is confirmed, usually within a few hours.</p></div>' :
+       (!done && !bad) ? '<div class="sh-card"><h3>Already paid?</h3><form class="sh-f" id="sh-rep"><label for="sh-pn">Name on your bank account (helps us find it)</label><input id="sh-pn" maxlength="100" autocomplete="name"><button class="sh-btn" type="submit">I have paid</button><p class="sh-msg" id="sh-msg" role="status"></p></form><button type="button" class="sh-btn alt" id="sh-cancelpay" style="margin-top:10px">Cancel this payment</button></div>' : "");
+    var f = $("sh-rep");
+    if (f) f.onsubmit = async function (e) {
+      e.preventDefault(); var m = $("sh-msg"), b = f.querySelector("button"); b.disabled = true; m.className = "sh-msg"; m.textContent = "Sending…";
+      var r = await client().rpc("report_payment", { p_ref: p.reference, p_note: $("sh-pn").value || null, p_phone: null });
+      if (r.error) { m.className = "sh-msg sh-bad"; m.textContent = r.error.message; b.disabled = false; return; }
+      p.status = "reported"; showPay(p, payBack);
+    };
+    var cp = $("sh-cancelpay"); if (cp) cp.onclick = async function () { if (!window.confirm("Cancel this payment?")) return; await client().rpc("cancel_my_payment", { p_id: p.id }); open(payBack === "pay" ? "billing" : payBack); };
+    wirePay();
+  }
+  function wirePay() { bodyEl.querySelectorAll(".sh-cp").forEach(function (b) { b.onclick = function () { var v = b.dataset.v; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function () { b.textContent = "Copied ✓"; }, function () { window.prompt("Copy", v); }); else window.prompt("Copy", v); }; }); }
+
+  /* ---- promote / boost (paid, or free if you switch charging off) ---- */
   async function myPromos(kind) {
     var c = client(), r = await c.rpc("my_promos"); if (r.error) return "";
+    var pays = await c.rpc("my_payments"), byRef = {}; ((pays && pays.data) || []).forEach(function (x) { if (x.ref_id) byRef[x.ref_id] = x; });
     var rows = (r.data || []).filter(function (x) { return !kind || x.kind === kind; });
     if (!rows.length) return "";
     return '<div class="sh-card"><h3>My requests</h3>' + rows.map(function (x) {
-      var what = x.kind === "product" ? "Product: " + esc(x.product || "") : x.kind === "shop" ? "Boost my shop" : "Advert";
-      return '<div class="sh-row"><div><b>' + what + '</b><small>' + x.days + " days" + (x.ends_at && x.status === "approved" ? " · ends " + new Date(x.ends_at).toLocaleDateString("en-NG") : "") + (x.admin_note ? " · " + esc(x.admin_note) : "") + '</small></div><div style="text-align:right"><span class="sh-pill ' + esc(x.status) + '">' + esc(x.status) + "</span>" +
+      var what = x.kind === "product" ? "Product: " + esc(x.product || "") : x.kind === "shop" ? "Boost my shop" : "Advert", st = x.status === "awaiting_payment" ? "awaiting payment" : x.status, pay = byRef[x.id];
+      return '<div class="sh-row"><div><b>' + what + '</b><small>' + x.days + " days" + (x.ends_at && x.status === "approved" ? " · ends " + new Date(x.ends_at).toLocaleDateString("en-NG") : "") + (x.admin_note ? " · " + esc(x.admin_note) : "") + '</small></div><div style="text-align:right"><span class="sh-pill ' + esc(x.status) + '">' + esc(st) + "</span>" +
+        (x.status === "awaiting_payment" && pay ? '<br><button type="button" class="sh-paynow" data-id="' + esc(pay.id) + '" style="border:0;background:none;color:#087f5b;font:700 13px Arial;padding:6px 0;cursor:pointer">Pay now</button>' : "") +
         (x.status === "pending" ? '<br><button type="button" class="sh-cancel" data-id="' + esc(x.id) + '" style="border:0;background:none;color:#b42318;font-size:12px;padding:6px 0;cursor:pointer">Cancel</button>' : "") + "</div></div>";
     }).join("") + "</div>";
   }
   var DAYS = '<label for="sh-days">How long?</label><select id="sh-days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select>';
+  function priceLine(kind) { return '<p id="sh-price" data-kind="' + kind + '" style="font-weight:700;margin:10px 0 0"></p>'; }
   async function vPromote() {
-    var g = await loadGrowth(true), P = (g.products || []).filter(function (p) { return p.in_stock; });
+    var g = await loadGrowth(true), P = (g.products || []).filter(function (p) { return p.in_stock; }); await loadPrices();
     if (!P.length) return '<div class="sh-card"><p>Add a product that is in stock first, then you can promote it.</p></div>';
-    return '<div class="sh-card"><p>Promoted products appear in the <b>Featured</b> section on the SafeBuy home page. The SafeBuy team reviews each request and tells you in your notifications.</p><form class="sh-f" id="sh-form" data-kind="product">' +
-      '<label for="sh-prod">Which product?</label><select id="sh-prod">' + P.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + "</option>"; }).join("") + "</select>" + DAYS +
+    return '<div class="sh-card"><p>Promoted products appear in the <b>Featured</b> section on the SafeBuy home page.' + (prices.charge_promos ? " You pay by bank transfer, and it starts as soon as we confirm your payment." : " The SafeBuy team reviews each request.") + '</p><form class="sh-f" id="sh-form" data-kind="product">' +
+      '<label for="sh-prod">Which product?</label><select id="sh-prod">' + P.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + "</option>"; }).join("") + "</select>" + DAYS + priceLine("promote_day_kobo") +
       '<label for="sh-note">Note for the team (optional)</label><textarea id="sh-note" rows="2" maxlength="300" placeholder="Anything we should know"></textarea>' +
-      '<button class="sh-btn" type="submit">Send promotion request</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>' + await myPromos("product");
+      '<button class="sh-btn" type="submit">Continue</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>' + await myPromos("product");
   }
   async function vBoost() {
-    var g = await loadGrowth(true), n = (g.products || []).filter(function (p) { return p.in_stock; }).length;
+    var g = await loadGrowth(true), n = (g.products || []).filter(function (p) { return p.in_stock; }).length; await loadPrices();
     if (!n) return '<div class="sh-card"><p>Add a product that is in stock first, then you can boost your shop.</p></div>';
-    return '<div class="sh-card"><p>Boosting features up to your 12 newest in-stock products in the <b>Featured</b> section, so customers find your shop first. You have ' + n + " in-stock product" + (n === 1 ? "" : "s") + '. The SafeBuy team reviews each request.</p><form class="sh-f" id="sh-form" data-kind="shop">' + DAYS +
-      '<button class="sh-btn" type="submit">Send boost request</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>' + await myPromos("shop");
+    return '<div class="sh-card"><p>Boosting features up to your 12 newest in-stock products in the <b>Featured</b> section, so customers find your shop first. You have ' + n + " in-stock product" + (n === 1 ? "" : "s") + '.</p><form class="sh-f" id="sh-form" data-kind="shop">' + DAYS + priceLine("boost_day_kobo") +
+      '<button class="sh-btn" type="submit">Continue</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>' + await myPromos("shop");
   }
+  /* ---- advertise my business: a banner on the SafeBuy home page ---- */
+  var SLOTS = { home_top: "Top of the home page", home_mid: "Middle of the home page" };
   async function vAd() {
-    await loadGrowth(false);
-    return '<div class="sh-card"><p>Want SafeBuy to advertise your business? Tell us what to promote and how to reach you. We will reply in your notifications.</p><form class="sh-f" id="sh-form" data-kind="ad">' +
+    await loadGrowth(false); await loadPrices(); var ap = prices.ad_day_kobo || {};
+    return '<div class="sh-card"><p>Get a banner on the SafeBuy home page, seen by every shopper. Pay by bank transfer and it goes live when we confirm your payment.</p><form class="sh-f" id="sh-form" data-kind="banner">' +
+      '<label for="sh-slot">Where should it appear?</label><select id="sh-slot">' + Object.keys(ap).map(function (k) { return '<option value="' + esc(k) + '">' + esc(SLOTS[k] || k) + " · " + naira(ap[k]) + " a day</option>"; }).join("") + "</select>" + DAYS + priceLine("ad") +
       '<label for="sh-biz">Business name</label><input id="sh-biz" maxlength="80" autocomplete="organization">' +
       '<label for="sh-phone">Phone or WhatsApp</label><input id="sh-phone" maxlength="30" inputmode="tel" autocomplete="tel">' +
-      '<label for="sh-note">What should we advertise?</label><textarea id="sh-note" rows="3" maxlength="500" placeholder="Your products, offers, location…"></textarea>' + DAYS +
-      '<button class="sh-btn" type="submit">Send advert request</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>' + await myPromos("ad");
+      '<label for="sh-title">Headline (short)</label><input id="sh-title2" maxlength="60" placeholder="e.g. Fresh shoes, delivered fast">' +
+      '<label for="sh-body">Text under it (optional)</label><textarea id="sh-body" rows="2" maxlength="160"></textarea>' +
+      '<label for="sh-btnl">Button words (optional)</label><input id="sh-btnl" maxlength="20" placeholder="e.g. Shop now">' +
+      '<label for="sh-link">Where the button goes (optional, must start with https://)</label><input id="sh-link" maxlength="250" inputmode="url" placeholder="https://wa.me/234…">' +
+      '<label for="sh-img">Picture link (optional, https://)</label><input id="sh-img" maxlength="250" inputmode="url">' +
+      '<button class="sh-btn" type="submit">Continue</button><p class="sh-msg" id="sh-msg" role="status"></p></form></div>';
   }
 
   /* ---- upgrade my subscription ---- */
   async function vUpgrade() {
     var c = client(), r = await c.rpc("seller_subscription");
     if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run seller_plans.sql in Supabase." : r.error.message);
-    var s = r.data || {}, P = s.plans || {}, naira = function (k) { return "₦" + (Number(k || 0) / 100).toLocaleString("en-NG"); };
+    var s = r.data || {}, P = s.plans || {};
     if (!s.app) throw new Error("Open your seller account first (tap My shop & listings).");
-    var status = s.active ? '<p class="sh-ok"><b>Verified badge plan active</b> until ' + new Date(s.expires_at).toLocaleDateString("en-NG") + " (" + esc(s.plan) + (s.auto_renew ? ", renews automatically" : ", not renewing") + ").</p>" : "<p>You do not have an active badge plan.</p>";
-    return '<div class="sh-card"><h3>Verified seller badge</h3>' + status + "<p>Listing is free. The Verified badge costs <b>" + naira(P.monthly_kobo) + " a month</b> or <b>" + naira(P.yearly_kobo) + " for 12 months</b>." + (P.required ? "" : " The badge is free for verified shops for now.") + '</p><button type="button" class="sh-btn" id="sh-plan">' + (s.active ? "Manage my plan" : "Upgrade my subscription") + "</button></div>";
+    var status = s.active ? '<p class="sh-ok"><b>Verified badge plan active</b> until ' + new Date(s.expires_at).toLocaleDateString("en-NG") + " (" + esc(s.plan) + ").</p>" : "<p>You do not have an active badge plan.</p>";
+    return '<div class="sh-card"><h3>Verified seller badge</h3>' + status + "<p>Listing is free. The Verified badge costs <b>" + naira(P.monthly_kobo) + " a month</b> or <b>" + naira(P.yearly_kobo) + " for 12 months</b>" + (Number(P.monthly_kobo) * 12 > Number(P.yearly_kobo) ? " (save " + naira(Number(P.monthly_kobo) * 12 - Number(P.yearly_kobo)) + ")" : "") + ". Verified shops also pay lower fees on sales.</p>" +
+      '<button type="button" class="sh-btn" data-plan="yearly">' + (s.active ? "Renew 12 months " : "Get 12 months ") + naira(P.yearly_kobo) + '</button><button type="button" class="sh-btn alt" data-plan="monthly">' + (s.active ? "Renew 1 month " : "Get 1 month ") + naira(P.monthly_kobo) + '</button><p class="sh-msg" id="sh-msg" role="status"></p></div>';
+  }
+
+  /* ---- payments & fees ---- */
+  async function vBilling() {
+    var c = client(), b = await c.rpc("seller_billing"); if (b.error) throw new Error(/function/i.test(b.error.message) ? "Setup needed: run money.sql in Supabase." : b.error.message);
+    var d = b.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings).");
+    var p = await c.rpc("my_payments"), rows = (p && p.data) || [], KN = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan" };
+    var fees = d.enabled ? '<div class="sh-card"><h3>Fees on your sales</h3><p>SafeBuy NG charges <b>' + esc(d.rate_pct) + "%</b> on each completed sale" + (d.verified ? " (Verified rate)" : ". Verified shops pay only " + esc(d.verified_pct) + "%") + ".</p>" +
+      (Number(d.owed_kobo) > 0 ? '<div class="sh-nums"><div><b>' + naira(d.owed_kobo) + "</b><span>owed on " + num(d.orders) + ' sale' + (d.orders == 1 ? "" : "s") + '</span></div></div><button type="button" class="sh-btn" id="sh-payfees">Pay ' + naira(d.owed_kobo) + "</button>" + (Number(d.owed_kobo) < Number(d.min_invoice_kobo) ? '<p class="sh-msg">You can pay once fees reach ' + naira(d.min_invoice_kobo) + ".</p>" : "") : '<p class="sh-ok">You do not owe any fees. 🎉</p>') + "</div>" : "";
+    return fees + '<div class="sh-card"><h3>My payments</h3>' + (rows.length ? rows.map(function (x) {
+      return '<div class="sh-row"><div><b>' + esc(KN[x.kind] || x.kind) + '</b><small>' + naira(x.amount_kobo) + " · ref " + esc(x.reference) + " · " + new Date(x.created_at).toLocaleDateString("en-NG") + '</small></div><div style="text-align:right"><span class="sh-pill ' + (x.status === "confirmed" ? "approved" : x.status === "rejected" || x.status === "cancelled" ? "rejected" : "") + '">' + esc(x.status === "awaiting" ? "awaiting payment" : x.status) + "</span>" +
+        ((x.status === "awaiting" || x.status === "reported") ? '<br><button type="button" class="sh-paynow" data-id="' + esc(x.id) + '" style="border:0;background:none;color:#087f5b;font:700 13px Arial;padding:6px 0;cursor:pointer">' + (x.status === "awaiting" ? "Pay now" : "View") + "</button>" : "") + "</div></div>";
+    }).join("") : "<p>No payments yet.</p>") + "</div>";
   }
 
   /* ---- invite other sellers and earn ---- */
@@ -159,26 +214,39 @@
   }
 
   /* ---- clicks inside the sheet ---- */
+  async function openPayById(id, back) { var r = await client().rpc("my_payment", { p_id: id }); if (r.data) showPay(r.data, back); else toast("Could not open that payment."); }
   function wire(v) {
-    var f = $("sh-form");
+    var f = $("sh-form"), pr = $("sh-price");
+    function upd() { if (!pr || !prices) return; var d = Number($("sh-days").value), k = pr.dataset.kind, rate = k === "ad" ? (prices.ad_day_kobo || {})[$("sh-slot").value] : prices[k]; pr.textContent = prices.charge_promos || k === "ad" ? "Price: " + naira(Number(rate || 0) * d) + " for " + d + " days" : "Free for now"; }
+    if (pr && $("sh-days")) { $("sh-days").onchange = upd; if ($("sh-slot")) $("sh-slot").onchange = upd; upd(); }
     if (f) f.onsubmit = async function (e) {
       e.preventDefault(); var kind = f.dataset.kind, msg = $("sh-msg"), b = f.querySelector("button[type=submit]"), c = client();
-      var phone = $("sh-phone") ? $("sh-phone").value : null, biz = $("sh-biz") ? $("sh-biz").value : null;
-      if (kind === "ad" && !($("sh-note").value || "").trim()) { msg.className = "sh-msg sh-bad"; msg.textContent = "Tell us what to advertise."; return; }
-      b.disabled = true; msg.className = "sh-msg"; msg.textContent = "Sending…";
+      b.disabled = true; msg.className = "sh-msg"; msg.textContent = "Working…";
       try {
-        var r = await c.rpc("seller_request_promo", { p_kind: kind, p_product: kind === "product" ? $("sh-prod").value : null, p_days: Number($("sh-days").value), p_note: $("sh-note") ? $("sh-note").value : null, p_business: biz, p_phone: phone });
+        var r;
+        if (kind === "banner") {
+          r = await c.rpc("submit_ad", { p_slot: $("sh-slot").value, p_days: Number($("sh-days").value), p_advertiser: $("sh-biz").value, p_phone: $("sh-phone").value, p_title: $("sh-title2").value, p_body: $("sh-body").value, p_button: $("sh-btnl").value, p_link: $("sh-link").value, p_image: $("sh-img").value });
+        } else {
+          r = await c.rpc("seller_order_promo", { p_kind: kind, p_product: kind === "product" ? $("sh-prod").value : null, p_days: Number($("sh-days").value), p_note: $("sh-note") ? $("sh-note").value : null, p_business: null, p_phone: null });
+        }
         if (r.error) throw new Error(r.error.message);
-        msg.className = "sh-msg sh-ok"; msg.textContent = "Request sent. We will reply in your notifications.";
-        setTimeout(function () { if (cur === v) open(v); }, 900);
+        var d = r.data || {};
+        if (d.free) { msg.className = "sh-msg sh-ok"; msg.textContent = "Request sent. We will reply in your notifications."; setTimeout(function () { if (cur === v) open(v); }, 900); return; }
+        showPay(d.payment, v);
       } catch (er) { msg.className = "sh-msg sh-bad"; msg.textContent = er.message; b.disabled = false; }
     };
     bodyEl.querySelectorAll(".sh-cancel").forEach(function (b) {
       b.onclick = async function () { b.disabled = true; try { await client().rpc("seller_cancel_promo", { p_id: b.dataset.id }); } catch (e) {} open(v); };
     });
-    var p = $("sh-plan"); if (p) p.onclick = function () {
-      hide(); var sell = document.querySelector('[data-action="sell"]'); if (sell) sell.click();
-      var tries = 0, t = setInterval(function () { var card = $("plan-card"); if (card) { clearInterval(t); card.scrollIntoView({ behavior: "smooth", block: "center" }); } else if (++tries > 20) { clearInterval(t); toast("Open My shop & listings to see your plan."); } }, 400);
+    bodyEl.querySelectorAll(".sh-paynow").forEach(function (b) { b.onclick = function () { openPayById(b.dataset.id, v); }; });
+    bodyEl.querySelectorAll("[data-plan]").forEach(function (b) {
+      b.onclick = async function () {
+        var m = $("sh-msg"); b.disabled = true; var r = await client().rpc("seller_pay_plan", { p_plan: b.dataset.plan });
+        if (r.error) { m.className = "sh-msg sh-bad"; m.textContent = r.error.message; b.disabled = false; return; } showPay(r.data, v);
+      };
+    });
+    var pf = $("sh-payfees"); if (pf) pf.onclick = async function () {
+      pf.disabled = true; var r = await client().rpc("seller_pay_fees"); if (r.error) { toast(r.error.message); pf.disabled = false; return; } showPay(r.data, v);
     };
     var cp = $("sh-copy"); if (cp) cp.onclick = function () {
       var l = cp.dataset.link;
