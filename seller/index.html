@@ -397,6 +397,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script src="../seller-growth.js?v=1" defer></script>
 <script src="../impressions.js?v=1" defer></script>
 <script src="../seller-hub.js?v=1" defer></script>
+<script src="../ads.js?v=1" defer></script>
 <script>window.__sbWords={signinTitle:"Seller sign in",signupTitle:"Open your seller account",signupBtn:"Create seller account",toggleSignup:"New seller? Create an account",menuSignup:"Create seller account"};</script>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////w3c7Edz20UwmGl+YyAAACC0lEQVR42u2YO04DMRCGf0MeSBRJAxLZSHADuAHLDagooKChSihyAzhCCuhSEhoKaqrkCHS0KbK8RJECCVjQmiLsI1l7ZyxBgTSuLPnL2DOe+T0bpeEwFiC00EILLbTQQgstNJ/WlzsLe+2hCdf50QUAlK/yKwZ6HBs6YNCRn+x7SNPj9JS1+bW8l72CmKj5XjP7+9qEimDoFO9HJ3pUeJnzbvsoiMm8lzNBIr3UTln1CQBoDcI+59yvAOBprfWTz7lLAEcAsHpD254AUHHGkLYnGV+8LmV7BKCqbcNku/RPFeLLif50oqNTp3P3uHQdAIJjZu38FFrbfJemrAKAfRb9Gu+5ysmTJEeePYaX5WR236GVLbOZikjbKtUTvUXfTkZ97mityirbgFT79wy9TipEJTN/Ic+tbtP5G/k2IKzaY5jP2EqqInpIv64f6eI2rYOV8Yy6ULXjXdhoGPO4b3lKzLQOpvQyR7+BxthJqxo+6+WOR9AEUH1n0tGigbaqpnLSWOX/oX672y4R9EMyGzJshx2X/mRUiRs9U1bl+6pmpr+qk14GnYL+Ki8+6jrpODeJ/B4BUK1BeAYAOGHQdmkrpjWvdiwhKKTLTvSSE73hRHeZb/FU4sj3cs0yt4Q0SCtzwPgmCaxfJEYdfJpWZEOzaB2e72KlZRJTJf9/Cy200EILLbTQQv8K/Q1+aubmT9k2pAAAAABJRU5ErkJggg==">
@@ -513,6 +514,7 @@ body.sa-seller #role-open{display:none!important}
 <button type="button" class="sa-tile" data-hub="upgrade"><span class="e">⭐</span>Upgrade my subscription<small>Verified badge plan</small></button>
 <button type="button" class="sa-tile" data-hub="advertise"><span class="e">📢</span>Advertise my business<small>We advertise your shop</small></button>
 <button type="button" class="sa-tile" data-hub="invite"><span class="e">🎁</span>Invite sellers, earn<small>Free badge days</small></button>
+<button type="button" class="sa-tile" data-hub="billing"><span class="e">💳</span>Payments &amp; fees<small>Pay for promotions, fees, plans</small></button>
 </div>
 <div class="sa-note" id="sa-hint">Sign in to see your shop.</div>
 </section>
@@ -662,6 +664,7 @@ body.sa-seller #role-open{display:none!important}
     </div>
   </div>
 
+  <div class="container"><div data-ad-slot="home_top" hidden></div></div>
   <section class="section" id="shop">
     <div class="container">
       <div class="section-heading">
@@ -704,6 +707,7 @@ body.sa-seller #role-open{display:none!important}
     </div>
   </section>
 
+  <div class="container"><div data-ad-slot="home_mid" hidden></div></div>
   <section class="section" id="how-it-works">
     <div class="container">
       <div class="section-heading">
@@ -777,6 +781,7 @@ body.sa-seller #role-open{display:none!important}
         <button type="button" data-action="delivery">Delivery areas</button>
         <button type="button" data-action="safety">Safety tips</button>
         <a href="../about.html">About us</a>
+        <a href="../advertise.html">Advertise with us</a>
         <a href="../refund.html">Refund policy</a>
         <a href="../privacy.html">Privacy policy</a>
         <a href="../terms.html">Terms of use</a>
