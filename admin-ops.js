@@ -55,7 +55,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["ads", "Ads"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +71,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, ads: pAds, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -344,6 +344,97 @@
     $("rf-form").onsubmit = async function (e) {
       e.preventDefault(); var m = $("rf-msg");
       try { await rpc("admin_set_referral", { p_enabled: $("rf-on").checked, p_days: Number($("rf-days").value), p_max: Number($("rf-max").value) }); m.className = "ops-ok"; m.textContent = "Saved."; }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+  }
+
+
+  /* ---- Money: revenue, payments to confirm, pricing and bank details, banner ads ---- */
+  var KINDS = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan", protection: "Buyer protection fees" };
+  function waLink(p) { var d = String(p || "").replace(/\D/g, ""); if (!d) return ""; d = d.indexOf("234") === 0 ? d : d.charAt(0) === "0" ? "234" + d.slice(1) : d.length === 10 ? "234" + d : d; return ' · <a href="https://wa.me/' + d + '" target="_blank" rel="noopener">WhatsApp</a>'; }
+  function setupMsg(e) { return fail(e).replace("admin_ops.sql", "money.sql"); }
+
+  async function pRevenue(my) {
+    var d; try { d = await rpc("admin_revenue"); } catch (e) { if (!stale(my)) body(setupMsg(e)); return; }
+    if (stale(my)) return;
+    var S = d.streams || {}, per = ["today", "d7", "d30", "all"], names = ["Today", "Last 7 days", "Last 30 days", "All time"], tot = {};
+    per.forEach(function (k) { tot[k] = Object.keys(S).reduce(function (a, s) { return a + Number((S[s] || {})[k] || 0); }, 0); });
+    var comm30 = Number(((S.commission || {}).d30) || 0), gmv = Number(d.gmv_30d_kobo || 0);
+    body((d.warnings && d.warnings.length ? '<div class="ops-row"><b class="ops-warn">Some numbers could not be read</b><p class="muted">' + d.warnings.map(esc).join("<br>") + "</p></div>" : "") +
+      '<div class="ops-grid">' + per.map(function (k, i) { return card(money(tot[k]), names[i] + " income"); }).join("") + "</div>" +
+      '<div class="ops-row"><b>14-day income</b>' + spark(d.series) + "</div>" +
+      '<div class="ops-row"><b>Where the money comes from</b>' + Object.keys(S).map(function (k) {
+        return '<div style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #eef1f3"><span>' + esc(KINDS[k] || k) + '</span><span><b>' + money(S[k].d30) + '</b> <span class="muted">30d · ' + money(S[k].all) + " all</span></span></div>";
+      }).join("") + "</div>" +
+      '<div class="ops-grid">' + card(money(d.mrr_kobo), "Monthly badge income (" + (d.active_subscribers || 0) + " subscribers)") + card(money(gmv), "Sales through SafeBuy, 30 days") +
+        card(money(d.fees_owed_kobo), "Sales fees sellers owe you") + card(money(d.awaiting_kobo), "Invoices waiting to be paid") + "</div>" +
+      (d.reported_count ? '<div class="ops-row"><b class="ops-warn">' + d.reported_count + " payment" + (d.reported_count == 1 ? "" : "s") + " (" + money(d.reported_kobo) + ') waiting for you to confirm</b><p><button class="button" type="button" data-v="payments">Open Payments</button></p></div>' : "") +
+      '<p class="muted">Income counts money you confirmed here, badge plans, and buyer protection fees. Delivery margin is not included. Sales fees count when the seller pays them' + (gmv ? "; your fee rate on sales over 30 days: " + (Math.round(comm30 / gmv * 1000) / 10) + "%" : "") + ".</p>");
+  }
+
+  async function pPayments(my) {
+    var rep, aw, ok; try { rep = await rpc("admin_payments", { p_status: "reported" }); aw = await rpc("admin_payments", { p_status: "awaiting" }); ok = await rpc("admin_payments", { p_status: "confirmed" }); } catch (e) { if (!stale(my)) body(setupMsg(e)); return; }
+    if (stale(my)) return;
+    function row(x, act) {
+      var det = x.ad ? "<br>Advert: <b>" + esc(x.ad.title) + "</b>" + (x.ad.body ? " · " + esc(x.ad.body) : "") + (x.ad.link ? "<br>Link: " + esc(x.ad.link) : "") + "<br>" + esc(x.ad.slot) + " · " + x.ad.days + " days" : "";
+      det += x.promo ? "<br>" + (x.promo.kind === "shop" ? "Boost shop" : "Promote: " + esc(x.promo.product || "")) + " · " + x.promo.days + " days" : "";
+      det += x.kind === "subscription" && x.meta ? "<br>Plan: " + esc(x.meta.plan) : "";
+      return '<div class="ops-row" data-id="' + esc(x.id) + '"><b>' + esc(KINDS[x.kind] || x.kind) + " · " + money(x.amount_kobo) + "</b> <span class=\"muted\">ref " + esc(x.reference) + "</span><br>" + esc(x.payer || "") + (x.phone ? " · " + esc(x.phone) + waLink(x.phone) : "") +
+        (x.payer_note ? '<br><i>Sender: ' + esc(x.payer_note) + "</i>" : "") + det + '<br><span class="muted">' + new Date(x.reported_at || x.created_at).toLocaleString("en-NG") + "</span>" +
+        (act ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input type="text" class="py-note" maxlength="150" placeholder="Note (optional)" style="flex:1;min-width:130px;padding:8px;border:1px solid #cfd5da;border-radius:8px"><button class="button" data-pay="1">Confirm received</button><button class="button outline" data-pay="0">Reject</button></div>' : "") + "</div>";
+    }
+    body('<h3>Tell us you received the money (' + rep.length + ')</h3><p class="muted">Check your bank app for the amount and the reference, then tap Confirm. Confirming starts the promotion or advert, or marks the fees or plan paid.</p>' + (rep.length ? rep.map(function (x) { return row(x, true); }).join("") : '<p class="muted">Nothing waiting.</p>') +
+      "<h3>Invoices not paid yet (" + aw.length + ")</h3>" + (aw.length ? aw.map(function (x) { return row(x, true); }).join("") : '<p class="muted">None.</p>') +
+      "<h3>Recently confirmed</h3>" + (ok.slice(0, 10).map(function (x) { return row(x, false); }).join("") || '<p class="muted">None yet.</p>') + '<p id="py-msg" class="muted"></p>');
+    panel.querySelectorAll("[data-pay]").forEach(function (b) {
+      b.onclick = async function () {
+        var r = b.closest(".ops-row"), yes = b.dataset.pay === "1", amt = r.querySelector("b").textContent;
+        if (!window.confirm((yes ? "Confirm you received " : "Reject ") + amt + "?")) return; b.disabled = true;
+        try { await rpc(yes ? "admin_confirm_payment" : "admin_reject_payment", { p_id: r.dataset.id, p_note: r.querySelector(".py-note").value || null }); pPayments(my); }
+        catch (er) { b.disabled = false; $("py-msg").className = "ops-bad"; $("py-msg").textContent = "Failed: " + er.message; }
+      };
+    });
+  }
+
+  async function pPricing(my) {
+    var d; try { d = await rpc("admin_money_settings"); } catch (e) { if (!stale(my)) body(setupMsg(e)); return; }
+    if (stale(my)) return;
+    var P = d.pricing, C = P.commission || {}, B = d.bank || {}, A = P.ad_day_kobo || {}, nv = function (k) { return Math.round(Number(k || 0) / 100); };
+    function f(id, label, val, hint) { return '<label style="display:block;margin-top:10px;font-weight:700;font-size:13px" for="' + id + '">' + esc(label) + '</label><input type="text" id="' + id + '" value="' + esc(val) + '" ' + (hint ? 'placeholder="' + esc(hint) + '" ' : "") + 'style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px">'; }
+    body('<form id="pr-form" class="ops-row"><b>Your bank account (sellers pay here)</b>' + f("pr-bank", "Bank name", B.bank_name) + f("pr-acct", "Account number", B.account_number) + f("pr-aname", "Account name", B.account_name) + f("pr-bnote", "Short note shown to sellers (optional)", B.note, "e.g. Payments confirmed within 3 hours") + "</form>" +
+      '<div class="ops-row"><b>Promotions and adverts (prices in naira per day)</b><label style="margin-top:8px"><input type="checkbox" id="pr-charge"' + (P.charge_promos !== false ? " checked" : "") + '><span>Charge for Promote and Boost (off = free, you approve each one)</span></label>' +
+      f("pr-prom", "Promote one product, per day (₦)", nv(P.promote_day_kobo)) + f("pr-boost", "Boost a whole shop, per day (₦)", nv(P.boost_day_kobo)) + f("pr-top", "Banner at the top of the home page, per day (₦)", nv(A.home_top)) + f("pr-mid", "Banner in the middle of the home page, per day (₦)", nv(A.home_mid)) + "</div>" +
+      '<div class="ops-row"><b>Fee on every completed sale</b><label style="margin-top:8px"><input type="checkbox" id="pr-comm"' + (C.enabled ? " checked" : "") + '><span>Charge sellers a fee on sales (only on orders marked paid AFTER you switch this on)</span></label>' +
+      f("pr-std", "Fee for shops without the Verified badge (%)", C.standard_pct) + f("pr-ver", "Fee for Verified shops (%)", C.verified_pct) + f("pr-min", "Sellers can pay once fees reach (₦)", nv(C.min_invoice_kobo)) + f("pr-max", "Most you charge on one order (₦, 0 = no limit)", nv(C.max_per_order_kobo)) +
+      '<p class="muted">Tell sellers before you switch this on. The Terms page already explains platform fees.</p></div>' +
+      '<button class="button full" id="pr-save" type="button">Save pricing and bank details</button><p id="pr-msg" class="muted"></p><p class="muted">Badge plan prices are in the Plans tab.</p>');
+    $("pr-save").onclick = async function () {
+      var m = $("pr-msg"), k = function (id) { return Math.round(Number(String($(id).value).replace(/[^0-9.]/g, "")) * 100); }, pc = function (id) { return Number(String($(id).value).replace(/[^0-9.]/g, "")); };
+      var pricing = { charge_promos: $("pr-charge").checked, promote_day_kobo: k("pr-prom"), boost_day_kobo: k("pr-boost"), ad_day_kobo: { home_top: k("pr-top"), home_mid: k("pr-mid") },
+        commission: { enabled: $("pr-comm").checked, standard_pct: pc("pr-std"), verified_pct: pc("pr-ver"), min_invoice_kobo: k("pr-min"), max_per_order_kobo: k("pr-max") } };
+      var bank = { bank_name: $("pr-bank").value, account_number: $("pr-acct").value, account_name: $("pr-aname").value, note: $("pr-bnote").value };
+      if (pricing.commission.enabled && !window.confirm("Charge sellers " + pricing.commission.standard_pct + "% (" + pricing.commission.verified_pct + "% for Verified shops) on new sales?")) return;
+      m.className = "muted"; m.textContent = "Saving…";
+      try { await rpc("admin_set_money", { p_pricing: pricing, p_bank: bank }); m.className = "ops-ok"; m.textContent = "Saved."; } catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+  }
+
+  async function pAds(my) {
+    var rows; try { rows = await rpc("admin_ads"); } catch (e) { if (!stale(my)) body(setupMsg(e)); return; }
+    if (stale(my)) return;
+    var inp = function (id, ph, max) { return '<input type="text" id="' + id + '" placeholder="' + ph + '" maxlength="' + max + '" style="width:100%;padding:9px;margin-top:8px;border:1px solid #cfd5da;border-radius:8px">'; };
+    body("<h3>Adverts (" + rows.length + ")</h3>" + (rows.length ? rows.map(function (x) {
+      var ctr = x.impressions ? Math.round(x.clicks / x.impressions * 1000) / 10 : 0;
+      return '<div class="ops-row"><b>' + esc(x.title) + "</b> · " + esc(x.advertiser) + ' <span class="muted">' + esc(x.slot) + "</span><br>" + esc(x.status) + (x.ends_at ? " · ends " + new Date(x.ends_at).toLocaleDateString("en-NG") : "") + " · " + (x.impressions || 0) + " views · " + (x.clicks || 0) + " clicks (" + ctr + "%)" +
+        (x.status === "live" ? '<div style="margin-top:8px"><button class="button outline" data-stop="' + esc(x.id) + '">Stop this advert</button></div>' : "") + "</div>";
+    }).join("") : '<p class="muted">No adverts yet.</p>') +
+      '<h3>Put up an advert yourself (free, goes live now)</h3><form id="ad-form" class="ops-row"><select id="ad-slot" style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px"><option value="home_top">Top of the home page</option><option value="home_mid">Middle of the home page</option></select>' +
+      inp("ad-days", "How many days (e.g. 7)", 3) + inp("ad-who", "Advertiser name", 80) + inp("ad-title", "Headline", 60) + inp("ad-body", "Text (optional)", 160) + inp("ad-btn", "Button words (optional)", 20) + inp("ad-link", "Button link, https:// (optional)", 250) + inp("ad-img", "Picture link, https:// (optional)", 250) +
+      '<button class="button full" type="submit" style="margin-top:10px">Put it live</button><p id="ad-msg" class="muted"></p></form>');
+    panel.querySelectorAll("[data-stop]").forEach(function (b) { b.onclick = async function () { if (!window.confirm("Stop this advert now?")) return; b.disabled = true; try { await rpc("admin_ad_stop", { p_id: b.dataset.stop }); pAds(my); } catch (e) { b.disabled = false; } }; });
+    $("ad-form").onsubmit = async function (e) {
+      e.preventDefault(); var m = $("ad-msg"); m.className = "muted"; m.textContent = "Saving…";
+      try { await rpc("admin_create_ad", { p_slot: $("ad-slot").value, p_days: Number($("ad-days").value) || 7, p_advertiser: $("ad-who").value, p_title: $("ad-title").value, p_body: $("ad-body").value, p_button: $("ad-btn").value, p_link: $("ad-link").value, p_image: $("ad-img").value }); pAds(my); }
       catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
     };
   }
