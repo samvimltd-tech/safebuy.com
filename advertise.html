@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advertise with SafeBuy NG</title><meta name="theme-color" content="#087f5b">
+<style>
+:root{--g:#087f5b;--gd:#066548;--gl:#e7f7ef;--ink:#172b24;--mu:#718078;--ln:#e6ece8;--bg:#f7f9f7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.5}
+.w{width:min(560px,100% - 32px);margin:0 auto;padding:18px 0 60px}a{color:var(--gd);font-weight:700}
+.c{background:#fff;border:1px solid var(--ln);border-radius:18px;padding:18px;margin-top:14px}
+h1{font-size:24px;margin:10px 0 4px}label{display:block;font-weight:700;font-size:13px;margin-top:12px}
+input,select{width:100%;padding:11px;border:1px solid #cfd5da;border-radius:10px;font-size:16px;margin-top:4px}
+button{width:100%;margin-top:16px;padding:13px;border:0;border-radius:12px;background:var(--g);color:#fff;font-weight:800;font-size:16px}
+button:disabled{opacity:.6}.mu{color:var(--mu);font-size:13px}.er{color:#b42318;font-weight:700}.ok{color:var(--gd);font-weight:700}
+.box{background:var(--gl);border-radius:12px;padding:12px;margin-top:10px}
+</style></head><body><main class="w">
+<a href="./">← Back to the shop</a>
+<h1>Advertise your business</h1>
+<p class="mu">Put your banner in front of SafeBuy NG shoppers. Pay by bank transfer; your advert goes live after we confirm the payment.</p>
+<div id="form" class="c">
+<label for="slot">Where should it appear?</label><select id="slot"></select>
+<label for="days">How many days? (1 to 30)</label><input id="days" type="number" min="1" max="30" value="7" inputmode="numeric">
+<p id="price" class="mu"></p>
+<label for="who">Business name</label><input id="who" maxlength="80">
+<label for="phone">Phone or WhatsApp number</label><input id="phone" type="tel" inputmode="tel" maxlength="20">
+<label for="title">Headline</label><input id="title" maxlength="60">
+<label for="body">Short text (optional)</label><input id="body" maxlength="160">
+<label for="btn">Button words (optional, e.g. Visit us)</label><input id="btn" maxlength="20">
+<label for="link">Button link (optional, must start with https://)</label><input id="link" maxlength="250" inputmode="url">
+<label for="img">Picture link (optional, https://)</label><input id="img" maxlength="250" inputmode="url">
+<button id="go" type="button">Continue to payment</button><p id="msg" class="mu"></p></div>
+<div id="pay" class="c" hidden></div>
+<p class="mu">Adverts must be honest and legal. We may remove any advert that is misleading or unsafe. See our <a href="./terms.html">Terms</a>.</p>
+</main>
+<script src="./supabase-config.js"></script>
+<script src="./vendor/supabase-2.45.4.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+var N=function(k){return "₦"+Math.round(Number(k||0)/100).toLocaleString("en-NG")};
+var LBL={home_top:"Top of the home page",home_mid:"Middle of the home page"},P={},c=null,ref=null;
+function boot(){
+  var cfg=window.SAFEbuySupabaseConfig||{};
+  var u=cfg.url,k=cfg.publishableKey;
+  if(window.safeBuySupabase&&window.safeBuySupabase.rpc)c=window.safeBuySupabase;
+  else if(window.supabase&&u&&k)c=window.supabase.createClient(u,k);
+  if(!c){$("msg").className="er";$("msg").textContent="This page could not connect. Please try again later.";return;}
+  c.rpc("ad_prices").then(function(r){P=(r&&r.data)||{};var s=$("slot");s.innerHTML="";Object.keys(P).forEach(function(x){if(Number(P[x])>0){var o=document.createElement("option");o.value=x;o.textContent=(LBL[x]||x)+" - "+N(P[x])+" per day";s.appendChild(o)}});upd()});
+}
+function upd(){var d=Math.max(1,Math.min(30,Number($("days").value)||1));var r=Number(P[$("slot").value]||0);$("price").textContent=r?"Total: "+N(r*d):""}
+$("slot").onchange=upd;$("days").oninput=upd;
+$("go").onclick=async function(){
+  var m=$("msg");m.className="mu";m.textContent="Please wait…";$("go").disabled=true;
+  try{var r=await c.rpc("submit_ad",{p_slot:$("slot").value,p_days:Number($("days").value)||7,p_advertiser:$("who").value,p_phone:$("phone").value,p_title:$("title").value,p_body:$("body").value,p_button:$("btn").value,p_link:$("link").value,p_image:$("img").value});
+    if(r.error)throw new Error(r.error.message);var p=r.data.payment||{};ref=p.reference;show(p);}
+  catch(e){m.className="er";m.textContent=e.message;$("go").disabled=false}
+};
+function show(p){
+  var b=p.bank||{};$("form").hidden=true;var x=$("pay");x.hidden=false;
+  x.innerHTML='<h2 style="margin:0">Pay '+N(p.amount_kobo)+'</h2><div class="box"><b>Bank:</b> '+esc(b.bank_name||"-")+'<br><b>Account number:</b> '+esc(b.account_number||"-")+'<br><b>Account name:</b> '+esc(b.account_name||"-")+'<br><b>Reference (put this in the transfer note):</b> <b>'+esc(p.reference)+'</b></div>'+(b.note?'<p class="mu">'+esc(b.note)+'</p>':'')+'<p class="mu">After you transfer, tap the button below so we can check it.</p><label for="note">Name on the bank account you paid from</label><input id="note" maxlength="150"><button id="rep" type="button">I have paid</button><p id="m2" class="mu"></p>';
+  $("rep").onclick=async function(){var m=$("m2");$("rep").disabled=true;try{var r=await c.rpc("report_payment",{p_ref:ref,p_note:$("note").value,p_phone:$("phone").value});if(r.error)throw new Error(r.error.message);x.innerHTML='<h2 style="margin:0" class="ok">Thank you</h2><p>We will confirm your payment and put your advert live. Keep your reference: <b>'+esc(ref)+'</b>.</p><a href="./">Back to the shop</a>'}catch(e){m.className="er";m.textContent=e.message;$("rep").disabled=false}};
+}
+boot();
+})();
+</script></body></html>
