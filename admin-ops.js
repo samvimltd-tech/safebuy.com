@@ -64,7 +64,7 @@
   function fail(e) {
     var m = String(e && e.message || e);
     var missing = /could not find the function|does not exist|schema cache|404/i.test(m);
-    return '<div class="ops-row"><b class="ops-bad">' + (missing ? "Setup needed" : "Could not load") + "</b><p>" + (missing ? "Run admin_ops.sql once in Supabase (SQL editor), then open this tab again." : esc(m)) + "</p></div>";
+    return '<div class="ops-row"><b class="ops-bad">' + (missing ? "Setup needed" : "Could not load") + "</b><p>" + (missing ? "Run admin_ops.sql once in Supabase (SQL editor), then open this tab again. If you already did, run reload_api.sql, then refresh this page.<br><small class=\"muted\">Technical detail: " + esc(m) + "</small>" : esc(m)) + "</p></div>";
   }
 
   var seq = 0;
