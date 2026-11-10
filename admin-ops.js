@@ -87,6 +87,7 @@
         setBadge(d.reports_open);
         var el = $("ops-body"); if (!el) return;
         el.innerHTML = '<p class="muted"><span class="ops-dot"></span>Live · updates every 20 seconds · ' + new Date().toLocaleTimeString("en-NG") + "</p>" +
+          ((d.warnings && d.warnings.length) ? '<div class="ops-row"><b class="ops-warn">Some numbers could not be read</b><p class="muted">' + d.warnings.map(esc).join("<br>") + "</p></div>" : "") +
           '<div class="ops-grid">' +
           card(d.users_total, "Total users", '<span> · +' + (d.users_today || 0) + " today</span>" + spark(d.signups_series)) +
           card(d.orders_today, "Orders today", "<span> · " + (d.orders_total || 0) + " in total</span>" + spark(d.orders_series)) +
