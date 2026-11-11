@@ -113,6 +113,7 @@
     try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
     if (typeof openProduct === "function") openProduct(id);
   }
+  document.addEventListener("sb:pulse", function () { secAt = 0; build(); setTimeout(hearts, 300); });
   install(); build(); hearts(); deep();
   var tries = 0, iv = setInterval(function () { build(); hearts(); deep(); if ((host && host.innerHTML) || ++tries > 40) clearInterval(iv); }, 500);
   if (typeof products !== "undefined" && products.length) { build(); hearts(); }
