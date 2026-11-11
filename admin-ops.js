@@ -84,7 +84,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -100,7 +100,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -594,6 +594,29 @@
       } catch (e) { msg.className = "ops-bad"; msg.textContent = "Stopped: " + e.message; }
       go.disabled = false; setTimeout(function () { if (!stale(my)) pPhotos(my); }, 1500);
     };
+  }
+
+  /* ---- Clean-up: admin chooses what to clear. Backs up first; needs a typed confirm word. ---- */
+  async function pCleanup(my) {
+    var d; try { d = await rpc("admin_cleanup_counts"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "cleanup.sql")); return; }
+    if (stale(my)) return;
+    var G = [["orders", "Orders and deliveries", "All orders, delivery jobs, order history and ratings."], ["payments", "Payments, ads and promotions", "Payment records, adverts, featured products and promotion requests."],
+      ["social", "Social media campaigns", "Campaigns, posts, results and connected accounts."], ["activity", "Activity and logs", "Views, clicks, notifications, error records, reports and referral records."],
+      ["products", "Products (and photo fingerprints)", "Every product listing. Clear Orders first if products are linked to orders."], ["sellers", "Seller shops", "Seller applications and subscriptions. Clear Products first. Login accounts are kept."],
+      ["riders", "Riders", "Rider profiles. Login accounts are kept."]];
+    body('<div class="ops-row"><b>Clean-up</b><p class="muted">Choose exactly what to clear before real customers start. Each clean-up saves a backup copy first, asks you to type a confirm word, and is written to the Audit log. Admin accounts, prices, settings and everyone\'s login are never deleted.</p></div>' +
+      G.map(function (g) { var x = d[g[0]] || { total: 0, tables: {} }; var det = Object.keys(x.tables).filter(function (k) { return x.tables[k] > 0; }).map(function (k) { return esc(k.replace(/_/g, " ")) + " " + x.tables[k]; }).join(" · ");
+        return '<div class="ops-row"><b>' + esc(g[1]) + ' <span class="muted">(' + x.total + ' records)</span></b><p class="muted">' + esc(g[2]) + (det ? "<br>" + det : "") + "</p>" +
+          (x.total > 0 ? '<button class="button full" type="button" data-g="' + g[0] + '">Clear ' + esc(g[1].toLowerCase()) + "</button>" : '<p class="ops-ok">Already empty.</p>') + "</div>"; }).join("") + '<p id="cu-msg" role="status" class="muted"></p>');
+    var btns = panel.querySelectorAll("[data-g]");
+    Array.prototype.forEach.call(btns, function (b) { b.onclick = async function () {
+      var g = b.getAttribute("data-g"), word = "DELETE " + g.toUpperCase();
+      var t = window.prompt("This will clear: " + b.textContent.replace("Clear ", "") + ".\nA backup is saved first.\n\nType " + word + " to confirm:");
+      if (t === null) return; var msg = $("cu-msg"); msg.className = "muted"; msg.textContent = "Clearing…"; b.disabled = true;
+      try { var r = await rpc("admin_cleanup", { p_group: g, p_confirm: t }); var sk = Object.keys(r.skipped || {});
+        msg.className = sk.length ? "ops-bad" : "ops-ok"; msg.textContent = "Cleared: " + (Object.keys(r.cleared).map(function (k) { return k.replace(/_/g, " ") + " " + r.cleared[k]; }).join(", ") || "nothing") + (sk.length ? ". Not cleared (still linked): " + sk.join(", ") + ". Clear the related group first." : ".");
+        setTimeout(function () { if (!stale(my)) pCleanup(my); }, 2500);
+      } catch (e) { msg.className = "ops-bad"; msg.textContent = e.message; b.disabled = false; } }; });
   }
 
   async function pPlans(my) {
