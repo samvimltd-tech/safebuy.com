@@ -469,6 +469,14 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 })();
 
 if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
+document.addEventListener("click", function (e) {
+  var b = e.target.closest && e.target.closest("#sb-install-card"); if (!b) return;
+  if (document.getElementById("role-install-card")) return;
+  var done = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  if (done) { if (window.showToast) showToast("SafeBuy Buyer is already installed on this phone."); return; }
+  if (window.__installCard) window.__installCard.show(true);
+});
+(function () { var st = document.createElement("style"); st.textContent = "@media (display-mode: standalone){#sb-install-card{display:none!important}}"; document.head.appendChild(st); })();
 </script>
 <!--/BUYER-INSTALL-->
 <script src="./guard.js?v=1"></script>
@@ -641,7 +649,7 @@ if ("serviceWorker" in navigator) window.addEventListener("load", function () { 
       <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
-      <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
+      <!--BUYER-INSTALL-CARD--><button class="quick-link" type="button" id="sb-install-card"><span class="ql-ico">📲</span><span>Install Buyer App<small>Add to home screen</small></span></button><!--/BUYER-INSTALL-CARD-->
     </div>
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
       <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>List your products for free</small></span><span class="path-go">→</span></a>
