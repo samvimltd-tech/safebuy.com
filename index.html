@@ -398,10 +398,12 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script src="./switches.js?v=1" defer></script>
 <script src="./seller-plan.js?v=1" defer></script>
 <script src="./seller-growth.js?v=1" defer></script>
+<script src="./social.js?v=1" defer></script>
 <script src="./growth.js?v=1" defer></script>
 <script src="./impressions.js?v=1" defer></script>
 <script src="./seller-hub.js?v=1" defer></script>
 <script src="./ads.js?v=1" defer></script>
+<script src="./realtime.js?v=1" defer></script>
 <!--WORDS-->
 <script>window.__sbWords={signinTitle:"Buyer sign in",signupTitle:"Create your buyer account",signupBtn:"Create buyer account",toggleSignup:"New buyer? Create an account",menuSignup:"Create buyer account"};</script>
 <!--/WORDS-->
@@ -1754,6 +1756,10 @@ updateCartCount();
   }
 
   loadProducts();
+  window.sbReloadProducts = function () {
+    if (!client) return;
+    client.from("seller_products_public").select("*").order("created_at", { ascending: false }).then(function (r) { if (r && !r.error && r.data && r.data.length) setProducts(mapRows(r.data), "supabase"); }, function () {});
+  };
 
   /* ---------- Account ---------- */
   var form = document.getElementById("account-form");
@@ -1818,7 +1824,7 @@ updateCartCount();
       accLabel.textContent = "Account";
       accMenu.innerHTML =
         '<div class="dd-user">Signed in as<br><strong>' + email + '</strong><br><span class="mode-chip" data-mode-chip>Buyer mode</span></div><hr>' +
-        '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
+  '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
         '<button type="button" data-feature="orders"><span class="ico">📦</span><span class="lbl">My orders</span></button>' +
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
