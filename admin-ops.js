@@ -84,7 +84,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -100,7 +100,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -560,6 +560,39 @@
       e.preventDefault(); var m = $("sp-msg"), k = function (i) { return Math.round(Number(String($(i).value).replace(/[^0-9.]/g, "")) * 100); };
       try { await rpc("admin_set_social", { p_pricing: { enabled: $("sp-on").checked, pass_kobo: k("sp-pass"), free_scheduled: Math.round(k("sp-free") / 100), fee_pct: k("sp-pct") / 100, fee_min_kobo: k("sp-min"), min_budget_kobo: k("sp-bud") } }); m.className = "ops-ok"; m.textContent = "Saved."; }
       catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+  }
+
+
+  /* ---- Photo search: prepare every product photo so buyers can search with a picture ---- */
+  function loadVision() {
+    if (window.sbVision) return Promise.resolve(window.sbVision);
+    return new Promise(function (ok, bad) { var sc = document.createElement("script"); sc.src = "./visual-search.js?v=1"; sc.onload = function () { window.sbVision ? ok(window.sbVision) : bad(new Error("visual-search.js is old. Upload the newest one.")); }; sc.onerror = function () { bad(new Error("visual-search.js was not found. Upload it to the main folder.")); }; document.head.appendChild(sc); });
+  }
+  async function pPhotos(my) {
+    var V; try { V = await loadVision(); } catch (e) { if (!stale(my)) body('<div class="ops-row"><b class="ops-bad">' + esc(e.message) + "</b></div>"); return; }
+    var d; try { d = await rpc("admin_missing_vectors", { p_model: V.tag, p_limit: 30 }); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "visual.sql")); return; }
+    if (stale(my)) return;
+    var left = Number(d.total) - Number(d.indexed);
+    body('<div class="ops-row"><b>Search by photo</b><p class="muted">Buyers can tap the camera button on the home page, take or choose a photo, and see the closest products. For that, every product photo needs a fingerprint. New photos from sellers are done automatically when the seller is on wifi; use this button to catch up or to do everything now.</p>' +
+      '<div class="ops-grid">' + card(d.indexed, "photos ready") + card(left > 0 ? left : 0, "waiting") + "</div>" +
+      (left > 0 ? '<button class="button full" id="ph-go" type="button">Prepare ' + left + " photo" + (left === 1 ? "" : "s") + ' now</button><p class="muted">The first time, your phone downloads about 15 MB. Keep this page open until it finishes.</p>' : '<p class="ops-ok">All product photos are ready. Buyers can search by photo.</p>') +
+      '<p id="ph-msg" class="muted" role="status"></p></div>');
+    var go = $("ph-go"); if (!go) return;
+    go.onclick = async function () {
+      go.disabled = true; var msg = $("ph-msg"), total = 0, fails = 0; msg.className = "muted"; msg.textContent = "Getting the photo tool ready…";
+      try {
+        for (var round = 0; round < 40; round++) {
+          var r = await rpc("admin_missing_vectors", { p_model: V.tag, p_limit: 30 }), rows = (r.rows || []).filter(function (x) { return !window.__phSkip || !window.__phSkip[x.id]; });
+          if (!rows.length) break;
+          var out = await V.indexMissing({ list: function () { return Promise.resolve(rows); }, save: function (id, vec, src) { return rpc("admin_save_product_vector", { p_product: id, p_vec: vec, p_model: V.tag, p_src: src }); },
+            progress: function (i, n, ok, bad) { msg.textContent = "Preparing photos… " + (total + i) + " done" + (fails + bad ? " (" + (fails + bad) + " could not be read)" : ""); } });
+          total += out.done; fails += out.failed;
+          if (out.done === 0) { window.__phSkip = window.__phSkip || {}; rows.forEach(function (x) { window.__phSkip[x.id] = 1; }); }
+        }
+        msg.className = "ops-ok"; msg.textContent = "Done. " + total + " photo" + (total === 1 ? "" : "s") + " ready." + (fails ? " " + fails + " could not be read (the photo may be blocked or deleted)." : "");
+      } catch (e) { msg.className = "ops-bad"; msg.textContent = "Stopped: " + e.message; }
+      go.disabled = false; setTimeout(function () { if (!stale(my)) pPhotos(my); }, 1500);
     };
   }
 
