@@ -454,7 +454,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
   }
   window.__installCard = { show: show };
   // shown once the person has signed in (and again right after sign-up if it was skipped)
-  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); setTimeout(function () { show(false, true); makePill(); }, 700); } }, 1200);
+  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); if (!window.__sbIT) { window.__sbIT = 1; setTimeout(function () { show(false, true); makePill(); }, 2000); } } }, 1200);
   var fe = document.getElementById("account-form");
   if (fe) fe.addEventListener("submit", function () { formUsed = Date.now(); }, true);
   var tries = 0, ht = setInterval(function () {
@@ -462,7 +462,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
     if (c && c.auth) {
       clearInterval(ht);
       c.auth.onAuthStateChange(function (event) {
-        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(function () { show(true, true); }, 1400); }
+        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; window.__sbIT = 1; setTimeout(function () { show(true, true); makePill(); }, 2000); }
       });
     } else if (++tries > 60) clearInterval(ht);
   }, 300);
