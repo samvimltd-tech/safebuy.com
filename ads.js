@@ -23,6 +23,7 @@
     var a = e.target.closest && e.target.closest("a.sb-ad-go"); var c = client();
     if (a && c) c.rpc("ad_event", { p_id: a.getAttribute("data-ad"), p_kind: "click" }).then(function () {}, function () {});
   });
+  window.sbRefreshAds = function () { var c = client(); if (c) document.querySelectorAll("[data-ad-slot]").forEach(function (el) { fill(el, c); }); };
   function run(n) {
     var c = client(); if (!c) { if (n < 40) setTimeout(function () { run(n + 1); }, 500); return; }
     document.querySelectorAll("[data-ad-slot]").forEach(function (el) { fill(el, c); });
