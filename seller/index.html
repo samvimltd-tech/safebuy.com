@@ -664,7 +664,7 @@ body.sa-seller #role-open{display:none!important}
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
-        <div class="prototype-notice" id="sc-notice">
+            <div class="prototype-notice" id="sc-notice">
       <strong>Stay safe:</strong>
       <span id="sc-notice-text">Meet in a public place and inspect the item before you pay. Prefer shops with the ✓ Verified label.</span>
     </div>
@@ -1930,6 +1930,7 @@ updateCartCount();
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
         '<button type="button" data-feature="notifications"><span class="ico">🔔</span><span class="lbl">Notifications</span></button>' +
+        (window.__installCard ? '<button type="button" class="sb-install-btn"><span class="ico">📲</span>Install Buyer App</button>' : '') +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
         '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
@@ -1937,6 +1938,7 @@ updateCartCount();
       drawerAcc.innerHTML =
         '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
         '<button type="button" data-feature="mode" hidden><span class="lbl">🔄 Switch mode</span></button>' +
+        (window.__installCard ? '<button type="button" class="sb-install-btn">📲 Install Buyer App</button>' : '') +
         '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
         '<button type="button" data-auth="signout">🚪 Sign out</button>';
     } else {
