@@ -472,7 +472,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 
 if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
 document.addEventListener("click", function (e) {
-  var b = e.target.closest && e.target.closest("#sb-install-card"); if (!b) return;
+  var b = e.target.closest && e.target.closest("#sb-install-card,.sb-install-btn"); if (!b) return;
   if (document.getElementById("role-install-card")) return;
   var done = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
   if (done) { if (window.showToast) showToast("SafeBuy Buyer is already installed on this phone."); return; }
@@ -653,6 +653,8 @@ document.addEventListener("click", function (e) {
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <!--BUYER-INSTALL-CARD--><button class="quick-link" type="button" id="sb-install-card"><span class="ql-ico">📲</span><span>Install Buyer App<small>Add to home screen</small></span></button><!--/BUYER-INSTALL-CARD-->
     </div>
+    <!--BUYER-INSTALL--><button type="button" class="sb-install-btn" id="sb-home-install"><span class="sbi-ico">📲</span><span class="sbi-txt"><b>Get the SafeBuy Buyer app</b><small>Open SafeBuy in one tap from your home screen. Free.</small></span><span class="sbi-go">Install</span></button>
+    <style>#sb-home-install{display:none;align-items:center;gap:14px;width:100%;margin:0 0 22px;padding:16px;border:1px solid #bfe6d4;border-radius:20px;background:linear-gradient(135deg,#f0fbf6,#dff5ea);text-align:left;color:#10231b;box-shadow:0 6px 18px rgba(8,127,91,.10)}body.sb-in #sb-home-install{display:flex}#sb-home-install .sbi-ico{flex-shrink:0;width:52px;height:52px;border-radius:16px;background:#087f5b;display:grid;place-items:center;font-size:26px}#sb-home-install .sbi-txt{flex:1;font-size:19px;line-height:1.3}#sb-home-install small{display:block;font-size:15px;font-weight:400;color:#4f5f57;margin-top:3px}#sb-home-install .sbi-go{flex-shrink:0;background:#087f5b;color:#fff;font-weight:800;font-size:16px;padding:11px 18px;border-radius:14px}@media (display-mode: standalone){#sb-home-install{display:none!important}}</style><!--/BUYER-INSTALL-->
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
       <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>List your products for free</small></span><span class="path-go">→</span></a>
       <a class="path path-ride" href="./rider/" data-door="rider" style="text-decoration:none;color:inherit"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></a>
@@ -1693,7 +1695,7 @@ updateCartCount();
       try {
         if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) { res(file); return; }
         var url = URL.createObjectURL(file), img = new Image();
-       img.onload = function () {
+        img.onload = function () {
           URL.revokeObjectURL(url);
           var w = img.naturalWidth, h = img.naturalHeight;
           if (!w || !h) { res(file); return; }
@@ -1923,6 +1925,7 @@ updateCartCount();
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
         '<button type="button" data-feature="notifications"><span class="ico">🔔</span><span class="lbl">Notifications</span></button>' +
+        (window.__installCard ? '<button type="button" class="sb-install-btn"><span class="ico">📲</span>Install Buyer App</button>' : '') +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
         '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
@@ -1930,6 +1933,7 @@ updateCartCount();
       drawerAcc.innerHTML =
         '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
         '<button type="button" data-feature="mode" hidden><span class="lbl">🔄 Switch mode</span></button>' +
+        (window.__installCard ? '<button type="button" class="sb-install-btn">📲 Install Buyer App</button>' : '') +
         '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
         '<button type="button" data-auth="signout">🚪 Sign out</button>';
     } else {
