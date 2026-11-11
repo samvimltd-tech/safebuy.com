@@ -51,11 +51,40 @@
     panel.hidden = true; tab.classList.remove("active"); clearInterval(timer); timer = null;
     covered.forEach(function (i, n) { if ($(i)) $(i).hidden = false; });
   }
+  /* ---- live: new payments and campaigns show up the moment they happen ---- */
+  (function rt() {
+    if (!window.supabase || !window.supabase.createClient) return;
+    var c, started = false;
+    function note(t, b) {
+      var el = $("ops-toast"); if (!el) { el = document.createElement("div"); el.id = "ops-toast"; el.setAttribute("role", "status"); el.style.cssText = "position:fixed;left:12px;right:12px;top:12px;z-index:9999;max-width:420px;margin:0 auto;background:#172b24;color:#fff;border-radius:14px;padding:12px 14px;font:14px/1.35 Arial,sans-serif;box-shadow:0 8px 28px #0005;display:none"; document.body.appendChild(el); }
+      el.innerHTML = "<b>" + esc(t) + "</b><div>" + esc(b || "") + "</div>"; el.style.display = "block"; clearTimeout(el._t); el._t = setTimeout(function () { el.style.display = "none"; }, 7000);
+    }
+    function typing() { var a = document.activeElement; return a && panel.contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName); }
+    function refresh(only) { if (isOpen() && only.indexOf(view) >= 0 && !typing() && !document.hidden) go(view); }
+    function start() {
+      if (started || !token()) return; started = true;
+      try {
+        c = window.supabase.createClient(base, cfg.publishableKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+        c.realtime.setAuth(token());
+        c.channel("sb-admin-live")
+          .on("postgres_changes", { event: "*", schema: "public", table: "money_payments" }, function (p) {
+            var n = p.new || {}, o = p.old || {};
+            if (n.status === "reported" && o.status !== "reported") note("Payment to confirm", money(n.amount_kobo) + " · ref " + n.reference);
+            refresh(["payments", "revenue", "live"]);
+          })
+          .on("postgres_changes", { event: "*", schema: "public", table: "social_campaigns" }, function (p) { var n = p.new || {}; if (n.status === "paid" && (p.old || {}).status !== "paid") note("Social campaign paid", "Set it up and tap Start."); refresh(["social", "revenue"]); })
+          .subscribe();
+        setInterval(function () { try { c.realtime.setAuth(token()); } catch (e) {} }, 600000);
+      } catch (e) {}
+    }
+    var n = 0, iv = setInterval(function () { start(); if (started || ++n > 120) clearInterval(iv); }, 3000);
+  })();
+
   tab.addEventListener("click", show);
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["ads", "Ads"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -71,7 +100,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, ads: pAds, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -350,7 +379,7 @@
 
 
   /* ---- Money: revenue, payments to confirm, pricing and bank details, banner ads ---- */
-  var KINDS = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan", protection: "Buyer protection fees" };
+  var KINDS = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan", protection: "Buyer protection fees", social: "Social media marketing" };
   function waLink(p) { var d = String(p || "").replace(/\D/g, ""); if (!d) return ""; d = d.indexOf("234") === 0 ? d : d.charAt(0) === "0" ? "234" + d.slice(1) : d.length === 10 ? "234" + d : d; return ' · <a href="https://wa.me/' + d + '" target="_blank" rel="noopener">WhatsApp</a>'; }
   function setupMsg(e) { return fail(e).replace("admin_ops.sql", "money.sql"); }
 
@@ -435,6 +464,43 @@
     $("ad-form").onsubmit = async function (e) {
       e.preventDefault(); var m = $("ad-msg"); m.className = "muted"; m.textContent = "Saving…";
       try { await rpc("admin_create_ad", { p_slot: $("ad-slot").value, p_days: Number($("ad-days").value) || 7, p_advertiser: $("ad-who").value, p_title: $("ad-title").value, p_body: $("ad-body").value, p_button: $("ad-btn").value, p_link: $("ad-link").value, p_image: $("ad-img").value }); pAds(my); }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+    };
+  }
+
+
+  async function pSocial(my) {
+    var d; try { d = await rpc("admin_social"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "social.sql")); return; }
+    if (stale(my)) return;
+    var P = d.pricing || {}, rows = d.rows || [], NM = { facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok" };
+    function inp(id, ph, v) { return '<input type="text" id="' + id + '" placeholder="' + ph + '" value="' + esc(v == null ? "" : v) + '" style="width:100%;padding:8px;border:1px solid #cfd5da;border-radius:8px;margin-top:6px">'; }
+    body('<div class="ops-row"><b>Social media campaigns</b><p class="muted">Paid ones appear first. Set one up on Facebook, Instagram or TikTok, tap Start, then add each day&#39;s numbers from the platform report. Sellers see them straight away.</p></div>' +
+      (rows.length ? rows.map(function (x) {
+        var link = x.product_id ? location.origin + location.pathname.replace(/[^/]*$/, "").replace(/(admin|seller|rider)\/$/, "") + "?p=" + x.product_id : "";
+        return '<div class="ops-row" data-id="' + esc(x.id) + '"><b>' + esc(x.business || "Seller") + " · " + esc(x.product || "Whole shop") + "</b> <span class=\"muted\">" + esc(x.status) + "</span><br>" + (x.platforms || []).map(function (k) { return NM[k] || k; }).join(", ") + " · budget " + money(x.budget_kobo) + " · " + x.days + " days" +
+          "<br>Goal: " + esc(x.objective || "-") + "<br>Audience: " + esc(x.audience || "-") + (x.caption ? "<br>Caption: " + esc(x.caption) : "") + (x.image ? '<br><a href="' + esc(x.image) + '" target="_blank" rel="noopener">Product picture</a>' : "") +
+          "<br>Phone: " + esc(x.phone || "-") + waLink(x.phone) + (link ? '<br><span class="muted">Link to use: ' + esc(link) + "&amp;src=fb (or ig, tt)</span>" : "") +
+          "<br>So far: reach " + (x.reach || 0) + " · clicks " + (x.clicks || 0) + " · spent " + money(x.spend_kobo) +
+          (x.status === "paid" || x.status === "running" ? '<div style="margin-top:8px"><select class="so-plat" style="padding:8px;border-radius:8px">' + (x.platforms || []).map(function (k) { return '<option value="' + k + '">' + (NM[k] || k) + "</option>"; }).join("") + "</select>" +
+            inp("sp" + x.id, "Spent today (₦)") + inp("rc" + x.id, "Reach") + inp("ck" + x.id, "Clicks") + inp("en" + x.id, "Messages / enquiries") + inp("pu" + x.id, "Orders") + inp("sl" + x.id, "Sales value (₦)") +
+            '<button class="button" data-so="stats" style="margin-top:8px">Save today&#39;s numbers</button> ' + (x.status === "paid" ? '<button class="button" data-so="running">Start (it is live)</button> ' : "") + '<button class="button outline" data-so="finished">Finish</button> <button class="button outline" data-so="rejected">Cannot run it</button>' + "</div>" : "") + "</div>";
+      }).join("") : '<p class="muted">No campaigns yet.</p>') +
+      '<form id="sp-form" class="ops-row"><b>Prices</b><p class="muted">Money amounts in naira.</p>' + inp("sp-pass", "Social Pass price (₦)", Math.round((P.pass_kobo || 0) / 100)) + inp("sp-free", "Free scheduled posts", P.free_scheduled) + inp("sp-pct", "Management fee (% of ad budget)", P.fee_pct) + inp("sp-min", "Smallest management fee (₦)", Math.round((P.fee_min_kobo || 0) / 100)) + inp("sp-bud", "Smallest ad budget (₦)", Math.round((P.min_budget_kobo || 0) / 100)) +
+      '<label style="display:block;margin-top:8px"><input type="checkbox" id="sp-on"' + (P.enabled !== false ? " checked" : "") + "> Sellers can order campaigns</label>" + '<button class="button full" type="submit" style="margin-top:8px">Save</button><p id="sp-msg" class="muted"></p></form>');
+    panel.querySelectorAll("[data-so]").forEach(function (b) {
+      b.onclick = async function () {
+        var r = b.closest(".ops-row"), id = r.dataset.id, k = b.dataset.so, n = function (p) { return Math.round(Number(String(r.querySelector("#" + p + id).value).replace(/[^0-9.]/g, "")) || 0); };
+        b.disabled = true;
+        try {
+          if (k === "stats") await rpc("admin_social_stats", { p_id: id, p_platform: r.querySelector(".so-plat").value, p_day: null, p_spend_kobo: n("sp") * 100, p_reach: n("rc"), p_clicks: n("ck"), p_enquiries: n("en"), p_purchases: n("pu"), p_sales_kobo: n("sl") * 100 });
+          else { if (k === "rejected" && !window.confirm("Tell the seller it cannot run? Remember to refund their ad budget.")) { b.disabled = false; return; } await rpc("admin_social_set", { p_id: id, p_status: k, p_note: null }); }
+          pSocial(my);
+        } catch (er) { b.disabled = false; window.alert("Failed: " + er.message); }
+      };
+    });
+    $("sp-form").onsubmit = async function (e) {
+      e.preventDefault(); var m = $("sp-msg"), k = function (i) { return Math.round(Number(String($(i).value).replace(/[^0-9.]/g, "")) * 100); };
+      try { await rpc("admin_set_social", { p_pricing: { enabled: $("sp-on").checked, pass_kobo: k("sp-pass"), free_scheduled: Math.round(k("sp-free") / 100), fee_pct: k("sp-pct") / 100, fee_min_kobo: k("sp-min"), min_budget_kobo: k("sp-bud") } }); m.className = "ops-ok"; m.textContent = "Saved."; }
       catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
     };
   }
