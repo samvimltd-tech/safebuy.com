@@ -404,6 +404,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script src="./seller-hub.js?v=1" defer></script>
 <script src="./ads.js?v=1" defer></script>
 <script src="./realtime.js?v=1" defer></script>
+<script src="./visual-search.js?v=1" defer></script>
 <!--WORDS-->
 <script>window.__sbWords={signinTitle:"Buyer sign in",signupTitle:"Create your buyer account",signupBtn:"Create buyer account",toggleSignup:"New buyer? Create an account",menuSignup:"Create buyer account"};</script>
 <!--/WORDS-->
@@ -860,6 +861,10 @@ function showToast(message) {
 }
 
 function getVisibleProducts() {
+  if (window.sbVisual && window.sbVisual.ids) {
+    const byId = {}; products.forEach(function (p) { byId[p.id] = p; });
+    return window.sbVisual.ids.map(function (id) { return byId[id]; }).filter(Boolean);
+  }
   const term = searchTerm.toLowerCase();
   const list = products.filter(function (product) {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
@@ -879,7 +884,7 @@ function renderProducts() {
   }
 
   const visible = getVisibleProducts();
-  resultsLine.textContent = productSource === "error" ? "" : "Showing " + visible.length + " product" + (visible.length === 1 ? "" : "s");
+  resultsLine.textContent = productSource === "error" ? "" : (window.sbVisual ? "Closest matches: " : "Showing ") + visible.length + " product" + (visible.length === 1 ? "" : "s");
 
   if (visible.length === 0) {
     if (productSource === "error") {
@@ -1824,7 +1829,7 @@ updateCartCount();
       accLabel.textContent = "Account";
       accMenu.innerHTML =
         '<div class="dd-user">Signed in as<br><strong>' + email + '</strong><br><span class="mode-chip" data-mode-chip>Buyer mode</span></div><hr>' +
-  '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
+        '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
         '<button type="button" data-feature="orders"><span class="ico">📦</span><span class="lbl">My orders</span></button>' +
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
