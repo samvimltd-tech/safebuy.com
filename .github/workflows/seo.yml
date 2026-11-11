@@ -1,39 +1,20 @@
-name: Build SEO files
-
+# Rebuilds shop pages, product pages and sitemap.xml from the live product list. Runs every 30 minutes and on demand.
+name: Update SEO pages and sitemap
 on:
   schedule:
-    - cron: "*/15 * * * *"
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "scripts/**"
-      - "site.config.json"
-      - ".github/workflows/seo.yml"
-
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
 permissions:
   contents: write
-
 concurrency:
-  group: seo-build
+  group: seo
   cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Generate product pages, sitemap and feed
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SITE_URL: ${{ vars.SITE_URL }}
-        run: node scripts/build-seo.mjs
-
-      - name: Commit changes
-        run: 'git config user.name "safebuy-seo-bot" && git config user.email "safebuy-seo-bot@users.noreply.github.com" && git add -A && (git diff --cached --quiet && echo "No changes to publish." || (git commit -m "Update SEO pages, sitemap and feed" && git pull --rebase origin "$GITHUB_REF_NAME" && git push))'
+      - name: Generate pages
+        run: python3 seo/generate.py
+      - name: Save changes
+        run: | git config user.name "safebuy-seo-bot" git config user.email "seo-bot@users.noreply.github.com" git add -A shop p sitemap.xml robots.txt if git diff --cached --quiet; then echo "No changes"; else git commit -m "Update SEO pages and sitemap" && git push; fi
