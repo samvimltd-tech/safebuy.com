@@ -31,13 +31,13 @@
     ".sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
     ".sh-tile{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid #e6ece8;border-radius:16px;background:#fff;padding:14px 12px;font:700 14px Arial,sans-serif;color:#172b24;cursor:pointer;min-height:88px}" +
     ".sh-tile small{font:400 12px/1.35 Arial,sans-serif;color:#718078}.sh-tile .e{font-size:24px;line-height:1}" +
-    ".sh-card{background:#fff;border:1px solid #e6ece8;border-radius:14px;padding:14px;margin:0 0 12px}.sh-card h3{margin:0 0 6px;font-size:16px}.sh-card p{margin:0 0 8px;color:#52675c;font-size:14px;line-height:1.5}" +
-    ".sh-nums{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.sh-nums div{flex:1;min-width:96px;background:#fff;border:1px solid #e6ece8;border-radius:12px;padding:10px}.sh-nums b{display:block;font-size:20px}.sh-nums span{font-size:12px;color:#718078}" +
-    ".sh-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #eef2ef;font-size:14px}.sh-row:first-child{border-top:0}.sh-row b{display:block}.sh-row small{color:#718078}.sh-row .n{font-weight:700;white-space:nowrap}" +
-    ".sh-f label{display:block;margin:10px 0 4px;font-size:13px;font-weight:700}.sh-f select,.sh-f input,.sh-f textarea{width:100%;padding:11px;border:1px solid #cfd8d2;border-radius:10px;font:16px Arial,sans-serif;background:#fff}" +
+    ".sh-card{background:#fff;border:1px solid #e6ece8;border-radius:14px;padding:14px;margin:0 0 12px}.sh-card h3{margin:0 0 6px;font-size:18px}.sh-card p{margin:0 0 8px;color:#52675c;font-size:16px;line-height:1.5}" +
+    ".sh-nums{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.sh-nums div{flex:1;min-width:96px;background:#fff;border:1px solid #e6ece8;border-radius:12px;padding:10px}.sh-nums b{display:block;font-size:20px}.sh-nums span{font-size:14px;color:#718078}" +
+    ".sh-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #eef2ef;font-size:16px}.sh-row:first-child{border-top:0}.sh-row b{display:block}.sh-row small{color:#718078}.sh-row .n{font-weight:700;white-space:nowrap}" +
+    ".sh-f label{display:block;margin:10px 0 4px;font-size:15px;font-weight:700}.sh-f select,.sh-f input,.sh-f textarea{width:100%;padding:11px;border:1px solid #cfd8d2;border-radius:10px;font:16px Arial,sans-serif;background:#fff}" +
     ".sh-btn{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:#087f5b;color:#fff;font:700 15px Arial,sans-serif;cursor:pointer}.sh-btn.alt{background:#edf6ef;color:#066548}.sh-btn:disabled{opacity:.55}" +
-    ".sh-msg{min-height:18px;margin:8px 0 0;font-size:13px}.sh-ok{color:#087f5b}.sh-bad{color:#b42318}" +
-    ".sh-row .sh-pill{align-self:flex-start;white-space:nowrap}.sh-pill{display:inline-block;line-height:1.5;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;background:#fff3e0;color:#7a4a05}.sh-pill.approved{background:#e7f7ef;color:#066548}.sh-pill.rejected,.sh-pill.cancelled,.sh-pill.ended{background:#eef0f1;color:#52606a}" +
+    ".sh-msg{min-height:18px;margin:8px 0 0;font-size:15px}.sh-ok{color:#087f5b}.sh-bad{color:#b42318}" +
+    ".sh-row .sh-pill{align-self:flex-start;white-space:nowrap}.sh-pill{display:inline-block;line-height:1.5;padding:2px 9px;border-radius:20px;font-size:13px;font-weight:700;background:#fff3e0;color:#7a4a05}.sh-pill.approved{background:#e7f7ef;color:#066548}.sh-pill.rejected,.sh-pill.cancelled,.sh-pill.ended{background:#eef0f1;color:#52606a}" +
     ".sh-code{font:800 28px Arial,sans-serif;letter-spacing:4px;text-align:center;padding:12px;border:2px dashed #087f5b;border-radius:12px;background:#f4fbf6;margin:8px 0}" +
     "#hub-card .sh-grid{margin-top:8px}";
   document.head.appendChild(st);
@@ -73,7 +73,7 @@
   async function open(view) {
     cur = view || "home"; show(); titleEl.textContent = TITLES[cur] || "Grow my business"; backBtn.hidden = cur === "home";
     bodyEl.scrollTop = 0;
-    if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><p style="color:#52675c;font-size:14px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
+    if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><p style="color:#52675c;font-size:16px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
     bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
     var v = cur;
     try {
@@ -108,7 +108,7 @@
   function bankHtml(b) {
     b = b || {};
     if (!b.account_number) return '<p class="sh-bad">Payment details are not ready yet. Please contact SafeBuy NG support to pay.</p>';
-    return '<div class="sh-row"><div><small>Bank</small><b>' + esc(b.bank_name) + '</b></div></div><div class="sh-row"><div><small>Account number</small><b style="font-size:20px;letter-spacing:1px">' + esc(b.account_number) + '</b></div><button type="button" class="sh-cp" data-v="' + esc(b.account_number) + '" style="border:0;background:#edf6ef;color:#066548;border-radius:10px;padding:8px 12px;font:700 13px Arial;cursor:pointer">Copy</button></div><div class="sh-row"><div><small>Account name</small><b>' + esc(b.account_name) + "</b></div></div>" + (b.note ? '<p style="font-size:13px;color:#52675c">' + esc(b.note) + "</p>" : "");
+    return '<div class="sh-row"><div><small>Bank</small><b>' + esc(b.bank_name) + '</b></div></div><div class="sh-row"><div><small>Account number</small><b style="font-size:20px;letter-spacing:1px">' + esc(b.account_number) + '</b></div><button type="button" class="sh-cp" data-v="' + esc(b.account_number) + '" style="border:0;background:#edf6ef;color:#066548;border-radius:10px;padding:8px 12px;font:700 13px Arial;cursor:pointer">Copy</button></div><div class="sh-row"><div><small>Account name</small><b>' + esc(b.account_name) + "</b></div></div>" + (b.note ? '<p style="font-size:15px;color:#52675c">' + esc(b.note) + "</p>" : "");
   }
   /* the "send the money and tell us" panel, used by every payment */
   function showPay(p, back) {
@@ -141,7 +141,7 @@
       var what = x.kind === "product" ? "Product: " + esc(x.product || "") : x.kind === "shop" ? "Boost my shop" : "Advert", st = x.status === "awaiting_payment" ? "awaiting payment" : x.status, pay = byRef[x.id];
       return '<div class="sh-row"><div><b>' + what + '</b><small>' + x.days + " days" + (x.ends_at && x.status === "approved" ? " · ends " + new Date(x.ends_at).toLocaleDateString("en-NG") : "") + (x.admin_note ? " · " + esc(x.admin_note) : "") + '</small></div><div style="text-align:right"><span class="sh-pill ' + esc(x.status) + '">' + esc(st) + "</span>" +
         (x.status === "awaiting_payment" && pay ? '<br><button type="button" class="sh-paynow" data-id="' + esc(pay.id) + '" style="border:0;background:none;color:#087f5b;font:700 13px Arial;padding:6px 0;cursor:pointer">Pay now</button>' : "") +
-        (x.status === "pending" ? '<br><button type="button" class="sh-cancel" data-id="' + esc(x.id) + '" style="border:0;background:none;color:#b42318;font-size:12px;padding:6px 0;cursor:pointer">Cancel</button>' : "") + "</div></div>";
+        (x.status === "pending" ? '<br><button type="button" class="sh-cancel" data-id="' + esc(x.id) + '" style="border:0;background:none;color:#b42318;font-size:14px;padding:6px 0;cursor:pointer">Cancel</button>' : "") + "</div></div>";
     }).join("") + "</div>";
   }
   var DAYS = '<label for="sh-days">How long?</label><select id="sh-days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select>';
@@ -245,7 +245,7 @@
     h += '<div class="sh-card"><h3>1. Your accounts</h3><form class="sh-f" id="so-acc">' + ["facebook", "instagram", "tiktok"].map(function (k) {
       var a = acc[k] || {}; return '<label for="so-h-' + k + '">' + PL[k][2] + " " + PL[k][0] + ' page or username</label><input id="so-h-' + k + '" maxlength="60" value="' + esc(a.handle || "") + '" placeholder="e.g. @mybrand"><input id="so-u-' + k + '" maxlength="250" inputmode="url" value="' + esc(a.url || "") + '" placeholder="Page link (https://…)" style="margin-top:6px">';
     }).join("") + '<button class="sh-btn" type="submit">Save my accounts</button><p class="sh-msg" id="so-accmsg" role="status"></p></form>' +
-      '<p style="font-size:12px;color:#718078;margin-top:8px">We never ask for your password. Posts are shared from your own phone, so you stay in control.</p></div>';
+      '<p style="font-size:14px;color:#718078;margin-top:8px">We never ask for your password. Posts are shared from your own phone, so you stay in control.</p></div>';
     h += '<div class="sh-card"><h3>2. Make a post</h3>' + (SOC.prods.length ? '<form class="sh-f" id="so-post"><label for="so-prod">Product</label><select id="so-prod">' + opts + '</select>' +
       '<label for="so-plat">Where will you post it?</label><select id="so-plat">' + Object.keys(PL).map(function (k) { return '<option value="' + k + '">' + PL[k][0] + "</option>"; }).join("") + '</select>' +
       '<div id="so-img"></div><label for="so-cap">Caption (ready for you, edit if you like)</label><textarea id="so-cap" rows="7" maxlength="1500"></textarea>' +
@@ -258,7 +258,7 @@
       return '<div class="sh-row"><div><b>' + esc(PL[x.platform] ? PL[x.platform][0] : x.platform) + (x.product ? " · " + esc(x.product) : "") + "</b><small>" + esc(when(x.scheduled_at)) + (due ? " · due now" : "") + "</small></div><div style=\"display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end\">" +
         '<button type="button" class="sh-btn alt" style="margin:0;width:auto;padding:8px 10px" data-so="share" data-id="' + esc(x.id) + '" data-plat="' + esc(x.platform) + '" data-cap="' + esc(x.caption) + '">Post now</button>' +
         '<button type="button" class="sh-btn alt" style="margin:0;width:auto;padding:8px 10px" data-so="del" data-id="' + esc(x.id) + '">Delete</button></div></div>';
-    }).join("") : '<p>Nothing scheduled.</p>') + (pass ? '<p class="sh-ok" style="margin-top:8px"><b>' + esc(pass) + "</b></p>" : '<p style="font-size:13px;margin-top:8px">Free: ' + (P.free_scheduled || 3) + ' scheduled posts at a time. <b>Social Pass</b> (' + naira(P.pass_kobo) + " for " + (P.pass_days || 30) + ' days) gives unlimited scheduling.</p><button type="button" class="sh-btn alt" id="so-pass">Get the Social Pass</button>') + "</div>";
+    }).join("") : '<p>Nothing scheduled.</p>') + (pass ? '<p class="sh-ok" style="margin-top:8px"><b>' + esc(pass) + "</b></p>" : '<p style="font-size:15px;margin-top:8px">Free: ' + (P.free_scheduled || 3) + ' scheduled posts at a time. <b>Social Pass</b> (' + naira(P.pass_kobo) + " for " + (P.pass_days || 30) + ' days) gives unlimited scheduling.</p><button type="button" class="sh-btn alt" id="so-pass">Get the Social Pass</button>') + "</div>";
     h += '<div class="sh-card"><h3>3. Paid ads (we run them for you)</h3><p>Pay once. We set up and run your ads on the platforms you choose and show the results here. The ad budget goes to the platform; our management fee is separate and shown before you pay.</p>' +
       (SOC.prods.length ? '<form class="sh-f" id="so-camp"><label for="so-cprod">Product to advertise</label><select id="so-cprod">' + opts + "</select><label>Platforms</label>" +
         ["facebook", "instagram", "tiktok"].map(function (k) { return '<label style="font-weight:400"><input type="checkbox" class="so-cp" value="' + k + '" style="width:auto;margin-right:8px"' + (k === "facebook" ? " checked" : "") + ">" + PL[k][2] + " " + PL[k][0] + "</label>"; }).join("") +
@@ -277,7 +277,7 @@
     var pl = D.platforms || [], vis = D.visits || {}, sb = D.safebuy || {}, tv = Number(vis.fb || 0) + Number(vis.ig || 0) + Number(vis.tt || 0) + Number(vis.wa || 0);
     h += '<div class="sh-card"><h3>4. Which platform brings customers?</h3><div class="sh-nums"><div><b>' + num(sb.product_views_30d) + "</b><span>Views on SafeBuy (30 days)</span></div><div><b>" + num(tv) + "</b><span>Visits from your social links</span></div></div>" +
       ["fb", "ig", "tt", "wa"].map(function (k) { var nm = { fb: "Facebook", ig: "Instagram", tt: "TikTok", wa: "WhatsApp" }[k]; return '<div class="sh-row"><div><b>' + nm + "</b><small>Visits to your products from your " + nm + " links</small></div><b>" + num(vis[k]) + "</b></div>"; }).join("") +
-      (pl.length ? "<h3 style=\"margin-top:12px\">Paid ad results</h3>" + pl.map(function (x) { return '<div class="sh-row"><div><b>' + esc(PL[x.platform] ? PL[x.platform][0] : x.platform) + "</b><small>Reach " + num(x.reach) + " · Clicks " + num(x.clicks) + " · Messages " + num(x.enquiries) + " · Orders " + num(x.purchases) + "</small><small>Spent " + naira(x.spend_kobo) + " · Sales " + naira(x.sales_kobo) + "</small></div><b>" + roas(x.sales_kobo, x.spend_kobo) + "</b></div>"; }).join("") + '<p style="font-size:12px;color:#718078;margin-top:6px">The big number is sales for every ₦1 spent. Results are entered by our team from the platform reports.</p>' : '<p style="font-size:13px;margin-top:8px">Paid ad results appear here after your first campaign.</p>') + "</div>";
+      (pl.length ? "<h3 style=\"margin-top:12px\">Paid ad results</h3>" + pl.map(function (x) { return '<div class="sh-row"><div><b>' + esc(PL[x.platform] ? PL[x.platform][0] : x.platform) + "</b><small>Reach " + num(x.reach) + " · Clicks " + num(x.clicks) + " · Messages " + num(x.enquiries) + " · Orders " + num(x.purchases) + "</small><small>Spent " + naira(x.spend_kobo) + " · Sales " + naira(x.sales_kobo) + "</small></div><b>" + roas(x.sales_kobo, x.spend_kobo) + "</b></div>"; }).join("") + '<p style="font-size:14px;color:#718078;margin-top:6px">The big number is sales for every ₦1 spent. Results are entered by our team from the platform reports.</p>' : '<p style="font-size:15px;margin-top:8px">Paid ad results appear here after your first campaign.</p>') + "</div>";
     return h;
   }
 
@@ -286,7 +286,7 @@
     function msg(id, t, ok) { var m = $(id); if (m) { m.className = "sh-msg " + (ok ? "sh-ok" : "sh-bad"); m.textContent = t; } }
     function product() { var s = $("so-prod"); return s ? SOC.prods.filter(function (p) { return p.id === s.value; })[0] : null; }
     function refresh() { var p = product(); if (!p) return; var plat = $("so-plat").value, k = kitFor(p, plat); $("so-cap").value = k.text;
-      $("so-img").innerHTML = p.image ? '<img src="' + esc(p.image) + '" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px" referrerpolicy="no-referrer"><p style="font-size:12px;color:#718078;margin:4px 0 0">Press and hold the picture to save it, then attach it when you post.</p>' : ""; }
+      $("so-img").innerHTML = p.image ? '<img src="' + esc(p.image) + '" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px" referrerpolicy="no-referrer"><p style="font-size:14px;color:#718078;margin:4px 0 0">Press and hold the picture to save it, then attach it when you post.</p>' : ""; }
     if ($("so-prod")) { $("so-prod").onchange = refresh; $("so-plat").onchange = refresh; refresh(); }
     var af = $("so-acc"); if (af) af.onsubmit = async function (e) {
       e.preventDefault(); var b = af.querySelector("button"); b.disabled = true; var n = 0, bad = "";
@@ -376,15 +376,15 @@
 
 
   /* ---- "Next steps" coach: live checklist for this seller ---- */
-  var COACH_CSS = "<style>.sh-coach{background:#fff;border:1px solid #e6ece8;border-radius:16px;padding:14px;margin:0 0 14px}.sh-coach h3{margin:0 0 4px;font-size:16px}.sh-bar{height:8px;border-radius:6px;background:#e6efe9;margin:8px 0 10px;overflow:hidden}.sh-bar i{display:block;height:100%;background:#087f5b}.sh-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-top:1px solid #eef2ef;background:none;padding:10px 0;font:14px Arial,sans-serif;color:#172b24;cursor:pointer}.sh-step:first-of-type{border-top:0}.sh-step .c{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #b8c7bd;display:grid;place-items:center;font-size:13px;color:#fff}.sh-step.done .c{background:#087f5b;border-color:#087f5b}.sh-step.done b{text-decoration:line-through;color:#8a9a90}.sh-step small{display:block;color:#718078;font-size:12px}</style>";
+  var COACH_CSS = "<style>.sh-coach{background:#fff;border:1px solid #e6ece8;border-radius:16px;padding:14px;margin:0 0 14px}.sh-coach h3{margin:0 0 4px;font-size:18px}.sh-bar{height:8px;border-radius:6px;background:#e6efe9;margin:8px 0 10px;overflow:hidden}.sh-bar i{display:block;height:100%;background:#087f5b}.sh-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-top:1px solid #eef2ef;background:none;padding:10px 0;font:14px Arial,sans-serif;color:#172b24;cursor:pointer}.sh-step:first-of-type{border-top:0}.sh-step .c{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid #b8c7bd;display:grid;place-items:center;font-size:15px;color:#fff}.sh-step.done .c{background:#087f5b;border-color:#087f5b}.sh-step.done b{text-decoration:line-through;color:#8a9a90}.sh-step small{display:block;color:#718078;font-size:14px}</style>";
   async function drawCoach(host) {
     var c = client(); if (!host || !c) return;
     try {
       var r = await c.rpc("seller_coach"); if (r.error || !r.data || !r.data.app) { host.innerHTML = ""; return; }
       var steps = r.data.steps || [], done = steps.filter(function (x) { return x.done; }).length;
       var todo = steps.filter(function (x) { return !x.done; }).slice(0, 4);
-      if (!todo.length) { host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>🎉 You have done every growth step</h3><p style="margin:4px 0 0;font-size:14px;color:#52675c">Keep your stock updated and reply fast to customers.</p></div>'; return; }
-      host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>Your next steps</h3><div style="font-size:13px;color:#718078">' + done + " of " + steps.length + ' done</div><div class="sh-bar"><i style="width:' + Math.round(done / steps.length * 100) + '%"></i></div>' +
+      if (!todo.length) { host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>🎉 You have done every growth step</h3><p style="margin:4px 0 0;font-size:16px;color:#52675c">Keep your stock updated and reply fast to customers.</p></div>'; return; }
+      host.innerHTML = COACH_CSS + '<div class="sh-coach"><h3>Your next steps</h3><div style="font-size:15px;color:#718078">' + done + " of " + steps.length + ' done</div><div class="sh-bar"><i style="width:' + Math.round(done / steps.length * 100) + '%"></i></div>' +
         todo.map(function (x) { return '<button type="button" class="sh-step" data-coach="' + esc(x.go) + '"><span class="c"></span><span><b>' + esc(x.title) + "</b><small>" + esc(x.hint) + "</small></span></button>"; }).join("") + "</div>";
     } catch (e) { host.innerHTML = ""; }
   }
