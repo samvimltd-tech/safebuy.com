@@ -77,6 +77,30 @@
     }, function () { t.hidden = true; });
   }
 
+  /* ---- Overview: money waiting for you (opens Control > Payments / Social) ---- */
+  var moneyAt = 0;
+  function goOps(view) {
+    var c = document.querySelector('#main-tabs [data-plustab="ops"]'); if (!c) return; c.click();
+    setTimeout(function () { var v = document.querySelector('#ops-panel [data-v="' + view + '"]'); if (v) v.click(); }, 400);
+  }
+  function moneyTiles() {
+    if (!stats.children.length) return;
+    var defs = [["plus-pay-tile", "Payments to confirm", "payments"], ["plus-soc-tile", "Social campaigns to set up", "social"], ["plus-fee-tile", "Fees sellers owe you", "sellers"]], t = {};
+    defs.forEach(function (d) {
+      var el = $(d[0]);
+      if (!el) { el = document.createElement("button"); el.type = "button"; el.className = "stat"; el.id = d[0]; el.hidden = true; el.innerHTML = "<b>0</b><span>" + d[1] + "</span>"; stats.appendChild(el); el.addEventListener("click", function () { goOps(d[2]); }); }
+      t[d[0]] = el;
+    });
+    if (Date.now() - moneyAt < 30000) return; moneyAt = Date.now();
+    rpcRead("admin_revenue").then(function (r) {
+      var n = Number(r.reported_count || 0); t["plus-pay-tile"].hidden = false; t["plus-pay-tile"].firstChild.textContent = n; t["plus-pay-tile"].classList.toggle("alert", n > 0);
+      t["plus-fee-tile"].hidden = false; t["plus-fee-tile"].firstChild.textContent = money(r.fees_owed_kobo);
+    }, function () { t["plus-pay-tile"].hidden = true; t["plus-fee-tile"].hidden = true; });
+    rpcRead("admin_social").then(function (r) {
+      var n = (r.rows || []).filter(function (x) { return x.status === "paid"; }).length; t["plus-soc-tile"].hidden = false; t["plus-soc-tile"].firstChild.textContent = n; t["plus-soc-tile"].classList.toggle("alert", n > 0);
+    }, function () { t["plus-soc-tile"].hidden = true; });
+  }
+
   /* ---- Products: category filter ---- */
   var cat = document.createElement("select");
   cat.id = "catf-plus"; cat.hidden = true; cat.setAttribute("aria-label", "Category");
@@ -230,6 +254,11 @@
     try { pl = await rpcRead("admin_subscriptions"); } catch (e) {}
     try { rq = await rpcRead("admin_promos", { p_status: "pending" }); } catch (e) {}
     try { ga = await rpcRead("admin_growth_auto"); } catch (e) {}
+    var ms = null, rv = null, sc = null;
+    try { ms = await rpcRead("admin_money_settings"); } catch (e) {}
+    try { rv = await rpcRead("admin_revenue"); } catch (e) {}
+    try { sc = await rpcRead("admin_social"); } catch (e) {}
+    var bank = ms && ms.bank, bankOk = !!(bank && bank.account_number && bank.bank_name && bank.account_name), paidWait = sc ? (sc.rows || []).filter(function (x) { return x.status === "paid"; }).length : 0;
     var P = (pl && pl.plans) || null;
     var items = [
       [apps.length > 0, "Shops on the platform", apps.length + " shop" + (apps.length === 1 ? "" : "s") + ", " + verified + " verified", "Sellers tab"],
@@ -242,6 +271,9 @@
       [P ? Number(P.monthly_kobo) > 0 && Number(P.yearly_kobo) > 0 : false, "Verified badge plan prices", P ? "Monthly " + money(P.monthly_kobo) + ", 12 months " + money(P.yearly_kobo) + (P.required ? ". The badge needs a paid plan." : ". The badge is free for now.") : "Run seller_plans.sql in Supabase", "Control > Plans"],
       [rq ? rq.length === 0 : false, "Promotion requests", rq ? (rq.length ? rq.length + " waiting for your reply" : "Nothing waiting") : "Run growth2.sql in Supabase", "Control > Requests"],
       [ga ? ga.enabled !== false : false, "Automatic seller growth", ga ? (ga.enabled !== false ? "On. " + (ga.sent_30d || 0) + " messages sent in the last 30 days" : "Switched off") : "Run growth3.sql in Supabase", "Control > Requests"],
+      [ms ? bankOk : false, "Your bank details for payments", ms ? (bankOk ? bank.bank_name + ", " + bank.account_name : "Open Control > Pricing and enter your bank account. Sellers cannot pay you without it") : "Run money.sql in Supabase", "Control > Pricing"],
+      [rv ? Number(rv.reported_count || 0) === 0 : false, "Payments waiting for you to confirm", rv ? (Number(rv.reported_count || 0) ? rv.reported_count + " waiting (" + money(rv.reported_kobo) + ")" : "Nothing waiting") : "Run money.sql in Supabase", "Control > Payments"],
+      [sc ? paidWait === 0 : false, "Social campaigns waiting to be set up", sc ? (paidWait ? paidWait + " paid and waiting for you" : "Nothing waiting") : "Run social.sql in Supabase", "Control > Social"],
       [null, "Paystack online payments", "Cannot be checked from here. Follow SETUP.md, then test a full order in Paystack test mode", "SETUP.md"],
       [null, "Database security", "Run: select tablename from pg_tables where schemaname='public' and not rowsecurity; and fix anything listed", "Supabase SQL"],
       [null, "Rider documents are private", "In Supabase Storage, the delivery-docs bucket must not be public", "Supabase Storage"],
@@ -326,7 +358,7 @@
     if (e.target.id === "site-reset" && window.confirm("Remove all your changes and go back to the page's own wording?")) saveSite({}).then(openSite);
   });
 
-  function run() { fillCats(); decorateStats(); promoTile(); decorateItems(); applyCat(); }
+  function run() { fillCats(); decorateStats(); promoTile(); moneyTiles(); decorateItems(); applyCat(); }
   function refresh() {
     run();
     if (Date.now() - loadedAt > 20000) load().then(run);
