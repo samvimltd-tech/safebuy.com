@@ -1710,7 +1710,7 @@ updateCartCount();
           cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
           cv.toBlob(function (b) {
             if (!b || b.type !== "image/webp" || b.size >= file.size) { res(file); return; }
-            try { res(new File([b], (file.name || "photo").replace(/\.\w+$/, "") + ".webp", { type:"image/webp" })); } catch (e) { res(b); }
+            try { res(new File([b], (file.name || "photo").replace(/\.\w+$/, "") + ".webp", { type: "image/webp" })); } catch (e) { res(b); }
           }, "image/webp", 0.8);
         };
         img.onerror = function () { URL.revokeObjectURL(url); res(file); };
