@@ -454,9 +454,11 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
   }
   window.__installCard = { show: show };
   // shown once the person has signed in (and again right after sign-up if it was skipped)
-  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); if (!window.__sbIT) { window.__sbIT = 1; setTimeout(function () { show(false, true); makePill(); }, 2000); } } }, 1200);
-  var fe = document.getElementById("account-form");
-  if (fe) fe.addEventListener("submit", function () { formUsed = Date.now(); }, true);
+  var startedIn = signedIn();
+  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); if (!window.__sbIT) { window.__sbIT = 1; var fresh = !startedIn; setTimeout(function () { show(fresh, fresh); makePill(); }, 2000); } } }, 400);
+  if (/[?&]installdemo/.test(location.search)) setTimeout(function () { try { localStorage.removeItem(C.key + "-done"); localStorage.removeItem(C.key + "-later"); } catch (e) {} show(true, true); }, 2000);
+  document.addEventListener("submit", function (e) { if (e.target && e.target.id === "account-form") formUsed = Date.now(); }, true);
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("#account-form button")) formUsed = Date.now(); }, true);
   var tries = 0, ht = setInterval(function () {
     var c = window.safeBuySupabase;
     if (c && c.auth) {
@@ -1691,7 +1693,7 @@ updateCartCount();
       try {
         if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) { res(file); return; }
         var url = URL.createObjectURL(file), img = new Image();
-        img.onload = function () {
+       img.onload = function () {
           URL.revokeObjectURL(url);
           var w = img.naturalWidth, h = img.naturalHeight;
           if (!w || !h) { res(file); return; }
