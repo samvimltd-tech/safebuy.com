@@ -36,6 +36,48 @@
       }
     }, 0);
   }, true);
+
+  /* ---------- Softer, faster feel ---------- */
+  var st2 = document.createElement('style');
+  st2.textContent = 'html{scroll-behavior:smooth}img{content-visibility:auto}.product-card{will-change:transform;contain:layout paint;transition:transform .12s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}' +
+    '.product-card:active{transform:scale(.975)}button,.button,[data-action]{transition:transform .1s cubic-bezier(.2,.8,.2,1),opacity .1s,background-color .15s,box-shadow .2s}' +
+    '@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}';
+  document.head.appendChild(st2);
+
+  /* ---------- Bottom sheets: every pop-up slides up on phones, drag down to close ---------- */
+  var st3 = document.createElement('style');
+  st3.textContent = '@keyframes sbfade{from{opacity:0}to{opacity:1}}@keyframes sbup{from{transform:translateY(60%);opacity:.4}to{transform:none;opacity:1}}' +
+    '.modal-backdrop.open{animation:sbfade .16s ease-out}' +
+    '@media (max-width:700px){.modal-backdrop.open .modal{animation:sbup .26s cubic-bezier(.22,1,.36,1);overscroll-behavior:contain}' +
+    '.modal-backdrop .modal::before{content:"";display:block;width:46px;height:5px;border-radius:9px;background:#cfd8d3;margin:-8px auto 12px}}' +
+    '.modal.sb-drag{transition:none!important;animation:none!important}.modal.sb-snap{transition:transform .2s ease}';
+  document.head.appendChild(st3);
+  var my0 = null, mdy = 0, mdl = null;
+  function openBackdrop(el){ return el && el.closest && el.closest('.modal-backdrop'); }
+  document.addEventListener('touchstart', function(e){
+    var m = e.target.closest && e.target.closest('.modal'); if (!m || window.innerWidth > 700) { my0 = null; return; }
+    // only start a drag from the top handle area or when the sheet is scrolled to the top
+    if (m.scrollTop > 0 || e.target.closest('input,textarea,select')) { my0 = null; return; }
+    my0 = e.touches[0].clientY; mdy = 0; mdl = m; m.classList.remove('sb-snap');
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e){
+    if (my0 === null || !mdl) return; mdy = e.touches[0].clientY - my0;
+    if (mdy > 8) { mdl.classList.add('sb-drag'); mdl.style.transform = 'translateY(' + mdy + 'px)'; }
+  }, {passive:true});
+  document.addEventListener('touchend', function(){
+    if (my0 === null || !mdl) return; var m = mdl; m.classList.remove('sb-drag'); my0 = null; mdl = null;
+    if (mdy > 120) {
+      var bd = openBackdrop(m), btn = m.querySelector('#close-modal,[data-close],.modal-close,.close,button[aria-label*="lose"]');
+      m.style.transform = ''; if (btn) btn.click(); else if (bd) bd.dispatchEvent(new MouseEvent('click', {bubbles:true}));
+    } else { m.classList.add('sb-snap'); m.style.transform = ''; }
+    mdy = 0;
+  });
+  // Warm up the full product page the moment a finger touches a link to it
+  document.addEventListener('touchstart', function(e){
+    var a = e.target.closest && e.target.closest('a[href]'); if (!a || a.__pf) return;
+    try { var u = new URL(a.href, location.href); if (u.origin === location.origin && /\/(p|shop)\//.test(u.pathname)) { a.__pf = 1; var l = document.createElement('link'); l.rel = 'prefetch'; l.href = u.href; document.head.appendChild(l); } } catch(err){}
+  }, {passive:true, capture:true});
+
   // Warm connections to Supabase early
   try {
     var c = window.SAFEbuySupabaseConfig; if (c && c.url) {
