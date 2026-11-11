@@ -55,9 +55,10 @@
     ["impressions", "👁️", "Product impressions", "Times your products were shown"], ["enquiries", "💬", "Product enquiries", "Customers who asked about you"],
     ["clicks", "👆", "Customer clicks", "Times your products were opened"], ["upgrade", "⭐", "Upgrade my subscription", "Verified badge plan"],
     ["advertise", "📢", "Advertise my business", "Ask us to advertise your shop"], ["invite", "🎁", "Invite sellers, earn rewards", "Free badge days for every shop"],
-    ["billing", "💳", "Payments & fees", "Pay for promotions, fees and plans"]
+    ["billing", "💳", "Payments & fees", "Pay for promotions, fees and plans"],
+    ["social", "📱", "Social Media Marketing", "Facebook, Instagram and TikTok"]
   ];
-  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", pay: "Pay now" };
+  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", social: "Social Media Marketing", pay: "Pay now" };
   function tilesHtml() { return '<div class="sh-grid">' + TILES.map(function (t) { return '<button type="button" class="sh-tile" data-hub="' + t[0] + '"><span class="e">' + t[1] + "</span>" + t[2] + "<small>" + t[3] + "</small></button>"; }).join("") + "</div>"; }
 
   var growth = null;
@@ -76,7 +77,7 @@
     bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
     var v = cur;
     try {
-      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling })[v](v);
+      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial })[v](v);
       if (cur === v) { bodyEl.innerHTML = html; wire(v); }
     } catch (e) { if (cur === v) bodyEl.innerHTML = err(e); }
   }
@@ -213,9 +214,125 @@
       ((d.items || []).length ? '<div class="sh-card"><h3>Shops you invited</h3>' + d.items.map(function (i) { return '<div class="sh-row"><div><b>' + esc(i.shop || "New shop") + "</b><small>" + new Date(i.at).toLocaleDateString("en-NG") + '</small></div><span class="sh-pill ' + (i.rewarded ? "approved" : "") + '">' + (i.rewarded ? "Rewarded" : i.approved ? "Approved" : "Waiting for approval") + "</span></div>"; }).join("") + "</div>" : "");
   }
 
+
+  /* ---- Social Media Marketing: connect pages, ready-made posts, schedule, paid campaigns, results ---- */
+  var SOC = { data: null, prods: [] };
+  var PL = { facebook: ["Facebook", "fb", "📘"], instagram: ["Instagram", "ig", "📸"], tiktok: ["TikTok", "tt", "🎵"], whatsapp: ["WhatsApp", "wa", "💬"] };
+  function tag(s) { return "#" + String(s || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 24); }
+  function kitFor(p, plat) {
+    var link = root + "?p=" + encodeURIComponent(p.id) + "&src=" + PL[plat][1], price = naira(p.price_kobo), d = String(p.description || "").replace(/\s+/g, " ").trim().slice(0, 140);
+    var first = String(p.name || "").split(" ")[0], tags = ["#SafeBuyNG", "#ShopNaija", "#MadeInNigeria", tag(p.category), tag(first)].filter(function (t) { return t.length > 2; }).filter(function (t, i, a) { return a.indexOf(t) === i; }).join(" ");
+    var body;
+    if (plat === "tiktok") body = "🔥 " + p.name + " - " + price + "\n" + (d ? d + "\n" : "") + "Order safely on SafeBuy NG. Link in my bio 👆\n" + link + "\n" + tags;
+    else if (plat === "instagram") body = "✨ " + p.name + " is now on SafeBuy NG!\n" + (d ? d + "\n" : "") + "💰 " + price + "\nOrder safely from our shop. Tap the link in our bio.\n" + link + "\n.\n" + tags;
+    else if (plat === "whatsapp") body = "Hello 👋 " + p.name + " is available for " + price + ". " + (d ? d + " " : "") + "Order safely here: " + link;
+    else body = "✨ " + p.name + " now available on SafeBuy NG!\n" + (d ? d + "\n" : "") + "💰 " + price + "\nOrder directly from our shop 👉 " + link + "\n" + tags;
+    return { text: body, link: link };
+  }
+  function when(s) { try { return new Date(s).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }); } catch (e) { return ""; } }
+  function localInput(d) { var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); }
+  function roas(sales, spend) { return Number(spend) > 0 ? (Number(sales) / Number(spend)).toFixed(1) + "x" : "-"; }
+  var CST = { awaiting_payment: "Waiting for your payment", paid: "Paid. We are setting it up", running: "Running", finished: "Finished", rejected: "Not run", cancelled: "Cancelled" };
+
+  async function vSocial() {
+    var c = client(); if (!c) throw new Error("Still connecting. Try again in a moment.");
+    var r = await c.rpc("social_overview"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run social.sql in Supabase." : r.error.message);
+    var pr = await c.rpc("social_products"); SOC.data = r.data || {}; SOC.prods = (pr && pr.data) || [];
+    var D = SOC.data, P = D.pricing || {}, acc = {}; (D.accounts || []).forEach(function (a) { acc[a.platform] = a; });
+    var pass = D.pass_until ? "Social Pass active until " + new Date(D.pass_until).toLocaleDateString("en-NG") : "";
+    var opts = SOC.prods.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + "</option>"; }).join("");
+    var h = '<div class="sh-card"><h3>Grow beyond SafeBuy</h3><p>Connect your pages, get ready-made posts for every product, schedule them, and let us run paid ads for you on Facebook, Instagram and TikTok.</p></div>';
+    h += '<div class="sh-card"><h3>1. Your accounts</h3><form class="sh-f" id="so-acc">' + ["facebook", "instagram", "tiktok"].map(function (k) {
+      var a = acc[k] || {}; return '<label for="so-h-' + k + '">' + PL[k][2] + " " + PL[k][0] + ' page or username</label><input id="so-h-' + k + '" maxlength="60" value="' + esc(a.handle || "") + '" placeholder="e.g. @mybrand"><input id="so-u-' + k + '" maxlength="250" inputmode="url" value="' + esc(a.url || "") + '" placeholder="Page link (https://…)" style="margin-top:6px">';
+    }).join("") + '<button class="sh-btn" type="submit">Save my accounts</button><p class="sh-msg" id="so-accmsg" role="status"></p></form>' +
+      '<p style="font-size:12px;color:#718078;margin-top:8px">We never ask for your password. Posts are shared from your own phone, so you stay in control.</p></div>';
+    h += '<div class="sh-card"><h3>2. Make a post</h3>' + (SOC.prods.length ? '<form class="sh-f" id="so-post"><label for="so-prod">Product</label><select id="so-prod">' + opts + '</select>' +
+      '<label for="so-plat">Where will you post it?</label><select id="so-plat">' + Object.keys(PL).map(function (k) { return '<option value="' + k + '">' + PL[k][0] + "</option>"; }).join("") + '</select>' +
+      '<div id="so-img"></div><label for="so-cap">Caption (ready for you, edit if you like)</label><textarea id="so-cap" rows="7" maxlength="1500"></textarea>' +
+      '<button type="button" class="sh-btn" id="so-share">Share now</button><button type="button" class="sh-btn alt" id="so-copycap">Copy caption</button>' +
+      '<label for="so-when">Or schedule it (we will remind you)</label><input id="so-when" type="datetime-local" value="' + localInput(new Date(Date.now() + 3600000)) + '">' +
+      '<button type="button" class="sh-btn alt" id="so-sched">Schedule this post</button><p class="sh-msg" id="so-postmsg" role="status"></p></form>' : '<p>Add a product first (My shop &amp; listings), then your post is made for you.</p>') + "</div>";
+    var posts = (D.posts || []).filter(function (x) { return x.status === "scheduled"; });
+    h += '<div class="sh-card"><h3>Scheduled posts</h3>' + (posts.length ? posts.map(function (x) {
+      var due = new Date(x.scheduled_at) <= new Date();
+      return '<div class="sh-row"><div><b>' + esc(PL[x.platform] ? PL[x.platform][0] : x.platform) + (x.product ? " · " + esc(x.product) : "") + "</b><small>" + esc(when(x.scheduled_at)) + (due ? " · due now" : "") + "</small></div><div style=\"display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end\">" +
+        '<button type="button" class="sh-btn alt" style="margin:0;width:auto;padding:8px 10px" data-so="share" data-id="' + esc(x.id) + '" data-plat="' + esc(x.platform) + '" data-cap="' + esc(x.caption) + '">Post now</button>' +
+        '<button type="button" class="sh-btn alt" style="margin:0;width:auto;padding:8px 10px" data-so="del" data-id="' + esc(x.id) + '">Delete</button></div></div>';
+    }).join("") : '<p>Nothing scheduled.</p>') + (pass ? '<p class="sh-ok" style="margin-top:8px"><b>' + esc(pass) + "</b></p>" : '<p style="font-size:13px;margin-top:8px">Free: ' + (P.free_scheduled || 3) + ' scheduled posts at a time. <b>Social Pass</b> (' + naira(P.pass_kobo) + " for " + (P.pass_days || 30) + ' days) gives unlimited scheduling.</p><button type="button" class="sh-btn alt" id="so-pass">Get the Social Pass</button>') + "</div>";
+    h += '<div class="sh-card"><h3>3. Paid ads (we run them for you)</h3><p>Pay once. We set up and run your ads on the platforms you choose and show the results here. The ad budget goes to the platform; our management fee is separate and shown before you pay.</p>' +
+      (SOC.prods.length ? '<form class="sh-f" id="so-camp"><label for="so-cprod">Product to advertise</label><select id="so-cprod">' + opts + "</select><label>Platforms</label>" +
+        ["facebook", "instagram", "tiktok"].map(function (k) { return '<label style="font-weight:400"><input type="checkbox" class="so-cp" value="' + k + '" style="width:auto;margin-right:8px"' + (k === "facebook" ? " checked" : "") + ">" + PL[k][2] + " " + PL[k][0] + "</label>"; }).join("") +
+        '<label for="so-bud">Ad budget in naira (smallest ' + naira(P.min_budget_kobo) + ')</label><input id="so-bud" inputmode="numeric" value="' + Math.round(Number(P.min_budget_kobo || 500000) / 100) + '">' +
+        '<label for="so-cdays">How many days?</label><select id="so-cdays"><option>3</option><option selected>7</option><option>14</option><option>30</option></select>' +
+        '<label for="so-obj">Goal</label><select id="so-obj"><option>Get more orders</option><option>Get more customer messages</option><option>Get more people to see my shop</option></select>' +
+        '<label for="so-aud">Who should see it? (town, age, interests)</label><textarea id="so-aud" rows="2" maxlength="400" placeholder="e.g. Women 25-45 in Lagos who like fashion"></textarea>' +
+        '<label for="so-cphone">Your phone or WhatsApp number</label><input id="so-cphone" inputmode="tel" maxlength="20">' +
+        '<p id="so-quote" style="font-weight:700;margin:10px 0 0"></p><button class="sh-btn" type="submit">Continue to payment</button><p class="sh-msg" id="so-cmsg" role="status"></p></form>' : "<p>Add a product first.</p>") + "</div>";
+    var camps = D.campaigns || [];
+    h += '<div class="sh-card"><h3>Your campaigns</h3>' + (camps.length ? camps.map(function (x) {
+      return '<div class="sh-row"><div><b>' + esc(x.product || "Campaign") + "</b><small>" + (x.platforms || []).map(function (k) { return PL[k] ? PL[k][0] : k; }).join(", ") + " · budget " + naira(x.budget_kobo) + " · " + x.days + " days</small>" +
+        (x.status === "running" || x.status === "finished" ? "<small>Reach " + num(x.reach) + " · Clicks " + num(x.clicks) + " · Messages " + num(x.enquiries) + " · Orders " + num(x.purchases) + " · Spent " + naira(x.spend_kobo) + "</small>" : "") + (x.admin_note ? "<small>" + esc(x.admin_note) + "</small>" : "") + '</div><div><span class="sh-pill">' + esc(CST[x.status] || x.status) + "</span>" +
+        (x.status === "awaiting_payment" ? '<button type="button" class="sh-btn" style="margin:6px 0 0;padding:8px 10px" data-so="paycamp" data-id="' + esc(x.payment_id) + '">Pay now</button><button type="button" class="sh-btn alt" style="margin:6px 0 0;padding:8px 10px" data-so="cancelcamp" data-id="' + esc(x.id) + '">Cancel</button>' : "") + "</div></div>";
+    }).join("") : "<p>No campaigns yet.</p>") + "</div>";
+    var pl = D.platforms || [], vis = D.visits || {}, sb = D.safebuy || {}, tv = Number(vis.fb || 0) + Number(vis.ig || 0) + Number(vis.tt || 0) + Number(vis.wa || 0);
+    h += '<div class="sh-card"><h3>4. Which platform brings customers?</h3><div class="sh-nums"><div><b>' + num(sb.product_views_30d) + "</b><span>Views on SafeBuy (30 days)</span></div><div><b>" + num(tv) + "</b><span>Visits from your social links</span></div></div>" +
+      ["fb", "ig", "tt", "wa"].map(function (k) { var nm = { fb: "Facebook", ig: "Instagram", tt: "TikTok", wa: "WhatsApp" }[k]; return '<div class="sh-row"><div><b>' + nm + "</b><small>Visits to your products from your " + nm + " links</small></div><b>" + num(vis[k]) + "</b></div>"; }).join("") +
+      (pl.length ? "<h3 style=\"margin-top:12px\">Paid ad results</h3>" + pl.map(function (x) { return '<div class="sh-row"><div><b>' + esc(PL[x.platform] ? PL[x.platform][0] : x.platform) + "</b><small>Reach " + num(x.reach) + " · Clicks " + num(x.clicks) + " · Messages " + num(x.enquiries) + " · Orders " + num(x.purchases) + "</small><small>Spent " + naira(x.spend_kobo) + " · Sales " + naira(x.sales_kobo) + "</small></div><b>" + roas(x.sales_kobo, x.spend_kobo) + "</b></div>"; }).join("") + '<p style="font-size:12px;color:#718078;margin-top:6px">The big number is sales for every ₦1 spent. Results are entered by our team from the platform reports.</p>' : '<p style="font-size:13px;margin-top:8px">Paid ad results appear here after your first campaign.</p>') + "</div>";
+    return h;
+  }
+
+  function wireSocial() {
+    var c = client(), D = SOC.data || {}, P = D.pricing || {};
+    function msg(id, t, ok) { var m = $(id); if (m) { m.className = "sh-msg " + (ok ? "sh-ok" : "sh-bad"); m.textContent = t; } }
+    function product() { var s = $("so-prod"); return s ? SOC.prods.filter(function (p) { return p.id === s.value; })[0] : null; }
+    function refresh() { var p = product(); if (!p) return; var plat = $("so-plat").value, k = kitFor(p, plat); $("so-cap").value = k.text;
+      $("so-img").innerHTML = p.image ? '<img src="' + esc(p.image) + '" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px" referrerpolicy="no-referrer"><p style="font-size:12px;color:#718078;margin:4px 0 0">Press and hold the picture to save it, then attach it when you post.</p>' : ""; }
+    if ($("so-prod")) { $("so-prod").onchange = refresh; $("so-plat").onchange = refresh; refresh(); }
+    var af = $("so-acc"); if (af) af.onsubmit = async function (e) {
+      e.preventDefault(); var b = af.querySelector("button"); b.disabled = true; var n = 0, bad = "";
+      for (var k of ["facebook", "instagram", "tiktok"]) { var h = $("so-h-" + k).value.trim(), u = $("so-u-" + k).value.trim(); if (!h && !u) continue; var r = await c.rpc("social_save_account", { p_platform: k, p_handle: h, p_url: u }); if (r.error) { bad = PL[k][0] + ": " + r.error.message; break; } n++; }
+      b.disabled = false; if (bad) msg("so-accmsg", bad, false); else msg("so-accmsg", n ? "Saved." : "Nothing to save.", n > 0);
+    };
+    function shareNow(plat, cap, link, img) {
+      var done = function () { toast("Caption copied. Paste it when you post."); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(cap).then(done, function () {});
+      var url = plat === "facebook" ? "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(link) + "&quote=" + encodeURIComponent(cap) : plat === "whatsapp" ? "https://wa.me/?text=" + encodeURIComponent(cap) : "";
+      if (navigator.share) { navigator.share({ title: "SafeBuy NG", text: cap, url: link }).catch(function () {}); return; }
+      if (url) window.open(url, "_blank", "noopener"); else if (plat === "instagram") window.open("https://www.instagram.com/", "_blank", "noopener"); else if (plat === "tiktok") window.open("https://www.tiktok.com/upload", "_blank", "noopener");
+    }
+    var sb = $("so-share"); if (sb) sb.onclick = function () { var p = product(); if (!p) return; var plat = $("so-plat").value; shareNow(plat, $("so-cap").value, kitFor(p, plat).link); };
+    var cc = $("so-copycap"); if (cc) cc.onclick = function () { var t = $("so-cap").value; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { cc.textContent = "Copied ✓"; }, function () { window.prompt("Copy your caption", t); }); else window.prompt("Copy your caption", t); };
+    var sc = $("so-sched"); if (sc) sc.onclick = async function () {
+      var p = product(); if (!p) return; sc.disabled = true;
+      var r = await c.rpc("social_schedule", { p_product: p.id, p_platform: $("so-plat").value, p_caption: $("so-cap").value, p_when: new Date($("so-when").value).toISOString() });
+      sc.disabled = false; if (r.error) { msg("so-postmsg", r.error.message, false); return; } msg("so-postmsg", "Scheduled. We will notify you when it is time.", true); setTimeout(function () { if (cur === "social") open("social"); }, 900);
+    };
+    bodyEl.querySelectorAll("[data-so]").forEach(function (b) {
+      b.onclick = async function () {
+        var k = b.dataset.so, id = b.dataset.id;
+        if (k === "share") { shareNow(b.dataset.plat, b.dataset.cap, root); await c.rpc("social_post_done", { p_id: id, p_skip: false }); setTimeout(function () { if (cur === "social") open("social"); }, 600); }
+        else if (k === "del") { await c.rpc("social_post_delete", { p_id: id }); open("social"); }
+        else if (k === "paycamp") openPayById(id, "social");
+        else if (k === "cancelcamp") { if (!window.confirm("Cancel this campaign?")) return; var r = await c.rpc("social_cancel_campaign", { p_id: id }); if (r.error) toast(r.error.message); open("social"); }
+      };
+    });
+    var pp = $("so-pass"); if (pp) pp.onclick = async function () { pp.disabled = true; var r = await c.rpc("social_pay_pass"); if (r.error) { toast(r.error.message); pp.disabled = false; return; } showPay(r.data, "social"); };
+    var cf = $("so-camp");
+    if (cf) {
+      var q = async function () { var kb = Math.round(Number($("so-bud").value || 0) * 100); if (!kb) { $("so-quote").textContent = ""; return; } var r = await c.rpc("social_quote", { p_budget_kobo: kb }); if (r.data) $("so-quote").textContent = "Ad budget " + naira(r.data.budget_kobo) + " + our management fee " + naira(r.data.fee_kobo) + " = " + naira(r.data.total_kobo); };
+      $("so-bud").oninput = q; q();
+      cf.onsubmit = async function (e) {
+        e.preventDefault(); var b = cf.querySelector("button[type=submit]"), pls = [].slice.call(cf.querySelectorAll(".so-cp:checked")).map(function (x) { return x.value; }); b.disabled = true; msg("so-cmsg", "Working…", true);
+        var r = await c.rpc("social_request_campaign", { p_product: $("so-cprod").value, p_platforms: pls, p_budget_kobo: Math.round(Number($("so-bud").value || 0) * 100), p_days: Number($("so-cdays").value), p_objective: $("so-obj").value, p_audience: $("so-aud").value, p_caption: "", p_phone: $("so-cphone").value });
+        if (r.error) { msg("so-cmsg", r.error.message, false); b.disabled = false; return; } showPay(r.data.payment, "social");
+      };
+    }
+  }
+
   /* ---- clicks inside the sheet ---- */
   async function openPayById(id, back) { var r = await client().rpc("my_payment", { p_id: id }); if (r.data) showPay(r.data, back); else toast("Could not open that payment."); }
   function wire(v) {
+    if (v === "social") wireSocial();
     var f = $("sh-form"), pr = $("sh-price");
     function upd() { if (!pr || !prices) return; var d = Number($("sh-days").value), k = pr.dataset.kind, rate = k === "ad" ? (prices.ad_day_kobo || {})[$("sh-slot").value] : prices[k]; pr.textContent = prices.charge_promos || k === "ad" ? "Price: " + naira(Number(rate || 0) * d) + " for " + d + " days" : "Free for now"; }
     if (pr && $("sh-days")) { $("sh-days").onchange = upd; if ($("sh-slot")) $("sh-slot").onchange = upd; upd(); }
@@ -254,6 +371,7 @@
       else window.prompt("Copy your invite link", l);
     };
   }
+  document.addEventListener("sb:payment", function () { if (sh.classList.contains("open") && /^(billing|social|promote|boost|advertise|upgrade)$/.test(cur)) open(cur); else if (cur === "pay" && sh.classList.contains("open") && payBack) open(payBack === "pay" ? "billing" : payBack); });
   document.addEventListener("click", function (e) { var b = e.target.closest("[data-hub]"); if (b) { e.preventDefault(); open(b.dataset.hub); } });
 
 
