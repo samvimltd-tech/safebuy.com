@@ -4,9 +4,7 @@
   var css = 'a,button,[role=button],.product-card,.chip,[data-category],[data-action],label,select,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,.08)}' +
     'button,[role=button],[data-action],.product-card,[data-category]{transition:transform .08s ease,opacity .08s ease}' +
     'button:active,[role=button]:active,[data-action]:active,.product-card:active,[data-category]:active{transform:scale(.96);opacity:.85}' +
-    '.sb-busy{pointer-events:none;opacity:.65;position:relative}' +
-    '.sb-busy::after{content:"";position:absolute;right:8px;top:50%;width:14px;height:14px;margin-top:-7px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:sbspin .6s linear infinite}' +
-    '@keyframes sbspin{to{transform:rotate(360deg)}}' +
+        '@keyframes sbspin{to{transform:rotate(360deg)}}' +
     '#sb-topbar{position:fixed;left:0;top:0;height:3px;width:0;background:#16a34a;z-index:99999;transition:width .25s ease,opacity .3s ease;opacity:0;pointer-events:none}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   var bar = document.createElement('div'); bar.id = 'sb-topbar'; document.body.appendChild(bar);
@@ -21,22 +19,7 @@
     var done = function(){ if (--pending <= 0) { pending = 0; hide(); } };
     p.then(done, done); return p;
   };
-  // Instant busy state on action buttons; auto-clears when network is quiet again (max 8s)
-  document.addEventListener('click', function(e){
-    var b = e.target.closest && e.target.closest('button,[data-action]');
-    if (!b || b.disabled || b.classList.contains('sb-busy')) return;
-    if (b.matches('[data-category],.sb-nobusy,[type=file],.chip')) return;
-    var t0 = pending;
-    setTimeout(function(){
-      if (pending > 0 && document.body.contains(b)) {
-        b.classList.add('sb-busy');
-        var n = 0, iv = setInterval(function(){
-          if (pending === 0 || ++n > 80 || !document.body.contains(b)) { clearInterval(iv); b.classList.remove('sb-busy'); }
-        }, 100);
-      }
-    }, 0);
-  }, true);
-
+  // (busy spinners on buttons are handled by the page itself; nothing here can ever lock a button)
   /* ---------- Softer, faster feel ---------- */
   var st2 = document.createElement('style');
   st2.textContent = 'html{scroll-behavior:smooth}img{content-visibility:auto}.product-card{will-change:transform;contain:layout paint;transition:transform .12s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease}' +
