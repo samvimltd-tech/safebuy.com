@@ -392,6 +392,43 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
   window.__sbLinkError = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
 })();
 </script>
+<style>
+#sc-quick .quick-link[data-feature="messages"],#sc-quick .quick-link[data-feature="notifications"],#sc-quick .quick-link[data-action="delivery"]{display:none}
+#sc-quick .quick-link.has-new{display:flex}
+#sc-quick .quick-link .ql-new{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:12px;background:#dc2626;color:#fff;font:800 14px Arial,sans-serif;vertical-align:middle}
+</style>
+<script>
+/* Home cards: Messages and Notifications show only when there is something new; Delivery lives in the header. */
+(function () {
+  "use strict";
+  var busy = false, last = 0;
+  function set(feature, n, word) {
+    var b = document.querySelector('#sc-quick .quick-link[data-feature="' + feature + '"]'); if (!b) return;
+    var old = b.querySelector(".ql-new"); if (old) old.remove();
+    b.classList.toggle("has-new", n > 0);
+    if (n > 0) { var t = b.querySelector("span:last-child"); if (t) { var e = document.createElement("span"); e.className = "ql-new"; e.textContent = n + " new"; t.firstChild.after(e); } }
+  }
+  function refresh() {
+    var c = window.safeBuySupabase; if (!c || !c.rpc || busy) return;
+    busy = true;
+    c.auth.getSession().then(function (r) {
+      if (!(r && r.data && r.data.session)) { set("messages", 0); set("notifications", 0); busy = false; return; }
+      return c.rpc("my_unread_counts").then(function (x) {
+        var d = (x && x.data) || {}; set("messages", Number(d.messages || 0)); set("notifications", Number(d.alerts || 0)); busy = false;
+      });
+    }).catch(function () { busy = false; });
+  }
+  function soon() { var n = Date.now(); if (n - last < 1500) return; last = n; refresh(); }
+  setInterval(function () { if (document.visibilityState === "visible") refresh(); }, 30000);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") soon(); });
+  document.addEventListener("sb:pulse", soon); document.addEventListener("sb:order", soon);
+  var tries = 0, h = setInterval(function () {
+    var c = window.safeBuySupabase;
+    if (c && c.auth) { clearInterval(h); refresh(); c.auth.onAuthStateChange(function () { setTimeout(refresh, 600); }); }
+    else if (++tries > 60) clearInterval(h);
+  }, 300);
+})();
+</script>
 <script src="../guard.js?v=1"></script>
 <script src="../switches.js?v=1" defer></script>
 <script src="../seller-plan.js?v=1" defer></script>
@@ -664,7 +701,8 @@ body.sa-seller #role-open{display:none!important}
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
-            <div class="prototype-notice" id="sc-notice">
+    
+        <div class="prototype-notice" id="sc-notice">
       <strong>Stay safe:</strong>
       <span id="sc-notice-text">Meet in a public place and inspect the item before you pay. Prefer shops with the ✓ Verified label.</span>
     </div>
@@ -1930,7 +1968,6 @@ updateCartCount();
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
         '<button type="button" data-feature="messages"><span class="ico">💬</span><span class="lbl">Messages</span></button>' +
         '<button type="button" data-feature="notifications"><span class="ico">🔔</span><span class="lbl">Notifications</span></button>' +
-        (window.__installCard ? '<button type="button" class="sb-install-btn"><span class="ico">📲</span>Install Buyer App</button>' : '') +
         '<hr><button type="button" data-action="sell"><span class="ico">🏪</span>My shop &amp; listings</button>' +
         '<button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>' +
         '<button type="button" data-feature="settings"><span class="ico">⚙️</span>Account settings</button>' +
@@ -1938,7 +1975,6 @@ updateCartCount();
       drawerAcc.innerHTML =
         '<div class="d-user">Signed in as ' + email + ' <span class="mode-chip" data-mode-chip>Buyer mode</span></div>' +
         '<button type="button" data-feature="mode" hidden><span class="lbl">🔄 Switch mode</span></button>' +
-        (window.__installCard ? '<button type="button" class="sb-install-btn">📲 Install Buyer App</button>' : '') +
         '<button type="button" data-feature="settings">⚙️ Account settings</button>' +
         '<button type="button" data-auth="signout">🚪 Sign out</button>';
     } else {
@@ -2549,7 +2585,7 @@ document.addEventListener("click", function (e) {
   "use strict";
   var C = {name: "SafeBuy Seller", color: "#b45309", letter: "S", key: "role-install-sell", skip: false};
   if (C.skip) return;
-  var ev = null, card = null, pill = null, formUsed = 0;
+  var ev = null, card = null, pill = null, formUsed = 0, shownThisVisit = false;
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
   function standalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
   function done() { return standalone() || !!store(C.key + "-done"); }
@@ -2563,7 +2599,7 @@ document.addEventListener("click", function (e) {
     return false;
   }
   function makePill() {
-    if (!ev || done() || pill || !signedIn()) return;
+    return; /* floating button removed: only the install sheet is used */
     pill = document.createElement("button"); pill.type = "button"; pill.id = "role-install";
     pill.style.cssText = "position:fixed;left:14px;top:70px;z-index:60;border:1px solid " + C.color + ";border-radius:30px;padding:8px 14px;background:#fff;color:" + C.color + ";font:800 13px system-ui,sans-serif";
     pill.textContent = "⬇ Install " + C.name;
@@ -2573,19 +2609,19 @@ document.addEventListener("click", function (e) {
   window.addEventListener("appinstalled", function () { store(C.key + "-done", "1"); hide(); hidePill(); });
   function show(force, ready) {
     if (card || done()) return;
-    var later = Number(store(C.key + "-later") || 0);
-    if (!force && later && Date.now() - later < 3 * 86400000) return;
+    if (shownThisVisit && !force) return;
+    shownThisVisit = true;
     var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
     card = document.createElement("div");
     card.id = "role-install-card";
     card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(16,39,29,.62);display:flex;align-items:flex-end;justify-content:center";
-    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center">' +
+    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center;max-height:92vh;overflow:auto">' +
       '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:' + C.color + ';color:#fff;font:800 34px/64px system-ui,sans-serif">' + C.letter + '</div>' +
-      '<h2 style="margin:0 0 6px;font-size:21px">Install ' + C.name + '</h2>' +
-      '<p style="margin:0 0 16px;color:#52645a;font-size:15px;line-height:1.5">' + (ready ? "Your account is ready. " : "") + 'Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
-      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:15px;background:' + C.color + ';color:#fff;font:800 16px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
-      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:14px;line-height:1.55;text-align:left"></div>' +
-      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 14px system-ui,sans-serif;padding:10px">Not now</button></div>';
+      '<h2 style="margin:0 0 8px;font-size:26px">Install ' + C.name + '</h2>' +
+      '<p style="margin:0 0 16px;color:#52645a;font-size:18px;line-height:1.5">' + (ready ? "Your account is ready. " : "") + 'Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
+      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:17px;background:' + C.color + ';color:#fff;font:800 20px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
+      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:17px;line-height:1.6;text-align:left"></div>' +
+      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 17px system-ui,sans-serif;padding:12px">Not now</button></div>';
     document.body.appendChild(card);
     var help = card.querySelector("#ri-help");
     card.querySelector("#ri-go").addEventListener("click", function () {
@@ -2599,19 +2635,21 @@ document.addEventListener("click", function (e) {
           : "Tap the <b>menu (three dots)</b> at the top of your browser, then tap <b>Install app</b> or <b>Add to Home screen</b>.";
       }
     });
-    card.querySelector("#ri-later").addEventListener("click", function () { store(C.key + "-later", String(Date.now())); hide(); });
+    card.querySelector("#ri-later").addEventListener("click", function () { hide(); });
   }
   window.__installCard = { show: show };
   // shown once the person has signed in (and again right after sign-up if it was skipped)
-  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); setTimeout(function () { show(false, true); makePill(); }, 700); } }, 1200);
-  var fe = document.getElementById("account-form");
-  if (fe) fe.addEventListener("submit", function () { formUsed = Date.now(); }, true);
+  var startedOut = !signedIn();
+  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); setTimeout(function () { show(false, startedOut); }, 2000); } }, 400);
+  document.addEventListener("submit", function (e) { if (e.target && e.target.id === "account-form") formUsed = Date.now(); }, true);
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("#account-form button")) formUsed = Date.now(); }, true);
+  if (/[?&]installdemo/.test(location.search)) setTimeout(function () { show(true, true); }, 1500);
   var tries = 0, ht = setInterval(function () {
     var c = window.safeBuySupabase;
     if (c && c.auth) {
       clearInterval(ht);
       c.auth.onAuthStateChange(function (event) {
-        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(function () { show(true, true); }, 1400); }
+        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(function () { show(true, true); }, 2000); }
       });
     } else if (++tries > 60) clearInterval(ht);
   }, 300);
