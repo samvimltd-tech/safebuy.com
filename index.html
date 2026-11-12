@@ -1679,6 +1679,20 @@ updateCartCount();
              "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"];
   var libQ = [], readyQ = [], ready = false, tried = {};
   function run(q) { while (q.length) { try { q.shift()(); } catch (e) { console.error(e); } } }
+  /* Safe client options. (1) No sign-in "lock": the library's lock can get stuck behind an old tab or a killed page, and then
+     every request waits forever (screens stay on "Loading..." and a refresh looks signed out). (2) Any request that hangs
+     is cancelled after 30 s so the page shows an error instead of loading forever. */
+  window.__sbOpts = {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: function (name, timeout, fn) { return fn(); } },
+    global: { fetch: function (input, init) {
+      init = Object.assign({}, init || {});
+      var f = window.fetch.bind(window);
+      if (init.signal || typeof AbortController === "undefined") return f(input, init);
+      var ac = new AbortController(), t = setTimeout(function () { try { ac.abort(); } catch (e) {} }, 30000);
+      init.signal = ac.signal;
+      return f(input, init).then(function (r) { clearTimeout(t); return r; }, function (e) { clearTimeout(t); throw e; });
+    } }
+  };
   window.__sbLibLoaded = function (fn) { if (window.supabase) fn(); else libQ.push(fn); };
   window.__sbWhenReady = function (fn) { if (ready) fn(); else readyQ.push(fn); };
   window.__sbMarkReady = function () { if (ready) return; ready = true; run(readyQ); };
@@ -1768,7 +1782,7 @@ updateCartCount();
       failReason = "supabase-config.js is missing, not loaded, or incomplete.";
     } else {
       try {
-        client = window.supabase.createClient(cfg.url, cfg.publishableKey);
+        client = window.supabase.createClient(cfg.url, cfg.publishableKey, window.__sbOpts);
         window.safeBuySupabase = client;
         wrapStorage(client);
       } catch (e) {
@@ -2509,7 +2523,7 @@ document.addEventListener("click", function (e) {
 <script>
 /* The remaining feature files load in order as soon as the connection to the database is ready (or has failed). */
 (function () {
-  var L = ["./messages.js", "./notify.js", "./verify.js", "./lead-capture.js", "./buyer-account.js", "./orders.js", "./account-settings.js", "./delivery.js", "./delivery-orders.js", "./delivery-boost.js", "./bottom-sheet.js", "./pwa.js", "./protect-core.js", "./protected-option.js", "./theme.js", "./admin-plus.js"];
+  var L = ["./messages.js", "./notify.js", "./verify.js", "./lead-capture.js", "./buyer-account.js", "./orders.js", "./account-settings.js", "./delivery.js", "./delivery-orders.js", "./delivery-boost.js", "./bottom-sheet.js", "./protect-core.js", "./protected-option.js", "./theme.js", "./admin-plus.js"];
   function next() {
     if (!L.length) return;
     var s = document.createElement("script"); s.src = L.shift(); s.async = false;
