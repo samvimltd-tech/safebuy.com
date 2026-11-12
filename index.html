@@ -398,39 +398,118 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 <script>
 (function () {
   "use strict";
-  var ev = null, sheet = null;
+  var C = {name: "SafeBuy Buyer", color: "#087f5b", letter: "B", key: "role-install-buyer", skip: false};
+  if (C.skip) return;
+  var ev = null, card = null, pill = null, formUsed = 0, shownThisVisit = false;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
   function standalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
-  function installed() { try { return standalone() || localStorage.getItem("buyer-installed") === "1"; } catch (e) { return standalone(); } }
-  var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  var inApp = /FBAN|FBAV|Instagram|WhatsApp|musical_ly|TikTok|Snapchat|Twitter|Line\/|MicroMessenger|Telegram/i.test(ua);
-  function hideCard() { var c = document.getElementById("sb-home-install"); if (c) c.style.display = "none"; }
-  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); ev = e; });
-  window.addEventListener("appinstalled", function () { try { localStorage.setItem("buyer-installed", "1"); } catch (e) {} closeSheet(); hideCard(); });
-  if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
-  function closeSheet() { if (sheet) { sheet.remove(); sheet = null; } }
-  function steps(list) { return '<ol style="margin:14px 0 0;padding-left:26px;font-size:19px;line-height:1.6;color:#2b3f36">' + list.map(function (x) { return "<li style='margin:8px 0'>" + x + "</li>"; }).join("") + "</ol>"; }
-  function openHelp() {
-    if (sheet) return;
-    var body = inApp ? steps(["This browser cannot install apps.", "Tap the <b>⋮</b> or <b>⋯</b> menu and choose <b>Open in Chrome</b> (Android) or <b>Open in Safari</b> (iPhone).", "Sign in again and tap <b>Install</b>."])
-      : ios ? steps(["Open SafeBuy in <b>Safari</b>.", "Tap the <b>Share</b> button at the bottom.", "Tap <b>Add to Home Screen</b>, then <b>Add</b>."])
-      : steps(["Tap the <b>⋮</b> menu at the top right of Chrome.", "Tap <b>Install app</b> (or <b>Add to Home screen</b>).", "Tap <b>Install</b>."]);
-    sheet = document.createElement("div");
-    sheet.style.cssText = "position:fixed;inset:0;z-index:99995;background:rgba(16,39,29,.6);display:flex;align-items:flex-end;justify-content:center";
-    sheet.innerHTML = '<div role="dialog" aria-label="Install SafeBuy Buyer" style="width:min(520px,100%);background:#fff;border-radius:26px 26px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));font-family:Arial,sans-serif;max-height:88vh;overflow:auto"><div style="font-weight:800;font-size:24px;color:#10231b">Install SafeBuy Buyer</div>' + body + '<button id="sb-help-ok" style="width:100%;margin-top:18px;border:0;border-radius:14px;padding:16px;font:800 19px Arial,sans-serif;color:#fff;background:#087f5b">Got it</button></div>';
-    sheet.addEventListener("click", function (e) { if (e.target === sheet || e.target.id === "sb-help-ok") closeSheet(); });
-    document.body.appendChild(sheet);
-  }
-  // The ONE install button: the green card on the home page (visible only when signed in)
-  document.addEventListener("click", function (e) {
-    var b = e.target.closest && e.target.closest("#sb-home-install"); if (!b) return;
-    if (installed()) { if (window.showToast) showToast("SafeBuy Buyer is already installed on this phone."); return; }
-    if (ev) { var p = ev; ev = null; p.prompt(); if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === "accepted") { try { localStorage.setItem("buyer-installed", "1"); } catch (x) {} hideCard(); } }); }
-    else openHelp();
+  function done() { return standalone() || !!store(C.key + "-done"); }
+  function hide() { if (card) { card.remove(); card = null; } }
+  function hidePill() { if (pill) { pill.remove(); pill = null; } }
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); ev = e; makePill();
   });
-  if (/[?&]installdemo/.test(location.search)) setTimeout(openHelp, 1500);
+  function signedIn() {
+    try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k) && localStorage.getItem(k)) return true; } } catch (e) {}
+    return false;
+  }
+  function makePill() {
+    return; /* floating button removed: only the install sheet is used */
+    pill = document.createElement("button"); pill.type = "button"; pill.id = "role-install";
+    pill.style.cssText = "position:fixed;left:14px;top:70px;z-index:60;border:1px solid " + C.color + ";border-radius:30px;padding:8px 14px;background:#fff;color:" + C.color + ";font:800 13px system-ui,sans-serif";
+    pill.textContent = "⬇ Install " + C.name;
+    pill.addEventListener("click", function () { show(true); });
+    document.body.appendChild(pill);
+  }
+  window.addEventListener("appinstalled", function () { store(C.key + "-done", "1"); hide(); hidePill(); });
+  function show(force, ready) {
+    if (card || done()) return;
+    if (shownThisVisit && !force) return;
+    shownThisVisit = true;
+    var ua = navigator.userAgent, ios = /iphone|ipad|ipod/i.test(ua), inapp = /FBAN|FBAV|Instagram|Telegram|Line\//i.test(ua);
+    card = document.createElement("div");
+    card.id = "role-install-card";
+    card.style.cssText = "position:fixed;left:0;right:0;top:0;bottom:0;z-index:95;background:rgba(16,39,29,.62);display:flex;align-items:flex-end;justify-content:center";
+    card.innerHTML = '<div role="dialog" aria-modal="true" style="width:100vw;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));font-family:system-ui,sans-serif;color:#172b24;text-align:center;max-height:92vh;overflow:auto">' +
+      '<div style="width:64px;height:64px;margin:0 auto 12px;border-radius:18px;background:' + C.color + ';color:#fff;font:800 34px/64px system-ui,sans-serif">' + C.letter + '</div>' +
+      '<h2 style="margin:0 0 8px;font-size:26px">Install ' + C.name + '</h2>' +
+      '<p style="margin:0 0 16px;color:#52645a;font-size:18px;line-height:1.5">' + (ready ? "Your account is ready. " : "") + 'Add the app to your home screen to open it in one tap, with no browser bar.</p>' +
+      '<button id="ri-go" type="button" style="width:100%;border:0;border-radius:14px;padding:17px;background:' + C.color + ';color:#fff;font:800 20px system-ui,sans-serif">' + (ios ? "Show me how" : "Install app") + '</button>' +
+      '<div id="ri-help" style="display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:#f1f7f3;font-size:17px;line-height:1.6;text-align:left"></div>' +
+      '<button id="ri-later" type="button" style="margin-top:10px;border:0;background:transparent;color:#52645a;font:700 17px system-ui,sans-serif;padding:12px">Not now</button></div>';
+    document.body.appendChild(card);
+    var help = card.querySelector("#ri-help");
+    card.querySelector("#ri-go").addEventListener("click", function () {
+      if (ev && !ios) {
+        var p = ev; ev = null; hidePill(); p.prompt();
+        if (p.userChoice) p.userChoice.then(function (r) { if (r && r.outcome === "accepted") store(C.key + "-done", "1"); hide(); });
+      } else {
+        help.style.display = "block";
+        help.innerHTML = inapp ? "This page is open inside another app. Tap the menu and choose <b>Open in browser</b> (Chrome or Safari), then install from there."
+          : ios ? "1. Tap the <b>Share</b> button in Safari (the square with an arrow).<br>2. Scroll and tap <b>Add to Home Screen</b>.<br>3. Tap <b>Add</b>."
+          : "Tap the <b>menu (three dots)</b> at the top of your browser, then tap <b>Install app</b> or <b>Add to Home screen</b>.";
+      }
+    });
+    card.querySelector("#ri-later").addEventListener("click", function () { hide(); });
+  }
+  window.__installCard = { show: show };
+  // shown once the person has signed in (and again right after sign-up if it was skipped)
+  var startedOut = !signedIn();
+  var pt = setInterval(function () { if (window.__sbRecovery) return; if (signedIn()) { clearInterval(pt); setTimeout(function () { show(false, startedOut); }, 2000); } }, 400);
+  document.addEventListener("submit", function (e) { if (e.target && e.target.id === "account-form") formUsed = Date.now(); }, true);
+  document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("#account-form button")) formUsed = Date.now(); }, true);
+  if (/[?&]installdemo/.test(location.search)) setTimeout(function () { show(true, true); }, 1500);
+  var tries = 0, ht = setInterval(function () {
+    var c = window.safeBuySupabase;
+    if (c && c.auth) {
+      clearInterval(ht);
+      c.auth.onAuthStateChange(function (event) {
+        if (event === "SIGNED_IN" && !window.__sbRecovery && Date.now() - formUsed < 30000) { formUsed = 0; setTimeout(function () { show(true, true); }, 2000); }
+      });
+    } else if (++tries > 60) clearInterval(ht);
+  }, 300);
 })();
+
+if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("./sw.js").catch(function () {}); });
 </script>
 <!--/BUYER-INSTALL-->
+<style>
+#sc-quick .quick-link[data-feature="messages"],#sc-quick .quick-link[data-feature="notifications"],#sc-quick .quick-link[data-action="delivery"]{display:none}
+#sc-quick .quick-link.has-new{display:flex}
+#sc-quick .quick-link .ql-new{display:inline-block;margin-left:8px;padding:2px 10px;border-radius:12px;background:#dc2626;color:#fff;font:800 14px Arial,sans-serif;vertical-align:middle}
+</style>
+<script>
+/* Home cards: Messages and Notifications show only when there is something new; Delivery lives in the header. */
+(function () {
+  "use strict";
+  var busy = false, last = 0;
+  function set(feature, n, word) {
+    var b = document.querySelector('#sc-quick .quick-link[data-feature="' + feature + '"]'); if (!b) return;
+    var old = b.querySelector(".ql-new"); if (old) old.remove();
+    b.classList.toggle("has-new", n > 0);
+    if (n > 0) { var t = b.querySelector("span:last-child"); if (t) { var e = document.createElement("span"); e.className = "ql-new"; e.textContent = n + " new"; t.firstChild.after(e); } }
+  }
+  function refresh() {
+    var c = window.safeBuySupabase; if (!c || !c.rpc || busy) return;
+    busy = true;
+    c.auth.getSession().then(function (r) {
+      if (!(r && r.data && r.data.session)) { set("messages", 0); set("notifications", 0); busy = false; return; }
+      return c.rpc("my_unread_counts").then(function (x) {
+        var d = (x && x.data) || {}; set("messages", Number(d.messages || 0)); set("notifications", Number(d.alerts || 0)); busy = false;
+      });
+    }).catch(function () { busy = false; });
+  }
+  function soon() { var n = Date.now(); if (n - last < 1500) return; last = n; refresh(); }
+  setInterval(function () { if (document.visibilityState === "visible") refresh(); }, 30000);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") soon(); });
+  document.addEventListener("sb:pulse", soon); document.addEventListener("sb:order", soon);
+  var tries = 0, h = setInterval(function () {
+    var c = window.safeBuySupabase;
+    if (c && c.auth) { clearInterval(h); refresh(); c.auth.onAuthStateChange(function () { setTimeout(refresh, 600); }); }
+    else if (++tries > 60) clearInterval(h);
+  }, 300);
+})();
+</script>
 <script src="./guard.js?v=1"></script>
 <script src="./switches.js?v=1" defer></script>
 <script src="./seller-plan.js?v=1" defer></script>
@@ -603,8 +682,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
-    <!--BUYER-INSTALL--><button type="button" class="sb-install-btn" id="sb-home-install"><span class="sbi-ico">📲</span><span class="sbi-txt"><b>Get the SafeBuy Buyer app</b><small>Open SafeBuy in one tap from your home screen. Free.</small></span><span class="sbi-go">Install</span></button>
-    <style>#sb-home-install{display:none;align-items:center;gap:14px;width:100%;margin:0 0 22px;padding:16px;border:1px solid #bfe6d4;border-radius:20px;background:linear-gradient(135deg,#f0fbf6,#dff5ea);text-align:left;color:#10231b;box-shadow:0 6px 18px rgba(8,127,91,.10)}body.sb-in #sb-home-install{display:flex}#sb-home-install .sbi-ico{flex-shrink:0;width:52px;height:52px;border-radius:16px;background:#087f5b;display:grid;place-items:center;font-size:26px}#sb-home-install .sbi-txt{flex:1;font-size:19px;line-height:1.3}#sb-home-install small{display:block;font-size:15px;font-weight:400;color:#4f5f57;margin-top:3px}#sb-home-install .sbi-go{flex-shrink:0;background:#087f5b;color:#fff;font-weight:800;font-size:16px;padding:11px 18px;border-radius:14px}@media (display-mode: standalone){#sb-home-install{display:none!important}}</style><!--/BUYER-INSTALL-->
+    
     <div class="paths" id="sc-paths" aria-label="Sell or deliver with SafeBuy NG">
       <a class="path path-sell" href="./seller/" data-door="seller" style="text-decoration:none;color:inherit"><span class="path-ico">🏪</span><span class="path-t"><strong>Sell with us</strong><small>List your products for free</small></span><span class="path-go">→</span></a>
       <a class="path path-ride" href="./rider/" data-door="rider" style="text-decoration:none;color:inherit"><img src="./rider.webp" alt="" width="46" height="46" decoding="async"><span class="path-t"><strong>Deliver with us</strong><small>Earn as a rider</small></span><span class="path-go">→</span></a>
