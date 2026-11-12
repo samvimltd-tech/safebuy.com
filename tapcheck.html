@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>SafeBuy tap check</title>
+<style>body{margin:0;font:18px/1.5 Arial,sans-serif;background:#f7f9f7;color:#172b24;padding:16px}h1{font-size:26px;margin:0 0 6px}.row{background:#fff;border:1px solid #dde7e1;border-radius:14px;padding:12px 14px;margin:10px 0;word-break:break-word}.ok{border-left:8px solid #16a34a}.bad{border-left:8px solid #dc2626;background:#fff5f5}.warn{border-left:8px solid #f59e0b}b{display:block}small{color:#52645a}button{font:800 19px Arial;padding:14px 18px;border:0;border-radius:14px;background:#087f5b;color:#fff;margin:8px 8px 8px 0}iframe{position:absolute;left:-9999px;top:0;width:390px;height:800px;border:0}</style></head><body>
+<h1>SafeBuy tap check</h1><p>Open this page on your live site (same folder as index.html). It tests the site by itself and shows what blocks taps.</p>
+<button id="go">Run the check</button><button id="copy" hidden>Copy report</button><div id="out"></div><iframe id="fr" title="test"></iframe>
+<script>
+var out=document.getElementById("out"),report=[];
+function row(cls,title,txt){report.push((cls==="ok"?"OK   ":cls==="bad"?"FAIL ":"WARN ")+title+" - "+(txt||""));var d=document.createElement("div");d.className="row "+cls;d.innerHTML="<b>"+(cls==="ok"?"✅ ":cls==="bad"?"❌ ":"⚠️ ")+title+"</b><small>"+(txt||"")+"</small>";out.appendChild(d)}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+async function run(){
+  out.innerHTML="";report=[];document.getElementById("copy").hidden=true;
+  var base=location.href.replace(/[^\/]*$/,"");
+  // 1. every file the home page loads
+  var html="";
+  try{var r=await fetch(base+"index.html",{cache:"no-store"});html=await r.text();row(r.ok?"ok":"bad","index.html",r.status+" · "+html.length+" characters");}catch(e){row("bad","index.html","cannot load: "+e.message);return}
+  var srcs=[],m,re=/<script[^>]+src=["']([^"']+)["']/g;while((m=re.exec(html)))srcs.push(m[1]);
+  for(var i=0;i<srcs.length;i++){var u=new URL(srcs[i],base).href;if(u.indexOf(location.origin)!==0)continue;
+    try{var x=await fetch(u,{cache:"no-store"});var t=await x.text();
+      if(!x.ok){row("bad",srcs[i],"missing ("+x.status+")")}
+      else if(/<html|<!doctype/i.test(t.slice(0,200))){row("bad",srcs[i],"returns a web page instead of code. The file is missing or in the wrong folder.")}
+      else{try{new Function(t);row("ok",srcs[i],t.length+" characters")}catch(e){row("bad",srcs[i],"file is damaged or cut off: "+e.message)}}
+    }catch(e){row("bad",srcs[i],"cannot load: "+e.message)}}
+  // 2. the pages's own inline code
+  var inl=[],re2=/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g;while((m=re2.exec(html)))if(m[1].trim()&&!/application\/ld\+json/.test(m[0].slice(0,80)))inl.push(m[1]);
+  var bad=0;inl.forEach(function(c,k){try{new Function(c)}catch(e){bad++;row("bad","Page code block "+(k+1),e.message)}});
+  if(!bad)row("ok","Page code blocks",inl.length+" blocks, no syntax errors");
+  // 3. run the real page and look for errors and blockers
+  var fr=document.getElementById("fr"),errs=[];
+  await new Promise(function(res){fr.onload=res;fr.src=base+"index.html?tapcheck="+Date.now()});
+  var w=fr.contentWindow,d=fr.contentDocument;
+  try{w.addEventListener("error",function(e){errs.push(e.message)})}catch(e){}
+  await sleep(5000);
+  row(w.supabase?"ok":"bad","Sign-in library",w.supabase?"loaded":"NOT loaded. Cards and sign-in cannot work without it.");
+  row(w.safeBuySupabase?"ok":"warn","Connection to Supabase",w.safeBuySupabase?"ready":"not ready (check vendor/supabase-2.45.4.js and supabase-config.js)");
+  var keys=[];try{for(var j=0;j<localStorage.length;j++){var k=localStorage.key(j);if(/^sb-.*-auth-token$/.test(k))keys.push(k)}}catch(e){}
+  row(keys.length?"ok":"warn","Saved sign-in on this phone",keys.length?keys.length+" saved":"none saved. If you signed in on this phone and this says none, the phone is not keeping the sign-in (private mode, or storage blocked).");
+  // blockers over the screen
+  var pts=[[195,300],[195,450],[195,600],[100,700]],blk=[];
+  pts.forEach(function(p){var e=d.elementFromPoint(p[0],p[1]);if(!e)return;var el=e,fixed=null;while(el&&el!==d.body){var cs=w.getComputedStyle(el);if(cs.position==="fixed"){fixed=el;break}el=el.parentElement}if(fixed)blk.push((fixed.id||fixed.className||fixed.tagName)+" at "+p.join(","))});
+  row(blk.length?"bad":"ok","Anything covering the page",blk.length?"A fixed layer is sitting over the page: "+blk.join(" ; "):"nothing covers the screen");
+  var ov=d.getElementById("role-install-card");if(ov)row("warn","Install sheet is open","It covers the page until you tap Not now.");
+  // real click test
+  var card=d.querySelector('#sc-quick [data-feature="orders"], #sc-quick a[href="#shop"], [data-action="sell"]');
+  if(card){var before=d.body.className+"|"+d.querySelectorAll(".open").length;card.click();await sleep(1200);var after=d.body.className+"|"+d.querySelectorAll(".open").length;
+    row(before!==after||/account|sign/i.test(d.body.innerText.slice(0,5000))?"ok":"warn","Tapping a card",before!==after?"the page reacted":"no visible reaction (this can be normal if you are signed out)");}
+  else row("warn","Tapping a card","no home card found");
+  row(errs.length?"bad":"ok","Errors while the page ran",errs.length?errs.slice(0,5).join(" ; "):"none seen");
+  try{var rg=await navigator.serviceWorker.getRegistrations();row("ok","Offline helper",rg.length?rg.map(function(x){return x.scope}).join(" , "):"not installed yet")}catch(e){}
+  row("ok","Done","Take a screenshot of this whole list and send it. Red items are the problem.");
+  document.getElementById("copy").hidden=false;
+}
+document.getElementById("go").onclick=run;
+document.getElementById("copy").onclick=function(){try{navigator.clipboard.writeText(report.join("\n"));this.textContent="Copied"}catch(e){}};
+</script></body></html>
