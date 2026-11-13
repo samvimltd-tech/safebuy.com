@@ -76,6 +76,7 @@ def build():
 
     for d in ("shop", "p"): shutil.rmtree(os.path.join(OUT, d), ignore_errors=True)
     urls = [(BASE + "/", None, "daily", "1.0")]
+    urls.append((BASE + "/deals.html", None, "daily", "0.7"))
     def write(rel, text):
         p = os.path.join(OUT, rel, "index.html"); os.makedirs(os.path.dirname(p), exist_ok=True)
         open(p, "w", encoding="utf-8").write(text)
