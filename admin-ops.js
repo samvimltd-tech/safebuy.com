@@ -24,6 +24,7 @@
 
   var st = document.createElement("style");
   st.textContent = "#ops-panel .ops-nav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}#ops-panel .ops-nav button{border:1px solid #d6dbe0;background:#fff;border-radius:20px;padding:7px 13px;font:700 13px system-ui;cursor:pointer}#ops-panel .ops-nav button.on{background:#12372a;color:#fff;border-color:#12372a}" +
+    "#ops-panel .ops-f label{display:block;margin:8px 0;font-weight:700;font-size:14px}#ops-panel .ops-f input:not([type=checkbox]),#ops-panel .ops-f select{display:block;width:100%;margin-top:4px;padding:10px;border:1px solid #d6dbe0;border-radius:10px;font:16px system-ui;box-sizing:border-box}#ops-panel .ops-act{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}#ops-panel .ops-act .button,#ops-panel .ops-row>.button{width:auto;padding:9px 12px;font-size:14px}" +
     "#ops-panel .ops-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}#ops-panel .ops-c{background:#fff;border:1px solid #e1e5e9;border-radius:14px;padding:12px}#ops-panel .ops-c b{display:block;font-size:24px}#ops-panel .ops-c span{font-size:12.5px;color:#5b6670}" +
     "#ops-panel .ops-spark{display:flex;align-items:flex-end;gap:4px;height:36px;margin-top:6px}#ops-panel .ops-spark i{flex:1;background:#12372a;border-radius:3px 3px 0 0;min-height:2px;opacity:.85}" +
     "#ops-panel .ops-row{background:#fff;border:1px solid #e1e5e9;border-radius:14px;padding:12px;margin-bottom:10px}#ops-panel .ops-row label{display:flex;gap:10px;align-items:flex-start;font-weight:600}#ops-panel .ops-row input[type=text],#ops-panel .ops-row select,#ops-panel .ops-row textarea{width:100%;box-sizing:border-box;margin-top:6px;padding:9px;border:1px solid #cfd5da;border-radius:9px;font:inherit}" +
@@ -84,7 +85,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["adcentre", "Ad Centre"], ["cards", "Cards"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -100,7 +101,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup, adcentre: pAdCentre, cards: pCards })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -619,6 +620,119 @@
       } catch (e) { msg.className = "ops-bad"; msg.textContent = e.message; b.disabled = false; } }; });
   }
 
+
+  /* ---- Cards: switch card payments and automatic renewals on/off ---- */
+  async function pCards(my) {
+    var d; try { d = await rpc("admin_autorenew"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "autorenew.sql")); return; }
+    if (stale(my)) return;
+    var NAMES = { badge: "Verified badge", promo: "Promotion", boost: "Shop boost", ad: "Banner advert", social_pass: "Social Pass" };
+    body('<div class="ops-row"><b>Card payments and automatic renewal</b><p class="muted">When ON, sellers see a <b>Pay by card</b> button on every payment (Paystack) and can tick <b>Renew automatically</b>. Bank transfer keeps working. Turn this ON only after the Paystack server function is deployed and tested with a small real payment.</p>' +
+      '<p>Status: <b class="' + (d.enabled ? "ops-ok" : "ops-bad") + '">' + (d.enabled ? "ON" : "OFF") + '</b></p><button class="button full" type="button" id="cd-t">' + (d.enabled ? "Turn card payments OFF" : "Turn card payments ON") + '</button><p id="cd-m" class="muted" role="status"></p></div>' +
+      '<div class="ops-grid">' + card(d.cards, "saved cards") + card(d.active, "active renewals") + card(d.past_due, "stopped (failed)") + "</div>" +
+      (d.rows && d.rows.length ? d.rows.map(function (r) { return '<div class="ops-row"><b>' + esc(r.shop || "Seller") + " · " + esc(NAMES[r.tool] || r.tool) + '</b><p class="muted">' + esc(r.status) + (r.next ? " · next charge " + when(r.next) : "") + (r.amount_kobo ? " · " + money(r.amount_kobo) : "") + (r.error ? " · " + esc(r.error) : "") + "</p></div>"; }).join("") : '<p class="muted">No automatic renewals yet.</p>'));
+    $("cd-t").onclick = async function () {
+      if (!d.enabled && !window.confirm("Turn card payments ON for all sellers? Make sure Paystack is set up and tested.")) return;
+      try { await rpc("admin_set_cards", { p_enabled: !d.enabled }); pCards(my); } catch (e) { $("cd-m").className = "ops-bad"; $("cd-m").textContent = e.message; }
+    };
+  }
+
+  /* ---- Ad Centre: Consolidation Advertising command centre ---- */
+  var CH = ["site", "facebook", "instagram", "tiktok", "google"], CHN = { site: "SafeBuy site", facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", google: "Google" };
+  function nk(id) { var v = Number(($(id) || {}).value); return Math.round((isFinite(v) ? v : 0) * 100); }
+  async function pAdCentre(my) {
+    var d; try { d = await rpc("admin_consol_overview"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "consolidation.sql")); return; }
+    if (stale(my)) return;
+    var h = '<div class="ops-grid">' + card(d.active, "active campaigns") + card(d.sellers, "participating sellers") + card(d.pending, "products awaiting approval") + card(money(d.net_kobo), "net advertising earnings") + "</div>" +
+      '<div class="ops-row"><b>Automation: <span class="' + (d.auto ? "ops-ok" : "ops-bad") + '">' + (d.auto ? "ON" : "OFF") + '</span></b><p class="muted">When ON, SafeBuy creates the daily, weekly and monthly campaigns itself, opens registration, sends reminders, closes at the deadline and launches only campaigns that are paid, approved and funded. Times are West Africa Time.</p>' +
+      '<button class="button full" type="button" id="ac-auto">' + (d.auto ? "Turn automation OFF" : "Turn automation ON") + '</button><button class="button full" type="button" id="ac-run" style="margin-top:8px">Run the scheduler now</button><p id="ac-m" class="muted" role="status"></p></div>';
+    h += '<div class="ops-row"><b>Campaign settings</b><p class="muted">Prices and limits used for every new campaign. Advertising spend is separate from SafeBuy earnings.</p></div>';
+    (d.types || []).forEach(function (t) {
+      h += '<div class="ops-row" data-type="' + t.code + '"><b>' + esc(t.name) + '</b><div class="ops-f">' +
+        '<label>Fee per seller (₦)<input type="number" min="0" step="100" data-k="fee" value="' + (t.fee_kobo / 100) + '"></label>' +
+        '<label>Minimum sellers<input type="number" min="1" data-k="min" value="' + t.min_sellers + '"></label><label>Maximum sellers<input type="number" min="1" data-k="max" value="' + t.max_sellers + '"></label>' +
+        '<label>Products per seller<input type="number" min="1" data-k="per" value="' + t.products_per_seller + '"></label><label>Advertising budget (₦)<input type="number" min="0" step="100" data-k="budget" value="' + (t.budget_kobo / 100) + '"></label>' +
+        '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-k="auto" style="width:22px;height:22px" ' + (t.auto_approve ? "checked" : "") + '> Approve products automatically</label>' +
+        '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-k="on" style="width:22px;height:22px" ' + (t.enabled ? "checked" : "") + '> Create these campaigns</label>' +
+        '<div>' + CH.map(function (c) { return '<label style="display:inline-flex;gap:6px;align-items:center;margin-right:12px"><input type="checkbox" data-ch="' + c + '" style="width:20px;height:20px" ' + ((t.channels || []).indexOf(c) >= 0 ? "checked" : "") + '>' + CHN[c] + "</label>"; }).join("") + '</div></div>' +
+        '<button class="button full" type="button" data-act="savetype" data-code="' + t.code + '">Save ' + esc(t.name) + "</button></div>";
+    });
+    h += '<div class="ops-row"><b>Campaigns</b><button class="button full" type="button" id="ac-new" style="margin:6px 0">+ New campaign</button><button class="button full" type="button" id="ac-csv">Export revenue and expenses (CSV)</button></div>';
+    var SC = { draft: "Opens soon", open: "Registration open", closed: "Registration closed", running: "Running", paused: "Paused", completed: "Completed", cancelled: "Cancelled" };
+    (d.campaigns || []).forEach(function (c) {
+      var net = c.collected_kobo - c.ad_spend_kobo - c.creative_kobo - c.ops_kobo - c.fees_kobo;
+      h += '<div class="ops-row" data-c="' + c.id + '"><b>' + esc(c.name) + (c.bucket ? " · Bucket " + String(c.bucket).padStart(3, "0") : "") + ' <span class="muted">· ' + (c.full && c.status === "closed" ? "FULL" : esc(SC[c.status] || c.status)) + "</span></b>" +
+        '<p class="muted">Places: ' + (c.occupied || 0) + " of " + c.max + (c.waiting ? " · " + c.waiting + " on the waiting list" : "") + "<br>Registration closes " + when(c.deadline_at) + " · launches " + when(c.launch_at) + (c.ends_at ? " · ends " + when(c.ends_at) : "") + "<br>Paid " + c.paid + " of " + c.joined + " joined (minimum " + c.min + ", maximum " + c.max + ") · products: " + c.approved + " approved, " + c.pending + " waiting" + (c.refund_due ? " · <b class=\"ops-bad\">" + c.refund_due + " refund(s) due</b>" : "") + "</p>" +
+        (c.block ? '<p class="ops-bad">' + esc(c.block) + "</p>" : "") +
+        '<p>Collected ' + money(c.collected_kobo) + (c.refunded_kobo ? " · refunded " + money(c.refunded_kobo) : "") + " · ad spend " + money(c.ad_spend_kobo) + " · creative " + money(c.creative_kobo) + " · operations " + money(c.ops_kobo) + " · payment fees " + money(c.fees_kobo) + '<br><b>Net SafeBuy earnings: ' + money(net) + "</b> <span class=\"muted\">(budget set: " + money(c.budget_kobo) + ")</span></p>" +
+        (c.status === "running" || c.status === "completed" || c.status === "paused" ? '<p class="muted">Counted on SafeBuy: ' + c.impressions + " shown · " + c.clicks + " opened · " + c.enquiries + " enquiries" + ((c.platform || []).length ? "<br>Platform-reported (not added to the above): " + c.platform.map(function (x) { return esc(CHN[x.channel] || x.channel) + " " + x.impressions + " shown / " + x.clicks + " clicks"; }).join("; ") : "") + "</p>" : "") +
+        '<div class="ops-act"><button type="button" class="button" data-act="review">Review products</button>' + (c.pending ? '<button type="button" class="button" data-act="approveall">Approve all waiting (' + c.pending + ")</button>" : "") +
+        (c.status === "open" ? '<button type="button" class="button" data-act="status" data-to="closed">Close registration</button>' : "") + (c.status === "running" ? '<button type="button" class="button" data-act="status" data-to="paused">Pause</button>' : "") + (c.status === "paused" ? '<button type="button" class="button" data-act="status" data-to="running">Resume</button>' : "") +
+        (["draft", "open", "closed", "paused", "running"].indexOf(c.status) >= 0 ? '<button type="button" class="button" data-act="status" data-to="cancelled">Cancel and refund</button><button type="button" class="button" data-act="budget" data-b="' + c.budget_kobo + '">Set budget</button>' : "") +
+        '<button type="button" class="button" data-act="events">History</button><button type="button" class="button" data-act="expense">Add expense</button><button type="button" class="button" data-act="stats">Platform numbers</button></div>' +
+        ((c.captions || []).length ? '<details><summary>Captions and posting</summary>' + c.captions.map(function (x) {
+          var po = (c.posts || []).filter(function (q) { return q.channel === x.channel; })[0];
+          return '<div class="ops-row"><b>' + esc(CHN[x.channel] || x.channel) + (po ? ' <span class="muted">· ' + esc(po.status) + "</span>" : "") + '</b><p style="white-space:pre-wrap">' + esc(x.caption) + '</p><button type="button" class="button" data-act="copy" data-t="' + esc(x.caption) + '">Copy caption</button>' + (po ? '<button type="button" class="button" data-act="posted" data-ch="' + esc(x.channel) + '">Mark as posted</button>' + (po.url ? ' <a href="' + esc(po.url) + '" target="_blank" rel="noopener">View post</a>' : "") : "") + "</div>"; }).join("") + "</details>" : "") +
+        '<div class="ac-rev"></div></div>';
+    });
+    h += '<p class="muted">Publishing to Facebook, Instagram and TikTok is done by you from the captions above (copy, post, then mark as posted) until those platform accounts are approved for automatic posting.</p><div id="ac-new-box"></div>';
+    body(h);
+    var msg = function (t, bad) { var m = $("ac-m"); if (m) { m.className = bad ? "ops-bad" : "ops-ok"; m.textContent = t; } };
+    var again = function () { if (!stale(my)) pAdCentre(my); };
+    $("ac-auto").onclick = async function () { if (!d.auto && !window.confirm("Turn automation ON? SafeBuy will start creating campaigns and notifying sellers.")) return; try { await rpc("admin_consol_auto", { p_on: !d.auto }); again(); } catch (e) { msg(e.message, true); } };
+    $("ac-run").onclick = async function () { msg("Running…"); try { var r = await rpc("admin_consol_run"); msg("Done. Created " + r.created + ", opened " + r.opened + ", closed " + r.closed + ", launched " + r.launched + ", completed " + r.completed + "."); setTimeout(again, 1800); } catch (e) { msg(e.message, true); } };
+    $("ac-csv").onclick = function () {
+      var rows = [["Campaign", "Type", "Status", "Paid sellers", "Collected NGN", "Refunded NGN", "Ad spend NGN", "Creative NGN", "Operations NGN", "Payment fees NGN", "Net NGN"]];
+      (d.campaigns || []).forEach(function (c) { rows.push([c.name, c.type, c.status, c.paid, c.collected_kobo / 100, c.refunded_kobo / 100, c.ad_spend_kobo / 100, c.creative_kobo / 100, c.ops_kobo / 100, c.fees_kobo / 100, (c.collected_kobo - c.ad_spend_kobo - c.creative_kobo - c.ops_kobo - c.fees_kobo) / 100]); });
+      var csv = rows.map(function (r) { return r.map(function (x) { return '"' + String(x).replace(/"/g, '""') + '"'; }).join(","); }).join("\n");
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "safebuy-campaigns.csv"; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 500);
+    };
+    $("ac-new").onclick = function () {
+      var iso = function (h) { var t = new Date(Date.now() + h * 3600e3 + 3600e3); return t.toISOString().slice(0, 16); };
+      $("ac-new-box").innerHTML = '<div class="ops-row"><b>New campaign</b><div class="ops-f"><label>Type<select id="nc-t"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label><label>Name<input id="nc-n" maxlength="80"></label>' +
+        '<label>Registration opens<input type="datetime-local" id="nc-o" value="' + iso(0) + '"></label><label>Registration closes<input type="datetime-local" id="nc-d" value="' + iso(48) + '"></label><label>Launches<input type="datetime-local" id="nc-l" value="' + iso(60) + '"></label></div>' +
+        '<button class="button full" type="button" id="nc-go">Create campaign</button><p class="muted">Times are your phone\'s time. Settings come from the type above.</p></div>';
+      $("nc-go").onclick = async function () { try { await rpc("admin_consol_create", { p_type: $("nc-t").value, p_name: $("nc-n").value, p_opens: new Date($("nc-o").value).toISOString(), p_deadline: new Date($("nc-d").value).toISOString(), p_launch: new Date($("nc-l").value).toISOString() }); again(); } catch (e) { msg(e.message, true); alert(e.message); } };
+      $("ac-new-box").scrollIntoView({ behavior: "smooth" });
+    };
+    panel.querySelectorAll("[data-act]").forEach(function (b) {
+      b.onclick = async function () {
+        var act = b.dataset.act, row = b.closest("[data-c]"), cid = row && row.dataset.c;
+        try {
+          if (act === "savetype") {
+            var r = b.closest("[data-type]"), g = function (k) { return r.querySelector('[data-k="' + k + '"]'); };
+            await rpc("admin_consol_type_set", { p_code: b.dataset.code, p_fee: Math.round(Number(g("fee").value) * 100), p_min: Number(g("min").value), p_max: Number(g("max").value), p_per: Number(g("per").value), p_budget: Math.round(Number(g("budget").value) * 100), p_enabled: g("on").checked, p_auto_approve: g("auto").checked,
+              p_channels: [].slice.call(r.querySelectorAll("[data-ch]")).filter(function (x) { return x.checked; }).map(function (x) { return x.dataset.ch; }) });
+            b.textContent = "Saved ✓"; return;
+          }
+          if (act === "copy") { if (navigator.clipboard) await navigator.clipboard.writeText(b.dataset.t); b.textContent = "Copied ✓"; return; }
+          if (act === "status") { if (b.dataset.to === "cancelled" && !window.confirm("Cancel this campaign? Paid sellers are marked for refund and told.")) return; await rpc("admin_consol_status", { p_id: cid, p_status: b.dataset.to }); again(); return; }
+          if (act === "approveall") { var n = await rpc("admin_consol_approve_all", { p_campaign: cid }); alert(n + " product(s) approved."); again(); return; }
+          if (act === "budget") { var v = window.prompt("Advertising budget for this campaign in ₦ (a campaign only launches when collections cover it):", String(Number(b.dataset.b) / 100)); if (v === null) return;
+            var c = (d.campaigns || []).filter(function (x) { return x.id === cid; })[0];
+            await rpc("admin_consol_edit", { p_id: cid, p_name: c.name, p_fee: c.fee_kobo, p_min: c.min, p_max: c.max, p_per: c.per_seller, p_budget: Math.round(Number(v) * 100), p_deadline: null, p_launch: null, p_auto_approve: c.auto_approve }); again(); return; }
+          if (act === "expense") { var k = window.prompt("Type of expense: ad_spend, creative, operations or processing", "ad_spend"); if (!k) return; var a = window.prompt("Amount in ₦"); if (a === null) return; var note = window.prompt("Note (optional)") || "";
+            await rpc("admin_consol_expense", { p_id: cid, p_kind: k.trim(), p_amount: Math.round(Number(a) * 100), p_note: note }); again(); return; }
+          if (act === "stats") { var ch = window.prompt("Channel: facebook, instagram, tiktok or google", "facebook"); if (!ch) return; var im = window.prompt("Impressions reported by " + ch); if (im === null) return; var ck = window.prompt("Clicks reported by " + ch); if (ck === null) return;
+            await rpc("admin_consol_platform_stats", { p_id: cid, p_channel: ch.trim(), p_impressions: Number(im) || 0, p_clicks: Number(ck) || 0, p_note: "typed in by admin" }); again(); return; }
+          if (act === "posted") { var url = window.prompt("Link to the post (https://…), or leave empty"); if (url === null) return; await rpc("admin_consol_post", { p_id: cid, p_channel: b.dataset.ch, p_status: "posted", p_url: url }); again(); return; }
+          if (act === "events") { var ev = await rpc("admin_consol_events", { p_campaign: cid }); var bx = row.querySelector(".ac-rev");
+            bx.innerHTML = ev.length ? ev.map(function (x) { return '<p class="muted" style="margin:4px 0">' + when(x.at) + " · <b>" + esc(String(x.kind).replace(/_/g, " ")) + "</b>" + (x.shop ? " · " + esc(x.shop) : "") + (x.detail ? " · " + esc(x.detail) : "") + "</p>"; }).join("") : '<p class="muted">No events yet.</p>'; return; }
+          if (act === "review") {
+            var box = row.querySelector(".ac-rev"); if (box.innerHTML) { box.innerHTML = ""; return; }
+            box.innerHTML = '<p class="muted">Loading…</p>'; var list = await rpc("admin_consol_pending", { p_campaign: cid });
+            box.innerHTML = list.length ? list.map(function (x) {
+              return '<div class="ops-row" data-i="' + x.id + '" style="display:flex;gap:10px;align-items:center">' + (x.image ? '<img src="' + esc(x.image) + '" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px" referrerpolicy="no-referrer">' : "") +
+                '<div style="flex:1"><b>' + esc(x.name || "Product") + "</b><br><small>" + esc(x.shop) + " · " + money(x.price_kobo) + (x.in_stock ? "" : " · OUT OF STOCK") + (x.paid ? "" : " · NOT PAID YET") + " · " + esc(x.status) + (x.reason ? " (" + esc(x.reason) + ")" : "") + '</small></div>' +
+                '<button type="button" class="button" data-d="1">Approve</button><button type="button" class="button" data-d="0">Reject</button></div>'; }).join("") : '<p class="muted">No products yet.</p>';
+            box.querySelectorAll("[data-d]").forEach(function (q) { q.onclick = async function () {
+              var yes = q.dataset.d === "1", why = ""; if (!yes) { why = window.prompt("Reason for the seller (they will see it):"); if (!why) return; }
+              try { await rpc("admin_consol_decide", { p_id: q.closest("[data-i]").dataset.i, p_approve: yes, p_reason: why }); q.closest("[data-i]").style.opacity = ".5"; q.parentNode.querySelectorAll("button").forEach(function (z) { z.disabled = true; }); } catch (e) { alert(e.message); } }; });
+          }
+        } catch (e) { alert(e.message); }
+      };
+    });
+  }
+
   async function pPlans(my) {
     var d;
     try { d = await rpc("admin_subscriptions"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "seller_plans.sql")); return; }
@@ -716,7 +830,12 @@
     ["policy", "Read the About, Terms, Privacy and Refund pages and put in a real support contact"],
     ["order", "Tested one full order with 3 accounts: buyer, seller, rider"],
     ["backup", "Downloaded a first backup from the Backup tab"],
-    ["support", "Saved support email and WhatsApp in Site content"]
+    ["support", "Saved support email and WhatsApp in Site content"],
+    ["sql_cards", "Ran autorenew.sql, consolidation.sql and smart_adslot.sql (cards, Ad Centre)"],
+    ["deals", "Uploaded deals.html and opened it once to check it loads"],
+    ["paystack", "Deployed the paystack-cards function (JWT check OFF) and set PAYSTACK_SECRET + CRON_KEY"],
+    ["hook", "Added the Paystack webhook URL and the hourly renewals.yml GitHub workflow"],
+    ["cardson", "Turned on Admin > Control > Cards, then Ad Centre > Automation"]
   ];
   async function pChecklist(my) {
     var s;
