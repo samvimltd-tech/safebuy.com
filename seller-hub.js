@@ -27,8 +27,18 @@
     "#sh{position:fixed;inset:0;z-index:320;display:none;flex-direction:column;background:#f7f9f7;color:#172b24;font-family:Arial,Helvetica,sans-serif}#sh.open{display:flex}" +
     ".sh-top{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:#fff;border-bottom:1px solid #e6ece8}.sh-top strong{flex:1;font-size:17px}" +
     ".sh-top button{width:40px;height:40px;border:0;border-radius:50%;background:#edf6ef;color:#066548;font-size:20px;cursor:pointer}" +
-    ".sh-body{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;max-width:640px;width:100%;margin:0 auto}" +
+    ".sh-body{box-sizing:border-box;overflow-x:hidden;flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;max-width:640px;width:100%;margin:0 auto}" +
     ".sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
+    ".sh-hero{box-sizing:border-box;background:linear-gradient(135deg,#066548,#0a8f66);color:#fff;border-radius:16px;padding:16px;margin:0 0 12px}.sh-hero b{display:block;font-size:20px;line-height:1.25;margin:0 0 6px}.sh-hero span{font-size:16px;line-height:1.45;opacity:.95}" +
+    ".sh-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 12px}.sh-steps div{overflow-wrap:anywhere;background:#fff;border:1px solid #e6ece8;border-radius:12px;padding:8px 4px;text-align:center;font-size:13px;font-weight:700;color:#172b24;line-height:1.25}.sh-steps i{display:block;width:26px;height:26px;line-height:26px;margin:0 auto 4px;border-radius:50%;background:#087f5b;color:#fff;font-style:normal;font-size:14px}" +
+    ".sh-plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 14px}.sh-plan{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;border:2px solid #cfe3d8;border-radius:14px;background:#fff;padding:10px 4px;cursor:pointer;font-family:Arial,sans-serif;color:#172b24;touch-action:manipulation}.sh-plan .e{font-size:22px}.sh-plan b{font-size:14px}.sh-plan .pr{font-size:18px;font-weight:700;color:#087f5b}.sh-plan small{overflow-wrap:anywhere;font-size:12px;color:#52675c;line-height:1.3}.sh-plan:active{transform:scale(.97)}" +
+    ".sh-h{margin:6px 0 8px;font-size:17px;color:#172b24}.sh-fine ul{margin:6px 0 0;padding-left:20px;color:#52675c;font-size:15px;line-height:1.55}" +
+    ".sh-feat{box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;margin:0 0 12px;padding:14px;border:0;border-radius:16px;background:linear-gradient(135deg,#066548,#0a8f66);color:#fff;text-align:left;cursor:pointer;font-family:Arial,sans-serif;touch-action:manipulation}.sh-feat .e{font-size:28px}.sh-feat b{display:block;font-size:17px;line-height:1.25}.sh-feat small{display:block;font-size:14px;line-height:1.35;opacity:.95;margin-top:2px}.sh-feat .go{margin-left:auto;font-size:26px}.sh-feat:active{transform:scale(.98)}" +
+    ".sh-cd{display:block;font-size:13px;font-weight:700;color:#b45309;margin-top:2px}.sh-cd.late{color:#b42318}" +
+    ".sh-fill{transform-origin:left;animation:shf .8s ease-out}.sh-fill.hot{animation:shf .8s ease-out,shp 1.6s ease-in-out .8s infinite}@keyframes shf{from{transform:scaleX(0)}}@keyframes shp{50%{opacity:.6}}" +
+    ".sh-anim>*{animation:shin .28s ease-out both}.sh-anim>*:nth-child(2){animation-delay:.04s}.sh-anim>*:nth-child(3){animation-delay:.08s}.sh-anim>*:nth-child(4){animation-delay:.12s}.sh-anim>*:nth-child(n+5){animation-delay:.16s}@keyframes shin{from{opacity:0;transform:translateY(8px)}}" +
+    ".sh-feat small{transition:opacity .35s}.sh-feat small.fade{opacity:0}" +
+    "@media (prefers-reduced-motion:reduce){#sh *{animation:none!important;transition:none!important}}" +
     ".sh-skel i{display:block;height:64px;border-radius:14px;margin:0 0 10px;background:linear-gradient(90deg,#eef2ef 25%,#f7faf8 50%,#eef2ef 75%);background-size:200% 100%;animation:shk 1.1s linear infinite}@keyframes shk{to{background-position:-200% 0}}" +
     ".sh-btn,.sh-tile,.sh-back,#sh-sheet button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.sh-btn:active,.sh-tile:active{transform:scale(.98);opacity:.9}" +
     ".sh-tile{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid #e6ece8;border-radius:16px;background:#fff;padding:14px 12px;font:700 14px Arial,sans-serif;color:#172b24;cursor:pointer;min-height:88px}" +
@@ -76,7 +86,7 @@
   async function open(view) {
     cur = view || "home"; show(); titleEl.textContent = TITLES[cur] || "Grow my business"; backBtn.hidden = cur === "home";
     bodyEl.scrollTop = 0;
-    if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><p style="color:#52675c;font-size:16px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
+    if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><button type="button" class="sh-feat" data-hub="consol"><span class="e">🤝</span><span><b>Advertise together from ₦1,000</b><small id="sh-feat-s">Join other sellers. We promote everyone\u2019s products. Tap to see.</small></span><span class="go">›</span></button><p style="color:#52675c;font-size:16px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
     var v = cur, seen = viewCache[v];
     if (seen) { bodyEl.innerHTML = seen; wire(v); }
     else bodyEl.innerHTML = '<div class="sh-skel" aria-busy="true" aria-label="Loading"><i></i><i></i><i></i></div>';
@@ -85,10 +95,43 @@
       viewCache[v] = html;
       if (cur !== v) return;
       var ae = document.activeElement, typing = seen && ae && bodyEl.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
-      if (!seen || (html !== seen && !typing)) { var top = bodyEl.scrollTop; bodyEl.innerHTML = html; wire(v); if (seen) bodyEl.scrollTop = top; }
+      if (!seen || (html !== seen && !typing)) { var top = bodyEl.scrollTop; bodyEl.innerHTML = html; wire(v); if (seen) bodyEl.scrollTop = top; else flash(); }
     } catch (e) { if (cur === v && !seen) bodyEl.innerHTML = err(e); }
   }
   var viewCache = {};
+  function flash() { bodyEl.classList.add("sh-anim"); setTimeout(function () { bodyEl.classList.remove("sh-anim"); }, 600); }
+
+  /* ---- live motion: countdowns tick every second; the campaign list refreshes itself ---- */
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function tick() {
+    if (!sh.classList.contains("open")) return;
+    bodyEl.querySelectorAll("[data-cd]").forEach(function (el) {
+      var ms = new Date(el.dataset.cd).getTime() - Date.now(); if (isNaN(ms)) return;
+      if (ms <= 0) { el.textContent = "Registration is closing now"; el.className = "sh-cd late"; return; }
+      var d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4), sec = Math.floor(ms % 6e4 / 1e3);
+      el.textContent = "⏳ Closes in " + (d ? d + "d " : "") + (d || h ? h + "h " : "") + two(m) + "m" + (d ? "" : " " + two(sec) + "s");
+      el.className = "sh-cd" + (ms < 36e5 ? " late" : "");
+    });
+  }
+  setInterval(tick, 1000);
+  var rot = 0;
+  setInterval(function () {
+    var el = document.getElementById("sh-feat-s"); if (!el || !sh.classList.contains("open") || cur !== "home" || document.hidden) return;
+    var L = ["Join other sellers. We promote everyone\u2019s products. Tap to see.", "Daily from \u20a61,000 \u00b7 Weekly \u20a63,000 \u00b7 Monthly \u20a65,000", "You pay only after choosing your products."];
+    ((CON && CON.campaigns) || []).filter(function (c) { return c.status === "open" && c.spots_left > 0; }).slice(0, 3).forEach(function (c) { L.push((TYPE_LABEL[c.type] || "") + ": " + c.spots_left + " places left"); });
+    rot = (rot + 1) % L.length; el.classList.add("fade");
+    setTimeout(function () { el.textContent = L[rot]; el.classList.remove("fade"); }, 350);
+  }, 4500);
+  var ticking = false;
+  setInterval(async function () {
+    if (ticking || document.hidden || !sh.classList.contains("open") || cur !== "consol") return;
+    ticking = true;
+    try {
+      var ae = document.activeElement; if (ae && bodyEl.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+      var prev = viewCache.consol, html = await vConsol(); viewCache.consol = html;
+      if (cur === "consol" && html !== prev) { var top = bodyEl.scrollTop; bodyEl.innerHTML = html; wire("consol"); bodyEl.scrollTop = top; }
+    } catch (e) {} finally { ticking = false; }
+  }, 25000);
   /* after any button press, drop remembered screens so the next screen is always fresh */
   document.addEventListener("click", function (ev) { if (ev.target.closest && ev.target.closest("#sh-body .sh-btn, #sh-body button[data-wait-join], #sh-body button[data-wait-leave]")) viewCache = {}; }, true);
 
@@ -243,21 +286,32 @@
   async function vConsol() {
     var r = await client().rpc("consol_overview"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run consolidation.sql in Supabase." : r.error.message);
     var d = r.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings)."); CON = d;
-    var cs = d.campaigns || [];
-    var intro = '<div class="sh-card"><p>Join shared advertising campaigns with other sellers. SafeBuy NG promotes everyone’s products together on the SafeBuy website and our social pages. Every product is checked first, so joining does not guarantee that each product is approved.</p></div>';
-    if (!cs.length) return intro + '<div class="sh-card"><h3>No campaign is open right now</h3><p>New daily, weekly and monthly campaigns open by themselves. You will get a notification when registration opens.</p></div>';
-    return intro + cs.map(conCard).join("");
+    var cs = d.campaigns || [], by = { daily: null, weekly: null, monthly: null };
+    cs.forEach(function (c) { if (c.status === "open" && by[c.type] === null) by[c.type] = c; });
+    var mine = cs.filter(function (c) { return c.joined; }), rest = cs.filter(function (c) { return !c.joined; });
+    var PLANS = [["daily", "☀️", "Daily deals", "Quick one-day push", "1–2 products"], ["weekly", "🗓️", "Weekly deals", "A full week of exposure", "up to 3 products"], ["monthly", "🏆", "Mega monthly", "Biggest reach, monthly report", "up to 5 products"]];
+    var h = '<div class="sh-hero"><b>Share the cost. Reach more buyers.</b><span>Join other sellers. SafeBuy NG advertises all your products together on the website and social pages.</span></div>' +
+      '<div class="sh-steps"><div><i>1</i>Pick a plan</div><div><i>2</i>Choose products</div><div><i>3</i>Pay the fee</div><div><i>4</i>We approve and advertise</div></div>' +
+      '<div class="sh-plans">' + PLANS.map(function (p) {
+        var c = by[p[0]];
+        return '<button type="button" class="sh-plan" data-con-go="' + p[0] + '"><span class="e">' + p[1] + "</span><b>" + p[2] + "</b><span class=\"pr\">" + (c ? naira(c.fee_kobo) : "Soon") + "</span><small>" + p[4] + "</small><small>" + (c ? (c.spots_left > 0 ? c.spots_left + " places left" : "Full") : "Opens automatically") + "</small></button>";
+      }).join("") + "</div>";
+    if (mine.length) h += '<h3 class="sh-h">My campaigns</h3>' + mine.map(conCard).join("");
+    if (rest.length) h += '<h3 class="sh-h" id="sh-con-list">Open for you</h3>' + rest.map(conCard).join("");
+    else if (!mine.length) h += '<div class="sh-card"><h3>No campaign is open right now</h3><p>New daily, weekly and monthly campaigns open by themselves. You will get a notification when registration opens.</p></div>';
+    h += '<div class="sh-card sh-fine"><b>Good to know</b><ul><li>You pay only after choosing your products.</li><li>Every product is checked first. Joining does not guarantee approval.</li><li>If a campaign does not go ahead, your fee is refunded.</li><li>You see your own clicks and enquiries after it starts.</li></ul></div>';
+    return h;
   }
   function conCard(c) {
     var st = c.stats || {}, items = c.items || [], bk = c.bucket ? " · Bucket " + String(c.bucket).padStart(3, "0") : "", h = '<div class="sh-card"><h3>' + esc(c.name) + esc(bk) + "</h3>";
     var open = c.status === "open", live = c.status === "running" || c.status === "paused", done = c.status === "completed";
     h += '<p style="margin:0 0 6px">' + pill(TYPE_LABEL[c.type] || c.type) + " " + pill(open ? "Registration open" : c.full && c.status === "closed" ? "FULL" : c.status === "draft" ? "Opens " + fdt(c.opens_at) : live ? "Live now" : done ? "Finished" : c.status === "closed" ? "Registration closed" : c.status, open || live ? "approved" : c.status === "cancelled" ? "rejected" : "") + "</p>";
     h += '<div class="sh-row" style="flex-wrap:wrap"><div><small>Fee to join</small><b>' + naira(c.fee_kobo) + '</b></div><div><small>Products you can enter</small><b>' + c.per_seller + "</b></div></div>" +
-      '<div class="sh-row" style="flex-wrap:wrap"><div><small>Registration closes</small><b>' + fdt(c.deadline_at) + '</b></div><div><small>Launches</small><b>' + fdt(c.launch_at) + "</b></div></div>";
+      '<div class="sh-row" style="flex-wrap:wrap"><div><small>Registration closes</small><b>' + fdt(c.deadline_at) + '</b>' + (open ? '<span class="sh-cd" data-cd="' + esc(c.deadline_at) + '"></span>' : '') + '</div><div><small>Launches</small><b>' + fdt(c.launch_at) + "</b></div></div>";
     if (c.max) {
       var pct = Math.min(100, Math.round((c.occupied || 0) / c.max * 100)), left = c.spots_left;
       h += '<div style="margin:8px 0 2px;font-weight:700;font-size:16px">' + (c.occupied || 0) + " of " + c.max + ' places taken' + (open ? (left > 0 ? " · " + left + " left" : " · " + (c.full ? "FULL" : "all reserved")) : c.full ? " · FULL" : "") + '</div>' +
-        '<div style="height:12px;background:#e3ece7;border-radius:8px;overflow:hidden"><i style="display:block;height:100%;width:' + pct + '%;background:' + (pct >= 100 ? "#c2410c" : "#087f5b") + '"></i></div>';
+        '<div style="height:12px;background:#e3ece7;border-radius:8px;overflow:hidden"><i class="sh-fill' + (open && pct >= 80 && pct < 100 ? ' hot' : '') + '" style="display:block;height:100%;width:' + pct + '%;background:' + (pct >= 100 ? "#c2410c" : "#087f5b") + '"></i></div>';
     }
     if (c.joined) {
       h += (items.length ? items.map(function (x) { return '<div class="sh-row"><div><b>' + esc(x.name || "Product") + "</b>" + (x.reason ? "<small>" + esc(x.reason) + "</small>" : "") + "</div>" + pill(x.status === "pending" ? "In review" : x.status === "approved" ? "Approved" : x.status === "rejected" ? "Not approved" : x.status, x.status === "approved" ? "approved" : x.status === "rejected" ? "rejected" : "") + "</div>"; }).join("") : "");
@@ -296,6 +350,12 @@
     };
   }
   function wireConsol() {
+    bodyEl.querySelectorAll("[data-con-go]").forEach(function (b) { b.onclick = function () {
+      var t = b.dataset.conGo, c = (CON.campaigns || []).filter(function (x) { return x.type === t && x.status === "open"; })[0];
+      if (!c) { toast("The next " + t + " campaign opens automatically. You will get a notification."); return; }
+      if (c.joined) { var el = bodyEl.querySelector(".sh-h"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+      if (!(c.spots_left > 0)) { toast("This one is full. See the waiting list below."); return; }
+      conForm(c.id); }; });
     bodyEl.querySelectorAll("[data-con-join]").forEach(function (b) { b.onclick = function () { conForm(b.dataset.conJoin); }; });
     bodyEl.querySelectorAll("[data-con-pay]").forEach(function (b) { b.onclick = function () {
       var c = (CON.campaigns || []).filter(function (x) { return x.id === b.dataset.conPay; })[0]; if (c && c.payment) showPay(c.payment, "consol"); }; });
