@@ -107,9 +107,9 @@
     if (!sh.classList.contains("open")) return;
     bodyEl.querySelectorAll("[data-cd]").forEach(function (el) {
       var ms = new Date(el.dataset.cd).getTime() - Date.now(); if (isNaN(ms)) return;
-      if (ms <= 0) { el.textContent = "Registration is closing now"; el.className = "sh-cd late"; return; }
+      if (ms <= 0) { el.textContent = el.dataset.lbl ? "Ending now. The next campaign starts right away." : "Registration is closing now"; el.className = "sh-cd late"; return; }
       var d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4), sec = Math.floor(ms % 6e4 / 1e3);
-      el.textContent = "⏳ Closes in " + (d ? d + "d " : "") + (d || h ? h + "h " : "") + two(m) + "m" + (d ? "" : " " + two(sec) + "s");
+      el.textContent = "⏳ " + (el.dataset.lbl || "Closes in") + " " + (d ? d + "d " : "") + (d || h ? h + "h " : "") + two(m) + "m" + (d ? "" : " " + two(sec) + "s");
       el.className = "sh-cd" + (ms < 36e5 ? " late" : "");
     });
   }
@@ -281,13 +281,16 @@
 
   /* ---- Consolidation Advertising ---- */
   var CON = null, CK = 'style="width:22px;height:22px;min-width:22px;flex:0 0 22px;margin:2px 0 0;padding:0;accent-color:#087f5b"';
+  /* weekly and monthly campaigns can be joined while they are running (until the last 12 hours) */
+  function lateOk(c) { return c.status === "running" && c.type !== "daily" && c.ends_at && new Date(c.ends_at).getTime() - Date.now() > 432e5; }
+  function canJoin(c) { return c.status === "open" || lateOk(c); }
   var TYPE_LABEL = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
   function pill(t, cls) { return '<span class="sh-pill ' + (cls || "") + '">' + esc(t) + "</span>"; }
   async function vConsol() {
     var r = await client().rpc("consol_overview"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run consolidation.sql in Supabase." : r.error.message);
     var d = r.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings)."); CON = d;
     var cs = d.campaigns || [], by = { daily: null, weekly: null, monthly: null };
-    cs.forEach(function (c) { if (c.status === "open" && by[c.type] === null) by[c.type] = c; });
+    cs.forEach(function (c) { if (c.status === "open" && (by[c.type] === null || lateOk(by[c.type]))) by[c.type] = c; else if (lateOk(c) && by[c.type] === null) by[c.type] = c; });
     var mine = cs.filter(function (c) { return c.joined; }), rest = cs.filter(function (c) { return !c.joined; });
     var PLANS = [["daily", "☀️", "Daily deals", "Quick one-day push", "1–2 products"], ["weekly", "🗓️", "Weekly deals", "A full week of exposure", "up to 3 products"], ["monthly", "🏆", "Mega monthly", "Biggest reach, monthly report", "up to 5 products"]];
     var h = '<div class="sh-hero"><b>Share the cost. Reach more buyers.</b><span>Join other sellers. SafeBuy NG advertises all your products together on the website and social pages.</span></div>' +
@@ -299,15 +302,17 @@
     if (mine.length) h += '<h3 class="sh-h">My campaigns</h3>' + mine.map(conCard).join("");
     if (rest.length) h += '<h3 class="sh-h" id="sh-con-list">Open for you</h3>' + rest.map(conCard).join("");
     else if (!mine.length) h += '<div class="sh-card"><h3>No campaign is open right now</h3><p>New daily, weekly and monthly campaigns open by themselves. You will get a notification when registration opens.</p></div>';
-    h += '<div class="sh-card sh-fine"><b>Good to know</b><ul><li>You pay only after choosing your products.</li><li>Every product is checked first. Joining does not guarantee approval.</li><li>If a campaign does not go ahead, your fee is refunded.</li><li>You see your own clicks and enquiries after it starts.</li></ul></div>';
+    h += '<div class="sh-card sh-fine"><b>Good to know</b><ul><li>You pay only after choosing your products.</li><li>Your campaign starts by itself as soon as enough sellers have paid and the products are approved. You do not need to do anything.</li><li>Every product is checked first. Joining does not guarantee approval.</li><li>If a campaign does not go ahead, your fee is refunded.</li><li>You see your own clicks and enquiries after it starts.</li></ul></div>';
     return h;
   }
   function conCard(c) {
     var st = c.stats || {}, items = c.items || [], bk = c.bucket ? " · Bucket " + String(c.bucket).padStart(3, "0") : "", h = '<div class="sh-card"><h3>' + esc(c.name) + esc(bk) + "</h3>";
-    var open = c.status === "open", live = c.status === "running" || c.status === "paused", done = c.status === "completed";
-    h += '<p style="margin:0 0 6px">' + pill(TYPE_LABEL[c.type] || c.type) + " " + pill(open ? "Registration open" : c.full && c.status === "closed" ? "FULL" : c.status === "draft" ? "Opens " + fdt(c.opens_at) : live ? "Live now" : done ? "Finished" : c.status === "closed" ? "Registration closed" : c.status, open || live ? "approved" : c.status === "cancelled" ? "rejected" : "") + "</p>";
+    var late = lateOk(c), open = c.status === "open" || late, live = c.status === "running" || c.status === "paused", done = c.status === "completed";
+    h += '<p style="margin:0 0 6px">' + pill(TYPE_LABEL[c.type] || c.type) + " " + pill(late ? "Live: you can still join" : open ? "Registration open" : c.full && c.status === "closed" ? "FULL" : c.status === "draft" ? "Opens " + fdt(c.opens_at) : live ? "Live now" : done ? "Finished" : c.status === "closed" ? "Registration closed" : c.status, open || live ? "approved" : c.status === "cancelled" ? "rejected" : "") + "</p>";
+    if (live && c.ends_at) h += '<p class="sh-cd" data-cd="' + esc(c.ends_at) + '" data-lbl="Ends in" style="margin:0 0 8px"></p><p style="margin:0 0 8px;color:#52675c;font-size:15px">When it ends, the next ' + esc((TYPE_LABEL[c.type] || "").toLowerCase()) + ' campaign starts right away.</p>';
+    if (open && (CON.campaigns || []).some(function (x) { return x.type === c.type && x.id !== c.id && (x.status === "running" || x.status === "paused"); })) h += '<p style="margin:0 0 8px;color:#52675c;font-size:15px">Starts as soon as the current ' + esc((TYPE_LABEL[c.type] || "").toLowerCase()) + ' campaign ends, once everything is ready.</p>';
     h += '<div class="sh-row" style="flex-wrap:wrap"><div><small>Fee to join</small><b>' + naira(c.fee_kobo) + '</b></div><div><small>Products you can enter</small><b>' + c.per_seller + "</b></div></div>" +
-      '<div class="sh-row" style="flex-wrap:wrap"><div><small>Registration closes</small><b>' + fdt(c.deadline_at) + '</b>' + (open ? '<span class="sh-cd" data-cd="' + esc(c.deadline_at) + '"></span>' : '') + '</div><div><small>Launches</small><b>' + fdt(c.launch_at) + "</b></div></div>";
+      (late ? '<div class="sh-row" style="flex-wrap:wrap"><div><small>Started</small><b>' + fdt(c.launched_at || c.launch_at) + '</b></div><div><small>Ends</small><b>' + fdt(c.ends_at) + '</b></div></div><p style="margin:6px 0 0;color:#52675c;font-size:15px">You can join now. Your products show as soon as they are approved and stay until it ends. The fee is the same.</p>' : '<div class="sh-row" style="flex-wrap:wrap"><div><small>Registration closes</small><b>' + fdt(c.deadline_at) + '</b>' + (open ? '<span class="sh-cd" data-cd="' + esc(c.deadline_at) + '"></span>' : '') + '</div><div><small>Launches</small><b>' + fdt(c.launch_at) + "</b></div></div>");
     if (c.max) {
       var pct = Math.min(100, Math.round((c.occupied || 0) / c.max * 100)), left = c.spots_left;
       h += '<div style="margin:8px 0 2px;font-weight:700;font-size:16px">' + (c.occupied || 0) + " of " + c.max + ' places taken' + (open ? (left > 0 ? " · " + left + " left" : " · " + (c.full ? "FULL" : "all reserved")) : c.full ? " · FULL" : "") + '</div>' +
@@ -320,7 +325,7 @@
       else if (!c.paid && c.payment && c.payment.status !== "confirmed" && open) h += (c.reserved_until ? '<p style="margin:8px 0 0;font-weight:700;color:#b45309">Your place is held until ' + fdt(c.reserved_until) + ". Pay before then to keep it.</p>" : "") + '<button type="button" class="sh-btn" data-con-pay="' + esc(c.id) + '">Pay ' + naira(c.fee_kobo) + " to confirm your place</button>";
       else if (c.paid) h += '<p class="sh-ok" style="margin-top:8px"><b>✓ You are in' + (c.slot ? ": Slot " + String(c.slot).padStart(3, "0") : "") + '.</b>' + (live || done ? "" : " We will tell you when your products are approved and when it launches.") + "</p>";
       if ((live || done) && c.paid) h += '<div class="sh-nums" style="margin-top:10px"><div><b>' + num(st.impressions) + "</b><span>Times shown on SafeBuy</span></div><div><b>" + num(st.clicks) + "</b><span>Opens</span></div><div><b>" + num(st.enquiries) + "</b><span>Customers asked</span></div></div><p style=\"font-size:13px;color:#718078;margin:4px 0 0\">These are real counts from SafeBuy NG. Social platforms report their own numbers separately.</p>";
-      if (open && c.part_status !== "refund_due" && c.part_status !== "refunded") h += '<button type="button" class="sh-btn alt" data-con-join="' + esc(c.id) + '">Change my products</button>' + (!c.paid ? '<button type="button" class="sh-btn alt" data-con-leave="' + esc(c.id) + '" style="color:#b42318">Leave this campaign</button>' : "");
+      if (open && (!late || !c.paid) && c.part_status !== "refund_due" && c.part_status !== "refunded") h += '<button type="button" class="sh-btn alt" data-con-join="' + esc(c.id) + '">Change my products</button>' + (!c.paid ? '<button type="button" class="sh-btn alt" data-con-leave="' + esc(c.id) + '" style="color:#b42318">Leave this campaign</button>' : "");
     } else if (open && c.spots_left > 0) h += (c.wait && c.wait.status === "offered" ? '<p class="sh-ok" style="margin-top:8px"><b>A place is held for you until ' + fdt(c.wait.until) + ".</b></p>" : "") + '<button type="button" class="sh-btn" data-con-join="' + esc(c.id) + '">Join for ' + naira(c.fee_kobo) + "</button>";
     else if (open && c.wait) h += '<p class="sh-ok" style="margin-top:8px">You are on the waiting list: number ' + c.wait.pos + '. We will tell you if a place opens.</p><button type="button" class="sh-btn alt" data-wait-leave="' + esc(c.id) + '">Leave the waiting list</button>';
     else if (open) h += '<p style="margin:8px 0 0;color:#52675c">Every place is reserved right now' + (c.waiting ? " (" + c.waiting + " waiting)" : "") + '. If a payment is not completed, the place goes to the waiting list.</p><button type="button" class="sh-btn alt" data-wait-join="' + esc(c.id) + '">Join the waiting list</button>';
@@ -351,7 +356,7 @@
   }
   function wireConsol() {
     bodyEl.querySelectorAll("[data-con-go]").forEach(function (b) { b.onclick = function () {
-      var t = b.dataset.conGo, c = (CON.campaigns || []).filter(function (x) { return x.type === t && x.status === "open"; })[0];
+      var t = b.dataset.conGo, L = (CON.campaigns || []).filter(function (x) { return x.type === t && canJoin(x); }), c = L.filter(function (x) { return x.status === "open"; })[0] || L[0];
       if (!c) { toast("The next " + t + " campaign opens automatically. You will get a notification."); return; }
       if (c.joined) { var el = bodyEl.querySelector(".sh-h"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
       if (!(c.spots_left > 0)) { toast("This one is full. See the waiting list below."); return; }
