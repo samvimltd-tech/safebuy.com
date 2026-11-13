@@ -59,7 +59,7 @@
     return (
       (intro || "") +
       "<p>Verified shops show a green badge and a badge number, so shoppers trust them more. " +
-      "Step 1: send your RC number or TIN. Step 2: once we approve it, subscribe for <strong>" + PRICE + " per month</strong>, charged automatically to your card.</p>" +
+      "Step 1: send your RC number or TIN. Step 2: subscribe for <strong>" + PRICE + " per month</strong>, charged automatically to your card. Your badge shows as soon as we approve your number.</p>" +
       '<form id="vf-form">' +
       '<label for="vf-type">Number type</label>' +
       '<select id="vf-type"><option value="RC">RC number (business registration)</option><option value="TIN">Tax Identification Number (TIN)</option></select>' +
@@ -93,14 +93,21 @@
     if (req && req.status === "docs_approved") {
       return "<h3>Get verified</h3>" +
         '<p><span class="vf-badge">✓ ' + esc(req.id_type) + " number approved</span></p>" +
-        "<p>Subscribe for <strong>" + PRICE + " per month</strong>. Your badge number appears as soon as the first payment goes through.</p>" +
+        "<p>Subscribe for <strong>" + PRICE + " per month</strong>. Your badge shows as soon as the first payment goes through.</p>" +
         subscribeBtn("Subscribe " + PRICE + "/month");
     }
-    if (req && (req.status === "submitted" || req.status === "paid")) {
+    if (req && req.status === "paid") {
+      return "<h3>Get verified</h3>" +
+        '<p><span class="vf-badge warn">Payment received</span></p>' +
+        "<p>" + esc(req.id_type) + ": " + esc(req.id_number) + "</p>" +
+        '<p class="muted">Thank you. We are checking your number. Your badge shows as soon as we approve it.</p>';
+    }
+    if (req && req.status === "submitted") {
       return "<h3>Get verified</h3>" +
         '<p><span class="vf-badge warn">Under review</span></p>' +
         "<p>" + esc(req.id_type) + ": " + esc(req.id_number) + "</p>" +
-        '<p class="muted">We are checking your number. When it is approved, a Subscribe button appears here.</p>';
+        "<p>Your number is being checked. You can subscribe now. Your badge shows as soon as we approve it.</p>" +
+        subscribeBtn("Subscribe " + PRICE + "/month");
     }
     if (req && (req.status === "approved" || req.status === "expired")) {
       return "<h3>Get verified</h3>" +
@@ -183,7 +190,7 @@
       var box = document.createElement("div");
       box.id = "vf-box";
       box.className = "vf-box";
-      box.innerHTML = view(a.data, results[0].data || null, results[1].error ? null : results[1].data || null);
+      box.innerHTML = '<p class="muted" style="margin:0 0 8px">✅ Listing is free. List as many products as you like. The Verified badge is optional.</p>' + view(a.data, results[0].data || null, results[1].error ? null : results[1].data || null);
       anchor.parentNode.insertBefore(box, anchor);
       wire(box);
     } finally {
@@ -197,7 +204,7 @@
   // Back from Paystack (it adds ?reference=… to the return address)
   try {
     var q = new URLSearchParams(location.search);
-    if ((q.get("reference") || q.get("trxref")) && !q.get("delivery")) {
+    if ((q.get("reference") || q.get("trxref")) && !q.get("delivery") && !q.get("card")) {
       setTimeout(function () { toast("Payment received. Your badge turns on within a minute."); }, 600);
       history.replaceState(null, "", location.pathname + location.hash);
     }
