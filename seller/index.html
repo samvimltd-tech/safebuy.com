@@ -432,7 +432,6 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
 </script>
 <script src="../guard.js?v=1"></script>
 <script src="../switches.js?v=1" defer></script>
-<script src="../seller-plan.js?v=1" defer></script>
 <script src="../seller-growth.js?v=1" defer></script>
 <script src="../social.js?v=1" defer></script>
 <script src="../impressions.js?v=1" defer></script>
@@ -703,6 +702,11 @@ body.sa-seller #role-open{display:none!important}
       <button class="quick-link" type="button" data-action="delivery"><span class="ql-ico">🚚</span><span>Delivery<small>Areas available</small></span></button>
     </div>
     
+    <a id="sc-deals" href="../deals.html" hidden style="display:none;align-items:center;gap:10px;margin:10px 0;padding:12px 14px;border-radius:14px;background:#e6fcf5;border:1px solid #96f2d7;color:#087f5b;text-decoration:none;font-weight:700"><span aria-hidden="true">🔥</span><span id="sc-deals-t" style="flex:1">Today's deals</span><span aria-hidden="true">›</span></a>
+    <script>window.addEventListener("load",function(){try{var c=window.SAFEbuySupabaseConfig;if(!c||!c.url)return;var el=document.getElementById("sc-deals");
+    fetch(String(c.url).replace(/\/+$/,"")+"/rest/v1/rpc/consol_public",{method:"POST",headers:{apikey:c.publishableKey,Authorization:"Bearer "+c.publishableKey,"Content-Type":"application/json"},body:"{}"})
+    .then(function(r){return r.ok?r.json():[]}).then(function(l){l=(l||[]).filter(function(x){return x.products&&x.products.length});if(!l.length)return;
+    var n=l.reduce(function(a,x){return a+x.products.length},0);document.getElementById("sc-deals-t").textContent="Today's deals · "+n+" product"+(n===1?"":"s")+" on offer";el.hidden=false;el.style.display="flex"}).catch(function(){})}catch(e){}});</script>
         <div class="prototype-notice" id="sc-notice">
       <strong>Stay safe:</strong>
       <span id="sc-notice-text">Meet in a public place and inspect the item before you pay. Prefer shops with the ✓ Verified label.</span>
