@@ -641,10 +641,12 @@
   function nk(id) { var v = Number(($(id) || {}).value); return Math.round((isFinite(v) ? v : 0) * 100); }
   async function pAdCentre(my) {
     var d; try { d = await rpc("admin_consol_overview"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "consolidation.sql")); return; }
+    var ap = true; try { ap = await rpc("admin_consol_autopilot_get"); } catch (e) { ap = null; }
     if (stale(my)) return;
     var h = '<div class="ops-grid">' + card(d.active, "active campaigns") + card(d.sellers, "participating sellers") + card(d.pending, "products awaiting approval") + card(money(d.net_kobo), "net advertising earnings") + "</div>" +
       '<div class="ops-row"><b>Automation: <span class="' + (d.auto ? "ops-ok" : "ops-bad") + '">' + (d.auto ? "ON" : "OFF") + '</span></b><p class="muted">When ON, SafeBuy creates the daily, weekly and monthly campaigns itself, opens registration, sends reminders, closes at the deadline and launches only campaigns that are paid, approved and funded. Times are West Africa Time.</p>' +
-      '<button class="button full" type="button" id="ac-auto">' + (d.auto ? "Turn automation OFF" : "Turn automation ON") + '</button><button class="button full" type="button" id="ac-run" style="margin-top:8px">Run the scheduler now</button><p id="ac-m" class="muted" role="status"></p></div>';
+      '<button class="button full" type="button" id="ac-auto">' + (d.auto ? "Turn automation OFF" : "Turn automation ON") + '</button><button class="button full" type="button" id="ac-run" style="margin-top:8px">Run the scheduler now</button><p id="ac-m" class="muted" role="status"></p></div>' +
+      (ap === null ? "" : '<div class="ops-row"><b>Autopilot launch: <span class="' + (ap ? "ops-ok" : "ops-bad") + '">' + (ap ? "ON" : "OFF") + '</span></b><p class="muted">When ON, a campaign launches the moment it is ready: enough sellers have paid, every product is reviewed, and the money collected covers the advertising budget. It starts right after you confirm a payment or approve products, without waiting for the launch time. A new campaign opens for the next sellers.</p><button class="button full" type="button" id="ac-ap">' + (ap ? "Turn autopilot OFF" : "Turn autopilot ON") + '</button></div>');
     h += '<div class="ops-row"><b>Campaign settings</b><p class="muted">Prices and limits used for every new campaign. Advertising spend is separate from SafeBuy earnings.</p></div>';
     (d.types || []).forEach(function (t) {
       h += '<div class="ops-row" data-type="' + t.code + '"><b>' + esc(t.name) + '</b><div class="ops-f">' +
@@ -678,6 +680,7 @@
     body(h);
     var msg = function (t, bad) { var m = $("ac-m"); if (m) { m.className = bad ? "ops-bad" : "ops-ok"; m.textContent = t; } };
     var again = function () { if (!stale(my)) pAdCentre(my); };
+    if ($("ac-ap")) $("ac-ap").onclick = async function () { try { await rpc("admin_consol_autopilot", { p_on: !ap }); again(); } catch (e) { msg(e.message, true); } };
     $("ac-auto").onclick = async function () { if (!d.auto && !window.confirm("Turn automation ON? SafeBuy will start creating campaigns and notifying sellers.")) return; try { await rpc("admin_consol_auto", { p_on: !d.auto }); again(); } catch (e) { msg(e.message, true); } };
     $("ac-run").onclick = async function () { msg("Running…"); try { var r = await rpc("admin_consol_run"); msg("Done. Created " + r.created + ", opened " + r.opened + ", closed " + r.closed + ", launched " + r.launched + ", completed " + r.completed + "."); setTimeout(again, 1800); } catch (e) { msg(e.message, true); } };
     $("ac-csv").onclick = function () {
