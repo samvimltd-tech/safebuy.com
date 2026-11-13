@@ -1,0 +1,15 @@
+# Runs every hour: charges cards that are due (automatic renewal) and runs the Consolidation Advertising scheduler.
+# Needs two repository secrets: SUPABASE_URL (e.g. https://abcd.supabase.co) and CRON_KEY (same value as the Edge Function secret).
+name: Hourly renewals and campaigns
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the server function
+        run: |
+          curl -fsS -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/paystack-cards" \
+            -H "x-cron-key: ${{ secrets.CRON_KEY }}" -H "Content-Type: application/json" -d '{}'
