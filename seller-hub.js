@@ -47,7 +47,7 @@
   var bodyEl = $("sh-body"), titleEl = $("sh-title"), backBtn = $("sh-back"), cur = "", payBack = "";
   function show() { sh.classList.add("open"); document.body.style.overflow = "hidden"; }
   function hide() { sh.classList.remove("open"); document.body.style.overflow = ""; }
-  $("sh-x").addEventListener("click", hide); backBtn.addEventListener("click", function () { open(cur === "pay" ? (payBack || "home") : "home"); });
+  $("sh-x").addEventListener("click", hide); backBtn.addEventListener("click", function () { open(cur === "pay" ? (payBack || "home") : cur === "consol-form" ? "consol" : "home"); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && sh.classList.contains("open")) hide(); });
 
   var TILES = [
@@ -56,9 +56,10 @@
     ["clicks", "👆", "Customer clicks", "Times your products were opened"], ["upgrade", "⭐", "Upgrade my subscription", "Verified badge plan"],
     ["advertise", "📢", "Advertise my business", "Ask us to advertise your shop"], ["invite", "🎁", "Invite sellers, earn rewards", "Free badge days for every shop"],
     ["billing", "💳", "Payments & fees", "Pay for promotions, fees and plans"],
-    ["social", "📱", "Social Media Marketing", "Facebook, Instagram and TikTok"]
+    ["social", "📱", "Social Media Marketing", "Facebook, Instagram and TikTok"],
+    ["consol", "🤝", "Consolidation Ads", "Join shared daily, weekly and monthly campaigns"]
   ];
-  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", social: "Social Media Marketing", pay: "Pay now" };
+  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", social: "Social Media Marketing", consol: "Consolidation Ads", pay: "Pay now" };
   function tilesHtml() { return '<div class="sh-grid">' + TILES.map(function (t) { return '<button type="button" class="sh-tile" data-hub="' + t[0] + '"><span class="e">' + t[1] + "</span>" + t[2] + "<small>" + t[3] + "</small></button>"; }).join("") + "</div>"; }
 
   var growth = null;
@@ -77,7 +78,7 @@
     bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
     var v = cur;
     try {
-      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial })[v](v);
+      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial, consol: vConsol })[v](v);
       if (cur === v) { bodyEl.innerHTML = html; wire(v); }
     } catch (e) { if (cur === v) bodyEl.innerHTML = err(e); }
   }
@@ -114,7 +115,10 @@
   function showPay(p, back) {
     cur = "pay"; payBack = back || cur; show(); titleEl.textContent = "Pay now"; backBtn.hidden = false; bodyEl.scrollTop = 0;
     var done = p.status === "confirmed", rep = p.status === "reported", bad = p.status === "rejected" || p.status === "cancelled";
-    bodyEl.innerHTML = '<div class="sh-card"><h3>Pay ' + naira(p.amount_kobo) + '</h3>' +
+    var cardBlock = (p.card && !done && !bad && !rep) ? '<div class="sh-card"><h3>💳 Pay by card</h3><p>Pay <b>' + naira(p.amount_kobo) + '</b> safely on Paystack. It switches on straight away. We never see your card number.</p>' +
+      (p.renewable ? '<label style="display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:16px;line-height:1.45"><input type="checkbox" id="sh-renew" style="width:22px;height:22px;min-width:22px;flex:0 0 22px;margin:2px 0 0;padding:0;accent-color:#087f5b"><span>Renew automatically. Charge my card again when this period ends, until I stop it. I can stop any time in Payments &amp; fees.</span></label>' : '') +
+      '<button type="button" class="sh-btn" id="sh-card">Pay ' + naira(p.amount_kobo) + ' by card</button><p class="sh-msg" id="sh-cmsg" role="status"></p></div>' : '';
+    bodyEl.innerHTML = cardBlock + '<div class="sh-card"><h3>' + (cardBlock ? 'Or pay ' : 'Pay ') + naira(p.amount_kobo) + (cardBlock ? ' by bank transfer' : '') + '</h3>' +
       (done ? '<p class="sh-ok"><b>Payment confirmed. Thank you.</b></p>' : bad ? '<p class="sh-bad">This payment is ' + esc(p.status) + ".</p>" :
       "<p>Transfer <b>exactly " + naira(p.amount_kobo) + '</b> to the account below. Put this reference in the transfer remark:</p><div class="sh-code" id="sh-ref">' + esc(p.reference) + "</div>" + bankHtml(p.bank)) + "</div>" +
       (rep ? '<div class="sh-card"><p class="sh-ok"><b>Thanks. We are checking your payment.</b> You will get a notification once it is confirmed, usually within a few hours.</p></div>' :
@@ -127,6 +131,16 @@
       p.status = "reported"; showPay(p, payBack);
     };
     var cp = $("sh-cancelpay"); if (cp) cp.onclick = async function () { if (!window.confirm("Cancel this payment?")) return; await client().rpc("cancel_my_payment", { p_id: p.id }); open(payBack === "pay" ? "billing" : payBack); };
+    var cb = $("sh-card"); if (cb) cb.onclick = async function () {
+      var m = $("sh-cmsg"); cb.disabled = true; m.className = "sh-msg"; m.textContent = "Opening secure payment…";
+      try {
+        var cfg = window.SAFEbuySupabaseConfig, ses = await client().auth.getSession(), tok = ses.data.session.access_token;
+        var r = await fetch(String(cfg.url).replace(/\/+$/, "") + "/functions/v1/paystack-cards", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: cfg.publishableKey },
+          body: JSON.stringify({ action: "init", reference: p.reference, renew: !!($("sh-renew") && $("sh-renew").checked), back: location.href.split("#")[0].split("?")[0] }) });
+        var j = await r.json().catch(function () { return {}; }); if (!r.ok || !j.url) throw new Error(j.error || "Could not start the payment. Please try again.");
+        location.href = j.url;
+      } catch (er) { m.className = "sh-msg sh-bad"; m.textContent = er.message; cb.disabled = false; }
+    };
     wirePay();
   }
   function wirePay() { bodyEl.querySelectorAll(".sh-cp").forEach(function (b) { b.onclick = function () { var v = b.dataset.v; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function () { b.textContent = "Copied ✓"; }, function () { window.prompt("Copy", v); }); else window.prompt("Copy", v); }; }); }
@@ -188,16 +202,98 @@
   }
 
   /* ---- payments & fees ---- */
+  function fdate(t) { try { return new Date(t).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Lagos" }); } catch (e) { return ""; } }
+  function fdt(t) { try { return new Date(t).toLocaleString("en-NG", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Lagos" }); } catch (e) { return ""; } }
+  async function autoHtml() {
+    var r = await client().rpc("autorenew_my"); if (r.error || !r.data) return ""; var d = r.data, items = d.items || [];
+    if (!d.enabled && !items.length && !d.card) return "";
+    var h = '<div class="sh-card"><h3>🔁 Automatic renewals</h3>';
+    if (d.card) h += '<div class="sh-row"><div><b>Saved card</b><small>' + esc((d.card.brand || "Card") + " ending " + (d.card.last4 || "") + (d.card.exp ? " · expires " + d.card.exp : "")) + '</small></div><button type="button" id="sh-cardrm" style="border:0;background:none;color:#b42318;font:700 14px Arial;cursor:pointer">Remove card</button></div>';
+    h += items.length ? items.map(function (x) {
+      var bad = x.status === "past_due";
+      return '<div class="sh-row"><div><b>' + esc(x.label) + '</b><small>' + (bad ? "Stopped: " + esc(x.error || "card declined") : "Next charge " + fdate(x.next_charge_at) + (x.amount_kobo ? " · about " + naira(x.amount_kobo) : "")) + '</small></div><button type="button" class="sh-arstop" data-id="' + esc(x.id) + '" style="border:0;background:#fdecea;color:#b42318;border-radius:10px;padding:8px 12px;font:700 14px Arial;cursor:pointer">' + (bad ? "Remove" : "Stop") + "</button></div>";
+    }).join("") : "<p>Nothing renews automatically. When you pay by card, tick <b>Renew automatically</b> to keep a tool running without paying each time.</p>";
+    return h + '<p class="sh-msg" id="sh-armsg" role="status"></p></div>';
+  }
   async function vBilling() {
     var c = client(), b = await c.rpc("seller_billing"); if (b.error) throw new Error(/function/i.test(b.error.message) ? "Setup needed: run money.sql in Supabase." : b.error.message);
     var d = b.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings).");
     var p = await c.rpc("my_payments"), rows = (p && p.data) || [], KN = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan" };
     var fees = d.enabled ? '<div class="sh-card"><h3>Fees on your sales</h3><p>SafeBuy NG charges <b>' + esc(d.rate_pct) + "%</b> on each completed sale" + (d.verified ? " (Verified rate)" : ". Verified shops pay only " + esc(d.verified_pct) + "%") + ".</p>" +
       (Number(d.owed_kobo) > 0 ? '<div class="sh-nums"><div><b>' + naira(d.owed_kobo) + "</b><span>owed on " + num(d.orders) + ' sale' + (d.orders == 1 ? "" : "s") + '</span></div></div><button type="button" class="sh-btn" id="sh-payfees">Pay ' + naira(d.owed_kobo) + "</button>" + (Number(d.owed_kobo) < Number(d.min_invoice_kobo) ? '<p class="sh-msg">You can pay once fees reach ' + naira(d.min_invoice_kobo) + ".</p>" : "") : '<p class="sh-ok">You do not owe any fees. 🎉</p>') + "</div>" : "";
-    return fees + '<div class="sh-card"><h3>My payments</h3>' + (rows.length ? rows.map(function (x) {
+    return fees + (await autoHtml()) + '<div class="sh-card"><h3>My payments</h3>' + (rows.length ? rows.map(function (x) {
       return '<div class="sh-row"><div><b>' + esc(KN[x.kind] || x.kind) + '</b><small>' + naira(x.amount_kobo) + " · ref " + esc(x.reference) + " · " + new Date(x.created_at).toLocaleDateString("en-NG") + '</small></div><div style="text-align:right"><span class="sh-pill ' + (x.status === "confirmed" ? "approved" : x.status === "rejected" || x.status === "cancelled" ? "rejected" : "") + '">' + esc(x.status === "awaiting" ? "awaiting payment" : x.status) + "</span>" +
         ((x.status === "awaiting" || x.status === "reported") ? '<br><button type="button" class="sh-paynow" data-id="' + esc(x.id) + '" style="border:0;background:none;color:#087f5b;font:700 13px Arial;padding:6px 0;cursor:pointer">' + (x.status === "awaiting" ? "Pay now" : "View") + "</button>" : "") + "</div></div>";
     }).join("") : "<p>No payments yet.</p>") + "</div>";
+  }
+
+  /* ---- Consolidation Advertising ---- */
+  var CON = null, CK = 'style="width:22px;height:22px;min-width:22px;flex:0 0 22px;margin:2px 0 0;padding:0;accent-color:#087f5b"';
+  var TYPE_LABEL = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
+  function pill(t, cls) { return '<span class="sh-pill ' + (cls || "") + '">' + esc(t) + "</span>"; }
+  async function vConsol() {
+    var r = await client().rpc("consol_overview"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run consolidation.sql in Supabase." : r.error.message);
+    var d = r.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings)."); CON = d;
+    var cs = d.campaigns || [];
+    var intro = '<div class="sh-card"><p>Join shared advertising campaigns with other sellers. SafeBuy NG promotes everyone’s products together on the SafeBuy website and our social pages. Every product is checked first, so joining does not guarantee that each product is approved.</p></div>';
+    if (!cs.length) return intro + '<div class="sh-card"><h3>No campaign is open right now</h3><p>New daily, weekly and monthly campaigns open by themselves. You will get a notification when registration opens.</p></div>';
+    return intro + cs.map(conCard).join("");
+  }
+  function conCard(c) {
+    var st = c.stats || {}, items = c.items || [], bk = c.bucket ? " · Bucket " + String(c.bucket).padStart(3, "0") : "", h = '<div class="sh-card"><h3>' + esc(c.name) + esc(bk) + "</h3>";
+    var open = c.status === "open", live = c.status === "running" || c.status === "paused", done = c.status === "completed";
+    h += '<p style="margin:0 0 6px">' + pill(TYPE_LABEL[c.type] || c.type) + " " + pill(open ? "Registration open" : c.full && c.status === "closed" ? "FULL" : c.status === "draft" ? "Opens " + fdt(c.opens_at) : live ? "Live now" : done ? "Finished" : c.status === "closed" ? "Registration closed" : c.status, open || live ? "approved" : c.status === "cancelled" ? "rejected" : "") + "</p>";
+    h += '<div class="sh-row" style="flex-wrap:wrap"><div><small>Fee to join</small><b>' + naira(c.fee_kobo) + '</b></div><div><small>Products you can enter</small><b>' + c.per_seller + "</b></div></div>" +
+      '<div class="sh-row" style="flex-wrap:wrap"><div><small>Registration closes</small><b>' + fdt(c.deadline_at) + '</b></div><div><small>Launches</small><b>' + fdt(c.launch_at) + "</b></div></div>";
+    if (c.max) {
+      var pct = Math.min(100, Math.round((c.occupied || 0) / c.max * 100)), left = c.spots_left;
+      h += '<div style="margin:8px 0 2px;font-weight:700;font-size:16px">' + (c.occupied || 0) + " of " + c.max + ' places taken' + (open ? (left > 0 ? " · " + left + " left" : " · " + (c.full ? "FULL" : "all reserved")) : c.full ? " · FULL" : "") + '</div>' +
+        '<div style="height:12px;background:#e3ece7;border-radius:8px;overflow:hidden"><i style="display:block;height:100%;width:' + pct + '%;background:' + (pct >= 100 ? "#c2410c" : "#087f5b") + '"></i></div>';
+    }
+    if (c.joined) {
+      h += (items.length ? items.map(function (x) { return '<div class="sh-row"><div><b>' + esc(x.name || "Product") + "</b>" + (x.reason ? "<small>" + esc(x.reason) + "</small>" : "") + "</div>" + pill(x.status === "pending" ? "In review" : x.status === "approved" ? "Approved" : x.status === "rejected" ? "Not approved" : x.status, x.status === "approved" ? "approved" : x.status === "rejected" ? "rejected" : "") + "</div>"; }).join("") : "");
+      if (c.part_status === "refund_due") h += '<p class="sh-ok" style="margin-top:8px">Your fee is being refunded.</p>';
+      else if (c.part_status === "refunded") h += '<p class="sh-ok" style="margin-top:8px">Your fee was refunded.</p>';
+      else if (!c.paid && c.payment && c.payment.status !== "confirmed" && open) h += (c.reserved_until ? '<p style="margin:8px 0 0;font-weight:700;color:#b45309">Your place is held until ' + fdt(c.reserved_until) + ". Pay before then to keep it.</p>" : "") + '<button type="button" class="sh-btn" data-con-pay="' + esc(c.id) + '">Pay ' + naira(c.fee_kobo) + " to confirm your place</button>";
+      else if (c.paid) h += '<p class="sh-ok" style="margin-top:8px"><b>✓ You are in' + (c.slot ? ": Slot " + String(c.slot).padStart(3, "0") : "") + '.</b>' + (live || done ? "" : " We will tell you when your products are approved and when it launches.") + "</p>";
+      if ((live || done) && c.paid) h += '<div class="sh-nums" style="margin-top:10px"><div><b>' + num(st.impressions) + "</b><span>Times shown on SafeBuy</span></div><div><b>" + num(st.clicks) + "</b><span>Opens</span></div><div><b>" + num(st.enquiries) + "</b><span>Customers asked</span></div></div><p style=\"font-size:13px;color:#718078;margin:4px 0 0\">These are real counts from SafeBuy NG. Social platforms report their own numbers separately.</p>";
+      if (open && c.part_status !== "refund_due" && c.part_status !== "refunded") h += '<button type="button" class="sh-btn alt" data-con-join="' + esc(c.id) + '">Change my products</button>' + (!c.paid ? '<button type="button" class="sh-btn alt" data-con-leave="' + esc(c.id) + '" style="color:#b42318">Leave this campaign</button>' : "");
+    } else if (open && c.spots_left > 0) h += (c.wait && c.wait.status === "offered" ? '<p class="sh-ok" style="margin-top:8px"><b>A place is held for you until ' + fdt(c.wait.until) + ".</b></p>" : "") + '<button type="button" class="sh-btn" data-con-join="' + esc(c.id) + '">Join for ' + naira(c.fee_kobo) + "</button>";
+    else if (open && c.wait) h += '<p class="sh-ok" style="margin-top:8px">You are on the waiting list: number ' + c.wait.pos + '. We will tell you if a place opens.</p><button type="button" class="sh-btn alt" data-wait-leave="' + esc(c.id) + '">Leave the waiting list</button>';
+    else if (open) h += '<p style="margin:8px 0 0;color:#52675c">Every place is reserved right now' + (c.waiting ? " (" + c.waiting + " waiting)" : "") + '. If a payment is not completed, the place goes to the waiting list.</p><button type="button" class="sh-btn alt" data-wait-join="' + esc(c.id) + '">Join the waiting list</button>';
+    else if (c.full && c.status === "closed") h += '<p style="margin:8px 0 0;color:#52675c">This bucket is full. The next bucket is open above.</p>';
+    return h + "</div>";
+  }
+  function conForm(id) {
+    var c = (CON.campaigns || []).filter(function (x) { return x.id === id; })[0]; if (!c) return;
+    cur = "consol-form"; titleEl.textContent = "Join: " + c.name; backBtn.hidden = false; payBack = "consol"; bodyEl.scrollTop = 0;
+    var chosen = {}; (c.items || []).forEach(function (x) { if (x.status !== "removed") chosen[x.product] = 1; });
+    var P = CON.products || [];
+    bodyEl.innerHTML = '<div class="sh-card"><h3>Choose up to ' + c.per_seller + " product" + (c.per_seller == 1 ? "" : "s") + '</h3><form class="sh-f" id="con-form">' +
+      (P.length ? P.map(function (p) { return '<label style="display:flex;gap:10px;align-items:center;margin:8px 0;font-size:16px;font-weight:600"><input type="checkbox" class="con-p" value="' + esc(p.id) + '" ' + (chosen[p.id] ? "checked " : "") + CK + '><span style="flex:1">' + esc(p.name) + '<br><small style="font-weight:400;color:#718078">' + naira(p.price_kobo) + "</small></span></label>"; }).join("") : "<p>You have no products in stock yet. Add a product first.</p>") +
+      '<label style="display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:15px;font-weight:600;line-height:1.45"><input type="checkbox" id="con-ok" ' + CK + '><span>I confirm the prices and stock are right, and I allow SafeBuy NG to use my product photos and details in this campaign. I know SafeBuy NG checks each product and may not approve all of them.</span></label>' +
+      '<button class="sh-btn" type="submit"' + (P.length ? "" : " disabled") + '>' + (c.joined ? "Save my products" : "Continue · fee " + naira(c.fee_kobo)) + '</button><p class="sh-msg" id="con-msg" role="status"></p></form></div>';
+    var f = $("con-form"); if (!f) return;
+    f.onsubmit = async function (e) {
+      e.preventDefault(); var m = $("con-msg"), b = f.querySelector("button[type=submit]"); m.className = "sh-msg";
+      var ids = [].slice.call(f.querySelectorAll(".con-p:checked")).map(function (x) { return x.value; });
+      if (!ids.length) { m.className = "sh-msg sh-bad"; m.textContent = "Choose at least one product."; return; }
+      if (ids.length > c.per_seller) { m.className = "sh-msg sh-bad"; m.textContent = "You can choose up to " + c.per_seller + "."; return; }
+      if (!$("con-ok").checked) { m.className = "sh-msg sh-bad"; m.textContent = "Please tick the box to continue."; return; }
+      b.disabled = true; m.textContent = "Saving…";
+      var r = await client().rpc("consol_join", { p_campaign: id, p_products: ids, p_consent: true });
+      if (r.error) { m.className = "sh-msg sh-bad"; m.textContent = r.error.message; b.disabled = false; return; }
+      if (r.data && r.data.payment) showPay(r.data.payment, "consol"); else open("consol");
+    };
+  }
+  function wireConsol() {
+    bodyEl.querySelectorAll("[data-con-join]").forEach(function (b) { b.onclick = function () { conForm(b.dataset.conJoin); }; });
+    bodyEl.querySelectorAll("[data-con-pay]").forEach(function (b) { b.onclick = function () {
+      var c = (CON.campaigns || []).filter(function (x) { return x.id === b.dataset.conPay; })[0]; if (c && c.payment) showPay(c.payment, "consol"); }; });
+    bodyEl.querySelectorAll("[data-wait-join]").forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await client().rpc("consol_wait_join", { p_campaign: b.dataset.waitJoin }); if (r.error) toast(r.error.message); open("consol"); }; });
+    bodyEl.querySelectorAll("[data-wait-leave]").forEach(function (b) { b.onclick = async function () { b.disabled = true; await client().rpc("consol_wait_leave", { p_campaign: b.dataset.waitLeave }); open("consol"); }; });
+    bodyEl.querySelectorAll("[data-con-leave]").forEach(function (b) { b.onclick = async function () {
+      if (!window.confirm("Leave this campaign?")) return; b.disabled = true; var r = await client().rpc("consol_leave", { p_campaign: b.dataset.conLeave }); if (r.error) toast(r.error.message); open("consol"); }; });
   }
 
   /* ---- invite other sellers and earn ---- */
@@ -356,6 +452,13 @@
       b.onclick = async function () { b.disabled = true; try { await client().rpc("seller_cancel_promo", { p_id: b.dataset.id }); } catch (e) {} open(v); };
     });
     bodyEl.querySelectorAll(".sh-paynow").forEach(function (b) { b.onclick = function () { openPayById(b.dataset.id, v); }; });
+    bodyEl.querySelectorAll(".sh-arstop").forEach(function (b) { b.onclick = async function () {
+      if (!window.confirm("Stop automatic renewal for this? What you already paid for keeps running until it ends.")) return;
+      b.disabled = true; var r = await client().rpc("autorenew_cancel", { p_id: b.dataset.id }); if (r.error) { var m = $("sh-armsg"); if (m) { m.className = "sh-msg sh-bad"; m.textContent = r.error.message; } b.disabled = false; return; } open(v); }; });
+    var rm = $("sh-cardrm"); if (rm) rm.onclick = async function () {
+      if (!window.confirm("Remove your saved card? All automatic renewals will stop.")) return;
+      rm.disabled = true; await client().rpc("card_remove"); open(v); };
+    if (v === "consol") wireConsol();
     bodyEl.querySelectorAll("[data-plan]").forEach(function (b) {
       b.onclick = async function () {
         var m = $("sh-msg"); b.disabled = true; var r = await client().rpc("seller_pay_plan", { p_plan: b.dataset.plan });
@@ -413,5 +516,12 @@
   var ci2 = setInterval(function () { var c = client(); if (c && c.auth) { clearInterval(ci2); c.auth.onAuthStateChange(function (ev) { if (ev === "SIGNED_IN") setTimeout(coachAll, 1500); }); } }, 700);
   setTimeout(function () { clearInterval(ci2); }, 30000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) coachAll(); });
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get("card") === "1") {
+      history.replaceState(null, "", location.pathname + location.hash);
+      setTimeout(function () { toast("Payment received. It switches on within a minute."); open("billing"); }, 800);
+    }
+  } catch (e) {}
   window.__sbHub = { open: open, close: hide, coach: coachAll };
 })();
