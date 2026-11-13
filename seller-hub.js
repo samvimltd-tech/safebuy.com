@@ -29,6 +29,8 @@
     ".sh-top button{width:40px;height:40px;border:0;border-radius:50%;background:#edf6ef;color:#066548;font-size:20px;cursor:pointer}" +
     ".sh-body{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch;max-width:640px;width:100%;margin:0 auto}" +
     ".sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}" +
+    ".sh-skel i{display:block;height:64px;border-radius:14px;margin:0 0 10px;background:linear-gradient(90deg,#eef2ef 25%,#f7faf8 50%,#eef2ef 75%);background-size:200% 100%;animation:shk 1.1s linear infinite}@keyframes shk{to{background-position:-200% 0}}" +
+    ".sh-btn,.sh-tile,.sh-back,#sh-sheet button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.sh-btn:active,.sh-tile:active{transform:scale(.98);opacity:.9}" +
     ".sh-tile{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid #e6ece8;border-radius:16px;background:#fff;padding:14px 12px;font:700 14px Arial,sans-serif;color:#172b24;cursor:pointer;min-height:88px}" +
     ".sh-tile small{font:400 12px/1.35 Arial,sans-serif;color:#718078}.sh-tile .e{font-size:24px;line-height:1}" +
     ".sh-card{background:#fff;border:1px solid #e6ece8;border-radius:14px;padding:14px;margin:0 0 12px}.sh-card h3{margin:0 0 6px;font-size:18px}.sh-card p{margin:0 0 8px;color:#52675c;font-size:16px;line-height:1.5}" +
@@ -75,13 +77,20 @@
     cur = view || "home"; show(); titleEl.textContent = TITLES[cur] || "Grow my business"; backBtn.hidden = cur === "home";
     bodyEl.scrollTop = 0;
     if (cur === "home") { bodyEl.innerHTML = '<div id="sh-coach"></div><p style="color:#52675c;font-size:16px;margin:0 0 12px">Tools to get more customers. Tap one to start.</p>' + tilesHtml(); drawCoach($("sh-coach")); return; }
-    bodyEl.innerHTML = '<p style="color:#718078">Loading…</p>';
-    var v = cur;
+    var v = cur, seen = viewCache[v];
+    if (seen) { bodyEl.innerHTML = seen; wire(v); }
+    else bodyEl.innerHTML = '<div class="sh-skel" aria-busy="true" aria-label="Loading"><i></i><i></i><i></i></div>';
     try {
       var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial, consol: vConsol })[v](v);
-      if (cur === v) { bodyEl.innerHTML = html; wire(v); }
-    } catch (e) { if (cur === v) bodyEl.innerHTML = err(e); }
+      viewCache[v] = html;
+      if (cur !== v) return;
+      var ae = document.activeElement, typing = seen && ae && bodyEl.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
+      if (!seen || (html !== seen && !typing)) { var top = bodyEl.scrollTop; bodyEl.innerHTML = html; wire(v); if (seen) bodyEl.scrollTop = top; }
+    } catch (e) { if (cur === v && !seen) bodyEl.innerHTML = err(e); }
   }
+  var viewCache = {};
+  /* after any button press, drop remembered screens so the next screen is always fresh */
+  document.addEventListener("click", function (ev) { if (ev.target.closest && ev.target.closest("#sh-body .sh-btn, #sh-body button[data-wait-join], #sh-body button[data-wait-leave]")) viewCache = {}; }, true);
 
   /* ---- numbers: impressions / enquiries / clicks ---- */
   var META = {
