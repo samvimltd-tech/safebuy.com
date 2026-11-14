@@ -56,6 +56,46 @@
     ".sh-code{font:800 28px Arial,sans-serif;letter-spacing:4px;text-align:center;padding:12px;border:2px dashed #087f5b;border-radius:12px;background:#f4fbf6;margin:8px 0}" +
     "#hub-card .sh-grid{margin-top:8px}";
   document.head.appendChild(st);
+
+  /* ---- "Pro" skin: same design language as the new Seller app (tokens, dark mode, motion). Appended after the base styles so it wins. ---- */
+  var sk = document.createElement("style");
+  sk.textContent = [
+    "#sh{--bg:#f6f7f5;--card:#fff;--ink:#14231c;--mute:#5d6f65;--line:#e4e9e5;--brand:#0b7a55;--brand2:#065f42;--soft:#e6f5ee;--warn:#b45309;--warnbg:#fff4e0;--bad:#b42318;--badbg:#fdecea;--ok:#067647;--okbg:#e3f6ec;--sh:0 1px 2px #0001,0 6px 18px #0000000d;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}",
+    "@media(prefers-color-scheme:dark){#sh{--bg:#0e1612;--card:#16211b;--ink:#eaf2ed;--mute:#9bb0a4;--line:#26352c;--brand:#2fbf8a;--brand2:#1c9a6c;--soft:#173125;--warn:#f0b04a;--warnbg:#33260f;--bad:#ff8a7e;--badbg:#3a1815;--ok:#5fd59a;--okbg:#143324;--sh:0 1px 2px #0006}}",
+    "#sh *{font-family:inherit}",
+    "#sh.open{animation:shup .28s cubic-bezier(.22,1,.36,1)}@keyframes shup{from{transform:translateY(5%);opacity:0}}",
+    "#sh .sh-top{background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}",
+    "#sh .sh-top strong{font-size:18px;letter-spacing:-.01em}",
+    "#sh .sh-top button{background:var(--soft);color:var(--brand2);transition:transform .12s}#sh .sh-top button:active{transform:scale(.92)}",
+    "#sh .sh-body{padding:16px;padding-bottom:calc(28px + env(safe-area-inset-bottom))}",
+    "#sh .sh-hero{background:linear-gradient(135deg,var(--brand2),var(--brand));border-radius:20px;padding:20px;box-shadow:0 10px 30px #0b7a5533;position:relative;overflow:hidden}",
+    "#sh .sh-hero::after{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:#ffffff1a}",
+    "#sh .sh-hero b{font-size:22px;letter-spacing:-.01em}",
+    "#sh .sh-feat{background:linear-gradient(135deg,var(--brand2),var(--brand));border-radius:20px;padding:16px;box-shadow:0 10px 30px #0b7a5533}#sh .sh-feat .e{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:#ffffff26;font-size:24px}",
+    "#sh .sh-grid{gap:12px}",
+    "#sh .sh-tile{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);color:var(--ink);padding:14px;min-height:104px;transition:transform .12s,box-shadow .2s,border-color .2s}#sh .sh-tile:hover{border-color:var(--brand)}",
+    "#sh .sh-tile .e{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:var(--soft);font-size:21px}",
+    "#sh .sh-tile small{color:var(--mute)}",
+    "#sh .sh-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--sh);padding:16px}#sh .sh-card h3{font-size:18px;letter-spacing:-.01em;color:var(--ink)}#sh .sh-card p{color:var(--mute)}",
+    "#sh .sh-h{color:var(--ink)}#sh .sh-fine ul{color:var(--mute)}",
+    "#sh .sh-steps div{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:14px}#sh .sh-steps i{background:var(--brand);color:#fff}",
+    "#sh .sh-plan{background:var(--card);border:2px solid var(--line);color:var(--ink);border-radius:18px;box-shadow:var(--sh);transition:transform .12s,border-color .2s}#sh .sh-plan:hover,#sh .sh-plan:focus-visible{border-color:var(--brand)}#sh .sh-plan .pr{color:var(--brand)}#sh .sh-plan small{color:var(--mute)}",
+    "#sh .sh-nums div,#sh .sh-row{border-color:var(--line)}#sh .sh-nums div{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh)}#sh .sh-nums span{color:var(--mute)}",
+    "#sh .sh-track .now i{background:var(--warnbg);color:var(--warn);box-shadow:0 0 0 2px var(--warn)}#sh .sh-track .ok i{background:var(--brand);color:#fff}#sh .sh-track i{background:var(--line);color:var(--mute)}#sh .sh-track div{color:var(--mute)}#sh .sh-track .ok,#sh .sh-track .now{color:var(--ink)}",
+    "#sh .sh-next{background:var(--soft);color:var(--ink);border-radius:14px}",
+    "#sh .sh-chip{background:var(--line);color:var(--mute)}#sh .sh-chip.ok{background:var(--okbg);color:var(--ok)}",
+    "#sh .sh-pill{background:var(--warnbg);color:var(--warn)}#sh .sh-pill.approved{background:var(--okbg);color:var(--ok)}",
+    "#sh .sh-f label{color:var(--ink)}#sh .sh-f select,#sh .sh-f input,#sh .sh-f textarea{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;min-height:46px;padding:12px}#sh .sh-f input:focus,#sh .sh-f select:focus,#sh .sh-f textarea:focus{outline:2px solid var(--brand);outline-offset:1px}",
+    "#sh .sh-btn{background:var(--brand);color:#fff;border-radius:14px;min-height:48px;box-shadow:0 6px 16px #0b7a5530;transition:transform .12s,opacity .12s}#sh .sh-btn.alt{background:var(--soft);color:var(--brand2);box-shadow:none}",
+    "@media(prefers-color-scheme:dark){#sh .sh-btn{color:#04150d}#sh .sh-btn.alt{color:var(--brand)}}",
+    "#sh .sh-btn:focus-visible,#sh .sh-tile:focus-visible,#sh .sh-plan:focus-visible,#sh .sh-top button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}",
+    "#sh .sh-ok{color:var(--ok)}#sh .sh-bad{color:var(--bad)}#sh .sh-cd{color:var(--warn)}#sh .sh-cd.late{color:var(--bad)}",
+    "#sh .sh-code{background:var(--soft);border-color:var(--brand);color:var(--ink)}",
+    "#sh .sh-ttrow{border-color:var(--line)}#sh .sh-skel i{background:linear-gradient(90deg,var(--line) 25%,var(--card) 50%,var(--line) 75%);background-size:200% 100%}",
+    "#sh [style*='color:#52675c'],#sh [style*='color:#718078']{color:var(--mute)!important}#sh [style*='color:#172b24']{color:var(--ink)!important}#sh [style*='color:#b42318']{color:var(--bad)!important}#sh [style*='color:#087f5b'],#sh [style*='color:#066548']{color:var(--ok)!important}",
+    "#sh a{color:var(--brand)}"
+  ].join("");
+  document.head.appendChild(sk);
   var sh = document.createElement("div"); sh.id = "sh"; sh.setAttribute("role", "dialog"); sh.setAttribute("aria-modal", "true");
   sh.innerHTML = '<div class="sh-top"><button type="button" id="sh-back" aria-label="Back" hidden>‹</button><strong id="sh-title">Grow my business</strong><button type="button" id="sh-x" aria-label="Close">✕</button></div><div class="sh-body" id="sh-body"></div>';
   document.body.appendChild(sh);
@@ -82,7 +122,7 @@
   async function loadGrowth(force) {
     var c = client(); if (!c) throw new Error("Still connecting. Try again in a moment.");
     if (!growth || force) { var r = await c.rpc("seller_growth"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run growth2.sql in Supabase." : r.error.message); growth = r.data; }
-    if (!growth || !growth.app) throw new Error("Open your seller account first (tap My shop & listings).");
+    if (!growth || !growth.app) throw new Error("Set up your shop first (Account tab), then come back here.");
     return growth;
   }
   function err(e) { return '<div class="sh-card"><p class="sh-bad">' + esc(e && e.message || e) + "</p></div>"; }
@@ -251,7 +291,7 @@
     var c = client(), r = await c.rpc("seller_subscription");
     if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run seller_plans.sql in Supabase." : r.error.message);
     var s = r.data || {}, P = s.plans || {};
-    if (!s.app) throw new Error("Open your seller account first (tap My shop & listings).");
+    if (!s.app) throw new Error("Set up your shop first (Account tab), then come back here.");
     var status = s.active ? '<p class="sh-ok"><b>Verified badge plan active</b> until ' + new Date(s.expires_at).toLocaleDateString("en-NG") + " (" + esc(s.plan) + ").</p>" : "<p>You do not have an active badge plan.</p>";
     return '<div class="sh-card"><h3>Verified seller badge</h3>' + status + "<p>Listing is free. The Verified badge costs <b>" + naira(P.monthly_kobo) + " a month</b> or <b>" + naira(P.yearly_kobo) + " for 12 months</b>" + (Number(P.monthly_kobo) * 12 > Number(P.yearly_kobo) ? " (save " + naira(Number(P.monthly_kobo) * 12 - Number(P.yearly_kobo)) + ")" : "") + ". Verified shops also pay lower fees on sales.</p>" +
       '<button type="button" class="sh-btn" data-plan="yearly">' + (s.active ? "Renew 12 months " : "Get 12 months ") + naira(P.yearly_kobo) + '</button><button type="button" class="sh-btn alt" data-plan="monthly">' + (s.active ? "Renew 1 month " : "Get 1 month ") + naira(P.monthly_kobo) + '</button><p class="sh-msg" id="sh-msg" role="status"></p></div>';
@@ -273,7 +313,7 @@
   }
   async function vBilling() {
     var c = client(), b = await c.rpc("seller_billing"); if (b.error) throw new Error(/function/i.test(b.error.message) ? "Setup needed: run money.sql in Supabase." : b.error.message);
-    var d = b.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings).");
+    var d = b.data || {}; if (!d.app) throw new Error("Set up your shop first (Account tab), then come back here.");
     var p = await c.rpc("my_payments"), rows = (p && p.data) || [], KN = { promo: "Promotion", ad: "Banner advert", commission: "Sales fees", subscription: "Badge plan" };
     var fees = d.enabled ? '<div class="sh-card"><h3>Fees on your sales</h3><p>SafeBuy NG charges <b>' + esc(d.rate_pct) + "%</b> on each completed sale" + (d.verified ? " (Verified rate)" : ". Verified shops pay only " + esc(d.verified_pct) + "%") + ".</p>" +
       (Number(d.owed_kobo) > 0 ? '<div class="sh-nums"><div><b>' + naira(d.owed_kobo) + "</b><span>owed on " + num(d.orders) + ' sale' + (d.orders == 1 ? "" : "s") + '</span></div></div><button type="button" class="sh-btn" id="sh-payfees">Pay ' + naira(d.owed_kobo) + "</button>" + (Number(d.owed_kobo) < Number(d.min_invoice_kobo) ? '<p class="sh-msg">You can pay once fees reach ' + naira(d.min_invoice_kobo) + ".</p>" : "") : '<p class="sh-ok">You do not owe any fees. 🎉</p>') + "</div>" : "";
@@ -292,7 +332,7 @@
   function pill(t, cls) { return '<span class="sh-pill ' + (cls || "") + '">' + esc(t) + "</span>"; }
   async function vConsol() {
     var r = await client().rpc("consol_overview"); if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run consolidation.sql in Supabase." : r.error.message);
-    var d = r.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings)."); CON = d;
+    var d = r.data || {}; if (!d.app) throw new Error("Set up your shop first (Account tab), then come back here."); CON = d;
     var cs = d.campaigns || [], by = { daily: null, weekly: null, monthly: null };
     cs.forEach(function (c) { if (c.status === "open" && (by[c.type] === null || lateOk(by[c.type]))) by[c.type] = c; else if (lateOk(c) && by[c.type] === null) by[c.type] = c; });
     var mine = cs.filter(function (c) { return c.joined; }), rest = cs.filter(function (c) { return !c.joined; });
@@ -399,7 +439,7 @@
   async function vInvite() {
     var c = client(), r = await c.rpc("my_referral");
     if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run growth2.sql in Supabase." : r.error.message);
-    var d = r.data || {}; if (!d.app) throw new Error("Open your seller account first (tap My shop & listings).");
+    var d = r.data || {}; if (!d.app) throw new Error("Set up your shop first (Account tab), then come back here.");
     var S = d.settings || {}; if (S.enabled === false) return '<div class="sh-card"><p>Seller rewards are paused right now. Please check again soon.</p></div>';
     var link = root + "seller/?ref=" + encodeURIComponent(d.code), txt = "Sell on SafeBuy NG, free to list. Join with my link: " + link;
     return '<div class="sh-card"><h3>Earn free Verified-badge days</h3><p>For every shop you invite that gets approved, you get <b>' + (S.reward_days || 30) + " free days</b> of the Verified badge (up to " + (S.max_rewards || 20) + ' rewards).</p>' +
