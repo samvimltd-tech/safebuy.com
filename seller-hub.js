@@ -39,6 +39,9 @@
     ".sh-anim>*{animation:shin .28s ease-out both}.sh-anim>*:nth-child(2){animation-delay:.04s}.sh-anim>*:nth-child(3){animation-delay:.08s}.sh-anim>*:nth-child(4){animation-delay:.12s}.sh-anim>*:nth-child(n+5){animation-delay:.16s}@keyframes shin{from{opacity:0;transform:translateY(8px)}}" +
     ".sh-feat small{transition:opacity .35s}.sh-feat small.fade{opacity:0}" +
     "@media (prefers-reduced-motion:reduce){#sh *{animation:none!important;transition:none!important}}" +
+    ".sh-track{display:grid;gap:8px;margin:10px 0 6px}.sh-track div{display:flex;align-items:center;gap:10px;font-size:15px;color:#718078;line-height:1.3}.sh-track i{flex:0 0 26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:#e3ece7;color:#52675c;font-style:normal;font-size:14px;font-weight:700}.sh-track .ok{color:#172b24}.sh-track .ok i{background:#087f5b;color:#fff}.sh-track .now{color:#172b24;font-weight:700}.sh-track .now i{background:#fff3e0;color:#7a4a05;box-shadow:0 0 0 2px #f2c27a}.sh-track small{display:block;font-weight:400;color:#718078}.sh-next{margin:6px 0 0;padding:10px 12px;background:#f3f8f5;border-radius:12px;color:#172b24;font-size:15px;line-height:1.45}" +
+    ".sh-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.sh-chip{display:inline-block;padding:6px 11px;border-radius:999px;background:#eef2ef;color:#52675c;font-size:14px;font-weight:700;text-decoration:none}.sh-chip.ok{background:#e6fcf5;color:#087f5b}" +
+    ".sh-ttacc{display:flex;align-items:center;gap:12px;margin:0 0 10px}.sh-ttacc img{width:48px;height:48px;border-radius:50%;object-fit:cover}.sh-ttacc .e{font-size:30px}.sh-ttrow{padding:10px 0;border-top:1px solid #e6ece8;font-size:15px;line-height:1.45}.sh-ttrow:first-of-type{border-top:0}" +
     ".sh-skel i{display:block;height:64px;border-radius:14px;margin:0 0 10px;background:linear-gradient(90deg,#eef2ef 25%,#f7faf8 50%,#eef2ef 75%);background-size:200% 100%;animation:shk 1.1s linear infinite}@keyframes shk{to{background-position:-200% 0}}" +
     ".sh-btn,.sh-tile,.sh-back,#sh-sheet button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.sh-btn:active,.sh-tile:active{transform:scale(.98);opacity:.9}" +
     ".sh-tile{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid #e6ece8;border-radius:16px;background:#fff;padding:14px 12px;font:700 14px Arial,sans-serif;color:#172b24;cursor:pointer;min-height:88px}" +
@@ -69,9 +72,10 @@
     ["advertise", "📢", "Advertise my business", "Ask us to advertise your shop"], ["invite", "🎁", "Invite sellers, earn rewards", "Free badge days for every shop"],
     ["billing", "💳", "Payments & fees", "Pay for promotions, fees and plans"],
     ["social", "📱", "Social Media Marketing", "Facebook, Instagram and TikTok"],
-    ["consol", "🤝", "Consolidation Ads", "Join shared daily, weekly and monthly campaigns"]
+    ["consol", "🤝", "Consolidation Ads", "Join shared daily, weekly and monthly campaigns"],
+    ["mk", "🚀", "Social Auto-Post", "TikTok, Facebook, Instagram and Google"]
   ];
-  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", social: "Social Media Marketing", consol: "Consolidation Ads", pay: "Pay now" };
+  var TITLES = { home: "Grow my business", promote: "Promote my products", boost: "Boost my shop", impressions: "Product impressions", enquiries: "Product enquiries", clicks: "Customer clicks", upgrade: "Upgrade my subscription", advertise: "Advertise my business", invite: "Invite sellers & earn", billing: "Payments & fees", social: "Social Media Marketing", consol: "Consolidation Ads", mk: "Social Auto-Post", pay: "Pay now" };
   function tilesHtml() { return '<div class="sh-grid">' + TILES.map(function (t) { return '<button type="button" class="sh-tile" data-hub="' + t[0] + '"><span class="e">' + t[1] + "</span>" + t[2] + "<small>" + t[3] + "</small></button>"; }).join("") + "</div>"; }
 
   var growth = null;
@@ -91,7 +95,7 @@
     if (seen) { bodyEl.innerHTML = seen; wire(v); }
     else bodyEl.innerHTML = '<div class="sh-skel" aria-busy="true" aria-label="Loading"><i></i><i></i><i></i></div>';
     try {
-      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial, consol: vConsol })[v](v);
+      var html = await ({ impressions: vStat, enquiries: vStat, clicks: vStat, promote: vPromote, boost: vBoost, advertise: vAd, upgrade: vUpgrade, invite: vInvite, billing: vBilling, social: vSocial, consol: vConsol, mk: vMk })[v](v);
       viewCache[v] = html;
       if (cur !== v) return;
       var ae = document.activeElement, typing = seen && ae && bodyEl.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
@@ -305,10 +309,31 @@
     h += '<div class="sh-card sh-fine"><b>Good to know</b><ul><li>You pay only after choosing your products.</li><li>Your campaign starts by itself as soon as enough sellers have paid and the products are approved. You do not need to do anything.</li><li>Every product is checked first. Joining does not guarantee approval.</li><li>If a campaign does not go ahead, your fee is refunded.</li><li>You see your own clicks and enquiries after it starts.</li></ul></div>';
     return h;
   }
+  /* "what happens next" tracker for a seller who has paid */
+  function conTrack(c, items) {
+    var appr = items.filter(function (x) { return x.status === "approved"; }).length, pend = items.filter(function (x) { return x.status === "pending"; }).length;
+    var live = c.status === "running" || c.status === "paused", min = c.min || 1, pc = c.paid_count || 0, need = Math.max(0, min - pc);
+    var S = [["Payment received", true], ["Products approved", pend === 0 && appr > 0, pend ? pend + " in review" : appr ? "" : "Waiting"], ["Enough sellers (" + Math.min(pc, min) + " of " + min + " paid)", live || need === 0], ["Campaign live", live]];
+    var next = live ? "Your products are showing now. Watch your results below."
+      : pend ? "We are checking your product. This is quick."
+      : need > 0 ? "Waiting for " + need + " more seller" + (need === 1 ? "" : "s") + " to pay. It starts by itself the moment " + min + " have paid. If it does not fill before registration closes, your fee is refunded."
+      : "Everything is ready. It starts automatically in a moment.";
+    return '<div class="sh-track">' + S.map(function (x, i) { return '<div class="' + (x[1] ? "ok" : (i === 0 || S[i - 1][1]) && !(x[1]) ? "now" : "") + '"><i>' + (x[1] ? "✓" : i + 1) + "</i><span>" + esc(x[0]) + (x[2] ? "<small>" + esc(x[2]) + "</small>" : "") + "</span></div>"; }).join("") + '</div><p class="sh-next"><b>What happens next:</b> ' + esc(next) + "</p>";
+  }
+  /* where the ad is running */
+  function conChannels(c) {
+    var N = { facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", google: "Google" }, L = (c.chan_live || []).filter(function (x) { return N[x.channel]; });
+    var chips = ['<span class="sh-chip ok">SafeBuy ✓</span>'].concat(L.map(function (x) {
+      var ok = x.status === "posted", t = N[x.channel] + (ok ? " ✓" : " …");
+      return ok && x.url ? '<a class="sh-chip ok" href="' + esc(x.url) + '" target="_blank" rel="noopener">' + t + "</a>" : '<span class="sh-chip' + (ok ? " ok" : "") + '">' + t + "</span>";
+    }));
+    return '<p style="margin:0 0 4px;color:#52675c;font-size:14px">Where your ad is running</p><div class="sh-chips">' + chips.join("") + "</div>";
+  }
   function conCard(c) {
     var st = c.stats || {}, items = c.items || [], bk = c.bucket ? " · Bucket " + String(c.bucket).padStart(3, "0") : "", h = '<div class="sh-card"><h3>' + esc(c.name) + esc(bk) + "</h3>";
     var late = lateOk(c), open = c.status === "open" || late, live = c.status === "running" || c.status === "paused", done = c.status === "completed";
     h += '<p style="margin:0 0 6px">' + pill(TYPE_LABEL[c.type] || c.type) + " " + pill(late ? "Live: you can still join" : open ? "Registration open" : c.full && c.status === "closed" ? "FULL" : c.status === "draft" ? "Opens " + fdt(c.opens_at) : live ? "Live now" : done ? "Finished" : c.status === "closed" ? "Registration closed" : c.status, open || live ? "approved" : c.status === "cancelled" ? "rejected" : "") + "</p>";
+    if (live) h += conChannels(c);
     if (live && c.ends_at) h += '<p class="sh-cd" data-cd="' + esc(c.ends_at) + '" data-lbl="Ends in" style="margin:0 0 8px"></p><p style="margin:0 0 8px;color:#52675c;font-size:15px">When it ends, the next ' + esc((TYPE_LABEL[c.type] || "").toLowerCase()) + ' campaign starts right away.</p>';
     if (open && (CON.campaigns || []).some(function (x) { return x.type === c.type && x.id !== c.id && (x.status === "running" || x.status === "paused"); })) h += '<p style="margin:0 0 8px;color:#52675c;font-size:15px">Starts as soon as the current ' + esc((TYPE_LABEL[c.type] || "").toLowerCase()) + ' campaign ends, once everything is ready.</p>';
     h += '<div class="sh-row" style="flex-wrap:wrap"><div><small>Fee to join</small><b>' + naira(c.fee_kobo) + '</b></div><div><small>Products you can enter</small><b>' + c.per_seller + "</b></div></div>" +
@@ -323,7 +348,7 @@
       if (c.part_status === "refund_due") h += '<p class="sh-ok" style="margin-top:8px">Your fee is being refunded.</p>';
       else if (c.part_status === "refunded") h += '<p class="sh-ok" style="margin-top:8px">Your fee was refunded.</p>';
       else if (!c.paid && c.payment && c.payment.status !== "confirmed" && open) h += (c.reserved_until ? '<p style="margin:8px 0 0;font-weight:700;color:#b45309">Your place is held until ' + fdt(c.reserved_until) + ". Pay before then to keep it.</p>" : "") + '<button type="button" class="sh-btn" data-con-pay="' + esc(c.id) + '">Pay ' + naira(c.fee_kobo) + " to confirm your place</button>";
-      else if (c.paid) h += '<p class="sh-ok" style="margin-top:8px"><b>✓ You are in' + (c.slot ? ": Slot " + String(c.slot).padStart(3, "0") : "") + '.</b>' + (live || done ? "" : " We will tell you when your products are approved and when it launches.") + "</p>";
+      else if (c.paid) h += '<p class="sh-ok" style="margin-top:8px"><b>✓ You are in' + (c.slot ? ": Slot " + String(c.slot).padStart(3, "0") : "") + '.</b>' + (live || done ? "" : "") + "</p>" + (done ? "" : conTrack(c, items));
       if ((live || done) && c.paid) h += '<div class="sh-nums" style="margin-top:10px"><div><b>' + num(st.impressions) + "</b><span>Times shown on SafeBuy</span></div><div><b>" + num(st.clicks) + "</b><span>Opens</span></div><div><b>" + num(st.enquiries) + "</b><span>Customers asked</span></div></div><p style=\"font-size:13px;color:#718078;margin:4px 0 0\">These are real counts from SafeBuy NG. Social platforms report their own numbers separately.</p>";
       if (open && (!late || !c.paid) && c.part_status !== "refund_due" && c.part_status !== "refunded") h += '<button type="button" class="sh-btn alt" data-con-join="' + esc(c.id) + '">Change my products</button>' + (!c.paid ? '<button type="button" class="sh-btn alt" data-con-leave="' + esc(c.id) + '" style="color:#b42318">Leave this campaign</button>' : "");
     } else if (open && c.spots_left > 0) h += (c.wait && c.wait.status === "offered" ? '<p class="sh-ok" style="margin-top:8px"><b>A place is held for you until ' + fdt(c.wait.until) + ".</b></p>" : "") + '<button type="button" class="sh-btn" data-con-join="' + esc(c.id) + '">Join for ' + naira(c.fee_kobo) + "</button>";
@@ -501,8 +526,88 @@
 
   /* ---- clicks inside the sheet ---- */
   async function openPayById(id, back) { var r = await client().rpc("my_payment", { p_id: id }); if (r.data) showPay(r.data, back); else toast("Could not open that payment."); }
+
+  /* ---------- Social Auto-Post (TikTok, Facebook, Instagram, Google) ---------- */
+  var MK = { data: null };
+  var MKN = { tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" }, MKI = { tiktok: "🎵", facebook: "📘", instagram: "📸" };
+  var MKS = { requested: "Waiting for SafeBuy approval", planned: "Scheduled", publishing: "Publishing…", posted: "Live ✓", inbox: "Sent to your app inbox. Open it and tap Post", failed: "Failed. We will retry", rejected: "Not approved", needs_connect: "Reconnect this account to continue", cancelled: "Cancelled" };
+  function mkCaption(p) {
+    var first = String(p.name || "").split(" ")[0];
+    var tags = ["#SafeBuyNG", "#ShopNaija", "#MadeInNigeria", tag(p.category), tag(first)].filter(function (t) { return t.length > 2; }).filter(function (t, i, a) { return a.indexOf(t) === i; }).join(" ");
+    return "🔥 " + p.name + " - " + naira(p.price_kobo) + "\nOrder safely on SafeBuy NG 👇\n" + tags;
+  }
+  async function vMk() {
+    var c = client(), r = await c.rpc("mk_overview");
+    if (r.error) throw new Error(/function/i.test(r.error.message) ? "Setup needed: run marketing.sql in Supabase." : r.error.message);
+    var D = MK.data = r.data || {}, P = D.products || [], posts = D.posts || [], tk = D.tiktok, mt = D.meta, off = D.official || {};
+    var igOk = !!(mt && mt.has_ig), fbOk = !!(mt && mt.page && !mt.pick);
+    var h = '<div class="sh-hero"><b>Sell more with Social Auto-Post</b><span>Two ways to reach buyers: post to your own TikTok, Facebook and Instagram, or let SafeBuy NG feature your product on our official pages. Plus free listing on Google. You approve everything.</span></div>';
+    h += '<div class="sh-card"><h3>1. Your accounts</h3>';
+    h += '<div class="sh-ttrow"><b>🎵 TikTok</b> ' + (tk ? '<span class="sh-ok">Connected ✓ ' + esc(tk.name || "") + '</span><br><button type="button" class="sh-btn alt" data-mkoff="tiktok">Disconnect</button>' : '<br><button type="button" class="sh-btn" data-mkon="tiktok">Connect TikTok</button>') + "</div>";
+    h += '<div class="sh-ttrow"><b>📘 Facebook Page &amp; 📸 Instagram</b> ' + (mt ? (mt.pick ? '<br><span class="sh-bad">Choose the Page to use:</span>' + (mt.pages || []).map(function (g) { return '<br><button type="button" class="sh-btn alt" data-mkpick="' + esc(g.id) + '" style="margin-top:6px">' + esc(g.name) + (g.ig ? " + @" + esc(g.ig) : "") + "</button>"; }).join("") : '<span class="sh-ok">Connected ✓ ' + esc(mt.page || "") + "</span>" + (igOk ? '<br><span class="sh-ok">Instagram @' + esc(mt.ig || "") + " ✓</span>" : '<br><span class="muted">No Instagram business account linked to this Page, so Instagram is off.</span>') + '<br><button type="button" class="sh-btn alt" data-mkoff="meta">Disconnect</button>') : '<br><button type="button" class="sh-btn" data-mkon="meta">Connect Facebook &amp; Instagram</button>') + "</div>";
+    h += '<p class="sh-msg" id="mk-cmsg" role="status"></p><p style="font-size:14px;color:#718078">You log in on TikTok or Facebook itself. SafeBuy NG never sees your password and only posts what you choose here.</p></div>';
+    h += '<div class="sh-card"><h3>2. Google</h3><label style="display:flex;gap:10px;align-items:flex-start;font-weight:400"><input type="checkbox" id="mk-g" style="width:22px;height:22px;flex:0 0 22px"' + (D.google ? " checked" : "") + '><span>Show my products on Google. SafeBuy NG includes my products (photo, price, name) in its free Google product listings.</span></label></div>';
+    h += '<div class="sh-card"><h3>3. Promote a product</h3>' + (P.length ? '<form class="sh-f" id="mk-form"><label for="mk-prod">Product</label><select id="mk-prod">' + P.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + "</option>"; }).join("") + '</select><div id="mk-img"></div>' +
+      '<label for="mk-cap">Caption and hashtags (ready for you, edit if you like)</label><textarea id="mk-cap" rows="5" maxlength="1800"></textarea>' +
+      '<label>Where?</label>' + ["tiktok", "facebook", "instagram"].map(function (k) { return '<label style="display:flex;gap:10px;align-items:center;font-weight:400"><input type="checkbox" class="mk-ch" value="' + k + '" style="width:22px;height:22px;flex:0 0 22px"' + (k === "tiktok" ? " checked" : "") + "><span>" + MKI[k] + " " + MKN[k] + "</span></label>"; }).join("") +
+      '<label for="mk-when">When?</label><select id="mk-when"><option value="now">Now</option><option value="tomorrow">Tomorrow morning (9:00)</option><option value="pick">Pick a date and time</option></select><input type="datetime-local" id="mk-dt" hidden>' +
+      '<label style="display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:10px"><input type="checkbox" id="mk-ok" style="width:22px;height:22px;flex:0 0 22px"><span>I allow SafeBuy NG to use this product’s photo and details for this post.</span></label>' +
+      '<button class="sh-btn" type="submit" id="mk-own">Post to MY accounts</button>' +
+      '<button class="sh-btn alt" type="button" id="mk-central">Ask SafeBuy to feature it on SAFEBUY’s official pages</button>' +
+      '<p class="sh-msg" id="mk-msg" role="status"></p></form><p style="font-size:14px;color:#718078;margin-top:8px">SafeBuy Spotlight is free. We check every request first, so it is not guaranteed. Up to 9 requests a week.' + ((off.tiktok || off.facebook || off.instagram) ? "" : " SafeBuy’s official pages are not switched on yet, so approved requests will wait.") + "</p>" : '<p>Add a product with a clear photo first.</p>') + "</div>";
+    h += '<div class="sh-card"><h3>My social posts</h3>' + (posts.length ? posts.map(function (t) {
+      var can = ["requested", "planned", "failed", "needs_connect"].indexOf(t.status) > -1;
+      return '<div class="sh-ttrow"><b>' + esc(t.product || "Product") + "</b> " + MKI[t.channel] + ' <span class="sh-chip' + (t.status === "posted" ? " ok" : "") + '">' + esc(MKN[t.channel]) + " · " + (t.mode === "central" ? "SafeBuy Spotlight" : "My account") + '</span><br><span class="' + (t.status === "failed" || t.status === "rejected" ? "sh-bad" : t.status === "posted" ? "sh-ok" : "") + '">' + esc(MKS[t.status] || t.status) + "</span>" +
+        (t.status === "planned" ? '<br><span class="muted">' + esc(fdt(t.when)) + "</span>" : "") + ((t.status === "failed" || t.status === "rejected") && (t.error || t.note) ? '<br><span class="muted">' + esc(t.error || t.note) + "</span>" : "") +
+        (t.url ? ' <a href="' + esc(t.url) + '" target="_blank" rel="noopener">View</a>' : "") +
+        (can ? '<br><button type="button" class="sh-btn alt" data-mkc="' + esc(t.id) + '" style="margin-top:6px">Cancel</button>' : "") + "</div>";
+    }).join("") : "<p>No posts yet.</p>") + "</div>";
+    return h;
+  }
+  function wireMk() {
+    var c = client(), D = MK.data || {}, P = D.products || [];
+    function msg(t, ok, id) { var m = $(id || "mk-msg"); if (m) { m.className = "sh-msg " + (ok ? "sh-ok" : "sh-bad"); m.textContent = t; } }
+    function prod() { var s = $("mk-prod"); return s ? P.filter(function (p) { return p.id === s.value; })[0] : null; }
+    function fill() { var p = prod(); if (!p) return; $("mk-cap").value = mkCaption(p); $("mk-img").innerHTML = p.image ? '<img src="' + esc(p.image) + '" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-top:8px" referrerpolicy="no-referrer">' : '<p class="sh-bad">This product has no photo. Add one first.</p>'; }
+    if ($("mk-prod")) { $("mk-prod").onchange = fill; fill(); }
+    if ($("mk-when")) $("mk-when").onchange = function () { $("mk-dt").hidden = $("mk-when").value !== "pick"; };
+    function when() {
+      var w = $("mk-when").value; if (w === "now") return null;
+      if (w === "tomorrow") { var d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d.toISOString(); }
+      var v = $("mk-dt").value; return v ? new Date(v).toISOString() : null;
+    }
+    async function call(body) {
+      var cfg = window.SAFEbuySupabaseConfig, ses = await c.auth.getSession(), tok = ses.data.session.access_token;
+      var r = await fetch(String(cfg.url).replace(/\/+$/, "") + "/functions/v1/marketing", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok, apikey: cfg.publishableKey }, body: JSON.stringify(body) });
+      var j = await r.json().catch(function () { return {}; }); if (!r.ok) throw new Error(j.error || "Please try again."); return j;
+    }
+    function done() { viewCache = {}; open("mk"); }
+    bodyEl.querySelectorAll("[data-mkon]").forEach(function (b) { b.onclick = async function () {
+      b.disabled = true; msg("Opening…", true, "mk-cmsg");
+      try { var j = await call({ action: "connect", provider: b.dataset.mkon }); location.href = j.url; } catch (e) { msg(e.message, false, "mk-cmsg"); b.disabled = false; }
+    }; });
+    bodyEl.querySelectorAll("[data-mkoff]").forEach(function (b) { b.onclick = async function () { if (!window.confirm("Disconnect? Posts waiting to go out will pause.")) return; await c.rpc("mk_disconnect", { p_provider: b.dataset.mkoff }); done(); }; });
+    bodyEl.querySelectorAll("[data-mkpick]").forEach(function (b) { b.onclick = async function () { b.disabled = true; var r = await c.rpc("mk_pick_page", { p_page: b.dataset.mkpick }); if (r.error) { msg(r.error.message, false, "mk-cmsg"); b.disabled = false; } else done(); }; });
+    var g = $("mk-g"); if (g) g.onchange = async function () { var r = await c.rpc("mk_google_set", { p_on: g.checked }); if (r.error) { g.checked = !g.checked; toast(r.error.message); } else toast(g.checked ? "Your products will show on Google." : "Google listing switched off."); viewCache = {}; };
+    async function queue(mode) {
+      var p = prod(); if (!p) return; if (!$("mk-ok").checked) { msg("Please tick the box to allow us to use your product photo.", false); return; }
+      var chs = Array.prototype.map.call(bodyEl.querySelectorAll(".mk-ch:checked"), function (x) { return x.value; }); if (!chs.length) { msg("Tick at least one place to post.", false); return; }
+      var w = when(); if ($("mk-when").value === "pick" && !w) { msg("Pick a date and time.", false); return; }
+      var bs = [$("mk-own"), $("mk-central")]; bs.forEach(function (b) { b.disabled = true; }); msg("Working…", true);
+      try {
+        var r = await c.rpc("mk_queue", { p_product: p.id, p_caption: $("mk-cap").value, p_when: w, p_mode: mode, p_channels: chs }); if (r.error) throw new Error(r.error.message);
+        if (mode === "own" && !w) { msg("Posting…", true); try { await call({ action: "publish" }); } catch (e) { /* the hourly job will retry */ } }
+        toast(mode === "own" ? "Done. See My social posts below." : "Request sent. We will check it soon."); done();
+      } catch (e) { msg(e.message, false); bs.forEach(function (b) { b.disabled = false; }); }
+    }
+    var f = $("mk-form"); if (f) f.onsubmit = function (e) { e.preventDefault(); queue("own"); };
+    var ce = $("mk-central"); if (ce) ce.onclick = function () { queue("central"); };
+    bodyEl.querySelectorAll("[data-mkc]").forEach(function (b) { b.onclick = async function () { b.disabled = true; await c.rpc("mk_cancel", { p_id: b.dataset.mkc }); done(); }; });
+  }
+
   function wire(v) {
     if (v === "social") wireSocial();
+    if (v === "mk") wireMk();
     var f = $("sh-form"), pr = $("sh-price");
     function upd() { if (!pr || !prices) return; var d = Number($("sh-days").value), k = pr.dataset.kind, rate = k === "ad" ? (prices.ad_day_kobo || {})[$("sh-slot").value] : prices[k]; pr.textContent = prices.charge_promos || k === "ad" ? "Price: " + naira(Number(rate || 0) * d) + " for " + d + " days" : "Free for now"; }
     if (pr && $("sh-days")) { $("sh-days").onchange = upd; if ($("sh-slot")) $("sh-slot").onchange = upd; upd(); }
@@ -592,6 +697,10 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) coachAll(); });
   try {
     var qs = new URLSearchParams(location.search);
+    if (qs.get("mk")) {
+      var tk = qs.get("mk"); history.replaceState(null, "", location.pathname + location.hash);
+      setTimeout(function () { toast(tk === "connected" ? "Account connected." : tk === "pick" ? "Connected. Choose which Page to use." : tk === "nopage" ? "No Facebook Page found on that login." : tk === "cancelled" ? "Not connected." : "That link expired. Please try again."); open("mk"); }, 800);
+    }
     if (qs.get("card") === "1") {
       history.replaceState(null, "", location.pathname + location.hash);
       setTimeout(function () { toast("Payment received. It switches on within a minute."); open("billing"); }, 800);
