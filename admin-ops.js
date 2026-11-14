@@ -85,7 +85,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["adcentre", "Ad Centre"], ["cards", "Cards"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["adcentre", "Ad Centre"], ["tiktok", "Social Auto-Post"], ["cards", "Cards"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -101,7 +101,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup, adcentre: pAdCentre, cards: pCards })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup, adcentre: pAdCentre, tiktok: pTikTok, cards: pCards })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -622,6 +622,39 @@
 
 
   /* ---- Cards: switch card payments and automatic renewals on/off ---- */
+  async function pTikTok(my) {
+    var d; try { d = await rpc("admin_mk"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "marketing.sql")); return; }
+    if (stale(my)) return;
+    var off = d.official || {}, reqs = d.requests || [], rec = d.recent || [], cn = d.connected || {}, gg = d.google || {}, NMK = { tiktok: "TikTok", facebook: "Facebook", instagram: "Instagram" };
+    var PS = { planned: "queued", publishing: "publishing now…", posted: "posted ✓", inbox: "sent to inbox: finish posting in the app", failed: "failed", rejected: "rejected", needs_connect: "seller must reconnect", cancelled: "cancelled" };
+    var feed = (window.SAFEbuySupabaseConfig ? String(window.SAFEbuySupabaseConfig.url).replace(/\/+$/, "") : "") + "/functions/v1/marketing?feed=google";
+    var h = '<div class="ops-row"><b>SafeBuy official pages</b> ' + ["tiktok", "facebook", "instagram"].map(function (k) { return '<span class="' + (off[k] ? "ops-ok" : "ops-bad") + '">' + NMK[k] + ": " + (off[k] ? "connected" : "not connected") + "</span>"; }).join(" · ") +
+      '<p class="muted">Approved Spotlight posts go to the connected official pages. Missing ones need these secrets on the marketing function: TIKTOK_ACCESS_TOKEN, FB_PAGE_ID + FB_PAGE_TOKEN, IG_USER_ID.' + (off.at ? " Checked " + when(off.at) + "." : "") + "</p>" +
+      '<p class="muted">Sellers connected: TikTok ' + (cn.tiktok || 0) + ", Facebook/Instagram " + (cn.meta || 0) + ".</p></div>";
+    h += '<div class="ops-row"><b>Google product feed</b><p class="muted">' + (gg.sellers || 0) + " seller(s) opted in · " + (gg.products || 0) + ' products in the feed.</p><p class="muted" style="word-break:break-all">Add this link in Google Merchant Center > Products > Feeds (scheduled fetch):<br><b>' + esc(feed) + "</b></p></div>";
+    h += '<h3 style="margin:12px 0 6px">Spotlight requests (' + reqs.length + ")</h3>";
+    h += reqs.length ? reqs.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.product) + "</b> · " + esc(NMK[q.channel] || q.channel) + " · " + esc(q.shop || "Seller") + " · " + money((q.price_kobo || 0) / 100) +
+        (q.image ? '<br><img src="' + esc(q.image) + '" alt="" style="max-width:100%;max-height:180px;border-radius:10px;margin-top:6px" referrerpolicy="no-referrer">' : "") +
+        '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Caption (edit if needed)</label><textarea class="tt-cap" rows="4" style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px">' + esc(q.caption) + "</textarea>" +
+        '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Post at (empty = as soon as possible)</label><input type="datetime-local" class="tt-when" style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px">' +
+        '<input class="tt-note" type="text" inputmode="text" placeholder="Note to seller (optional)" style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px;margin-top:8px">' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-d="1">Approve</button><button type="button" class="button" data-d="0" style="background:#b42318">Reject</button></div></div>';
+    }).join("") : '<p class="muted">No requests waiting.</p>';
+    h += '<h3 style="margin:12px 0 6px">Recent posts</h3>' + (rec.length ? rec.map(function (q) {
+      return '<div class="ops-row"><b>' + esc(q.product) + "</b> · " + esc(q.shop || "Seller") + ' <span class="muted">· ' + (q.mode === "central" ? "SafeBuy Spotlight" : "seller\u2019s account") + " · " + esc(PS[q.status] || q.status) + "</span>" +
+        (q.error ? '<p class="muted">' + esc(q.error) + "</p>" : "") + ((q.status === "failed" || q.status === "needs_connect") ? '<button type="button" class="button" data-r="' + esc(q.id) + '">Try again now</button>' : "") + "</div>";
+    }).join("") : '<p class="muted">Nothing posted yet.</p>');
+    h += '<p id="tt-am" class="muted" role="status"></p>';
+    body(h);
+    function msg(t, bad) { var m = $("tt-am"); if (m) { m.className = bad ? "ops-bad" : "muted"; m.textContent = t; } }
+    document.querySelectorAll("[data-d]").forEach(function (b) { b.onclick = async function () {
+      var row = b.closest(".ops-row"), ok = b.dataset.d === "1", w = row.querySelector(".tt-when").value;
+      if (!ok && !window.confirm("Reject this request?")) return;
+      try { await rpc("admin_mk_decide", { p_id: row.dataset.id, p_ok: ok, p_caption: row.querySelector(".tt-cap").value, p_when: w ? new Date(w).toISOString() : null, p_note: row.querySelector(".tt-note").value }); pTikTok(my); } catch (e) { msg(e.message, true); }
+    }; });
+    document.querySelectorAll("[data-r]").forEach(function (b) { b.onclick = async function () { try { await rpc("admin_mk_retry", { p_id: b.dataset.r }); pTikTok(my); } catch (e) { msg(e.message, true); } }; });
+  }
   async function pCards(my) {
     var d; try { d = await rpc("admin_autorenew"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "autorenew.sql")); return; }
     if (stale(my)) return;
@@ -639,13 +672,32 @@
   /* ---- Ad Centre: Consolidation Advertising command centre ---- */
   var CH = ["site", "facebook", "instagram", "tiktok", "google"], CHN = { site: "SafeBuy site", facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", google: "Google" };
   function nk(id) { var v = Number(($(id) || {}).value); return Math.round((isFinite(v) ? v : 0) * 100); }
+  var PST = { planned: "queued", publishing: "publishing now…", posted: "posted ✓", failed: "failed", needs_setup: "waiting: channel not connected" };
+  function chanPanel(CHS) {
+    var st = CHS.state || {}, n = CHS.counts || {};
+    function line(key, name, how, auto) {
+      var on = auto || st[key], c = n[key] || {};
+      return '<p style="margin:6px 0"><b>' + name + '</b> <span class="' + (on ? "ops-ok" : "ops-bad") + '">' + (auto ? "Automatic" : on ? "Connected" : "Not connected") + "</span>" +
+        (c.posted || c.waiting || c.failed ? ' <span class="muted">· ' + (c.posted || 0) + " posted" + (c.waiting ? ", " + c.waiting + " waiting" : "") + (c.failed ? ", " + c.failed + " failed" : "") + "</span>" : "") +
+        (on ? "" : '<br><span class="muted">' + how + "</span>") + "</p>";
+    }
+    return '<div class="ops-row"><b>Advertising channels</b>' +
+      line("site", "SafeBuy website", "", true).replace("Automatic", "Automatic") +
+      line("google", "Google", "", true) +
+      line("facebook", "Facebook", "Add the secrets FB_PAGE_ID and FB_PAGE_TOKEN to the publish-ads function.", false) +
+      line("instagram", "Instagram", "Add IG_USER_ID (and FB_PAGE_TOKEN) to the publish-ads function.", false) +
+      line("tiktok", "TikTok", "Add TIKTOK_ACCESS_TOKEN to the publish-ads function. Needs an approved TikTok app.", false) +
+      '<p class="muted" style="margin:6px 0 0">Google finds the campaign page and every product through the sitemap. It decides itself when to show them.' + (st.at ? " Checked " + when(st.at) + "." : " Not checked yet: deploy publish-ads and run the workflow once.") + "</p></div>";
+  }
   async function pAdCentre(my) {
     var d; try { d = await rpc("admin_consol_overview"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "consolidation.sql")); return; }
+    var CHS = null; try { CHS = await rpc("admin_consol_channels"); if (!CHS || Array.isArray(CHS) || typeof CHS !== "object") CHS = null; } catch (e) { CHS = null; }
     var ap = true; try { ap = await rpc("admin_consol_autopilot_get"); } catch (e) { ap = null; }
     if (stale(my)) return;
     var h = '<div class="ops-grid">' + card(d.active, "active campaigns") + card(d.sellers, "participating sellers") + card(d.pending, "products awaiting approval") + card(money(d.net_kobo), "net advertising earnings") + "</div>" +
       '<div class="ops-row"><b>Automation: <span class="' + (d.auto ? "ops-ok" : "ops-bad") + '">' + (d.auto ? "ON" : "OFF") + '</span></b><p class="muted">When ON, SafeBuy creates the daily, weekly and monthly campaigns itself, opens registration, sends reminders, closes at the deadline and launches only campaigns that are paid, approved and funded. Times are West Africa Time.</p>' +
       '<button class="button full" type="button" id="ac-auto">' + (d.auto ? "Turn automation OFF" : "Turn automation ON") + '</button><button class="button full" type="button" id="ac-run" style="margin-top:8px">Run the scheduler now</button><p id="ac-m" class="muted" role="status"></p></div>' +
+      (CHS ? chanPanel(CHS) : "") +
       (ap === null ? "" : '<div class="ops-row"><b>Autopilot launch: <span class="' + (ap ? "ops-ok" : "ops-bad") + '">' + (ap ? "ON" : "OFF") + '</span></b><p class="muted">When ON, a campaign launches the moment it is ready: enough sellers have paid, every product is reviewed, and the money collected covers the advertising budget. It starts right after you confirm a payment or approve products, without waiting for the launch time. A new campaign opens for the next sellers.</p><button class="button full" type="button" id="ac-ap">' + (ap ? "Turn autopilot OFF" : "Turn autopilot ON") + '</button></div>');
     h += '<div class="ops-row"><b>Campaign settings</b><p class="muted">Prices and limits used for every new campaign. Advertising spend is separate from SafeBuy earnings.</p></div>';
     (d.types || []).forEach(function (t) {
@@ -667,16 +719,16 @@
         (c.block ? '<p class="ops-bad">' + esc(c.block) + "</p>" : "") +
         '<p>Collected ' + money(c.collected_kobo) + (c.refunded_kobo ? " · refunded " + money(c.refunded_kobo) : "") + " · ad spend " + money(c.ad_spend_kobo) + " · creative " + money(c.creative_kobo) + " · operations " + money(c.ops_kobo) + " · payment fees " + money(c.fees_kobo) + '<br><b>Net SafeBuy earnings: ' + money(net) + "</b> <span class=\"muted\">(budget set: " + money(c.budget_kobo) + ")</span></p>" +
         (c.status === "running" || c.status === "completed" || c.status === "paused" ? '<p class="muted">Counted on SafeBuy: ' + c.impressions + " shown · " + c.clicks + " opened · " + c.enquiries + " enquiries" + ((c.platform || []).length ? "<br>Platform-reported (not added to the above): " + c.platform.map(function (x) { return esc(CHN[x.channel] || x.channel) + " " + x.impressions + " shown / " + x.clicks + " clicks"; }).join("; ") : "") + "</p>" : "") +
-        '<div class="ops-act"><button type="button" class="button" data-act="review">Review products</button>' + (/^(cancelled|draft|open|closed)$/.test(c.status) ? '<button type="button" class="button" data-act="delete" style="background:#b42318">Delete</button>' : "") + (c.pending ? '<button type="button" class="button" data-act="approveall">Approve all waiting (' + c.pending + ")</button>" : "") +
+        '<div class="ops-act"><button type="button" class="button" data-act="review">Review products</button>' + (/^(open|closed)$/.test(c.status) ? '<button type="button" class="button" data-act="launchnow" style="background:#b45309">Launch now</button>' : "") + (/^(cancelled|draft|open|closed)$/.test(c.status) ? '<button type="button" class="button" data-act="delete" style="background:#b42318">Delete</button>' : "") + (c.pending ? '<button type="button" class="button" data-act="approveall">Approve all waiting (' + c.pending + ")</button>" : "") +
         (c.status === "open" ? '<button type="button" class="button" data-act="status" data-to="closed">Close registration</button>' : "") + (c.status === "running" ? '<button type="button" class="button" data-act="status" data-to="paused">Pause</button>' : "") + (c.status === "paused" ? '<button type="button" class="button" data-act="status" data-to="running">Resume</button>' : "") +
         (["draft", "open", "closed", "paused", "running"].indexOf(c.status) >= 0 ? '<button type="button" class="button" data-act="status" data-to="cancelled">Cancel and refund</button><button type="button" class="button" data-act="budget" data-b="' + c.budget_kobo + '">Set budget</button>' : "") +
         '<button type="button" class="button" data-act="events">History</button><button type="button" class="button" data-act="expense">Add expense</button><button type="button" class="button" data-act="stats">Platform numbers</button></div>' +
         ((c.captions || []).length ? '<details><summary>Captions and posting</summary>' + c.captions.map(function (x) {
           var po = (c.posts || []).filter(function (q) { return q.channel === x.channel; })[0];
-          return '<div class="ops-row"><b>' + esc(CHN[x.channel] || x.channel) + (po ? ' <span class="muted">· ' + esc(po.status) + "</span>" : "") + '</b><p style="white-space:pre-wrap">' + esc(x.caption) + '</p><button type="button" class="button" data-act="copy" data-t="' + esc(x.caption) + '">Copy caption</button>' + (po ? '<button type="button" class="button" data-act="posted" data-ch="' + esc(x.channel) + '">Mark as posted</button>' + (po.url ? ' <a href="' + esc(po.url) + '" target="_blank" rel="noopener">View post</a>' : "") : "") + "</div>"; }).join("") + "</details>" : "") +
+          return '<div class="ops-row"><b>' + esc(CHN[x.channel] || x.channel) + (po ? ' <span class="' + (po.status === "posted" ? "ops-ok" : po.status === "failed" ? "ops-bad" : "muted") + '">· ' + esc(PST[po.status] || po.status) + "</span>" : "") + '</b>' + (po && po.error ? '<p class="muted">' + esc(po.error) + "</p>" : "") + '<p style="white-space:pre-wrap">' + esc(x.caption) + '</p><button type="button" class="button" data-act="copy" data-t="' + esc(x.caption) + '">Copy caption</button>' + (po ? (po.status === "failed" || po.status === "needs_setup" ? '<button type="button" class="button" data-act="retry" data-ch="' + esc(x.channel) + '">Try again now</button>' : "") + '<button type="button" class="button" data-act="posted" data-ch="' + esc(x.channel) + '">Mark as posted</button>' + (po.url ? ' <a href="' + esc(po.url) + '" target="_blank" rel="noopener">View post</a>' : "") : "") + "</div>"; }).join("") + "</details>" : "") +
         '<div class="ac-rev"></div></div>';
     });
-    h += '<p class="muted">Publishing to Facebook, Instagram and TikTok is done by you from the captions above (copy, post, then mark as posted) until those platform accounts are approved for automatic posting.</p><div id="ac-new-box"></div>';
+    h += '<p class="muted">When a campaign goes live, Facebook, Instagram and TikTok posts are published automatically within the hour once the channel is connected (see Channels above). Until then use Copy caption and Mark as posted. Google and SafeBuy need no action.</p><div id="ac-new-box"></div>';
     body(h);
     var msg = function (t, bad) { var m = $("ac-m"); if (m) { m.className = bad ? "ops-bad" : "ops-ok"; m.textContent = t; } };
     var again = function () { if (!stale(my)) pAdCentre(my); };
@@ -709,6 +761,7 @@
           }
           if (act === "copy") { if (navigator.clipboard) await navigator.clipboard.writeText(b.dataset.t); b.textContent = "Copied ✓"; return; }
           if (act === "status") { if (b.dataset.to === "cancelled" && !window.confirm("Cancel this campaign? Paid sellers are marked for refund and told.")) return; await rpc("admin_consol_status", { p_id: cid, p_status: b.dataset.to }); again(); return; }
+          if (act === "launchnow") { if (!window.confirm("Launch this campaign now? Registration closes and the products start showing immediately. Anyone who has not paid yet is removed.")) return; await rpc("admin_consol_launch_now", { p_id: cid }); alert("Launched. The campaign is live."); again(); return; }
           if (act === "delete") { if (!window.confirm("Delete this campaign for good? Its report and entries are removed. This cannot be undone.")) return; await rpc("admin_consol_delete", { p_id: cid }); again(); return; }
           if (act === "approveall") { var n = await rpc("admin_consol_approve_all", { p_campaign: cid }); alert(n + " product(s) approved."); again(); return; }
           if (act === "budget") { var v = window.prompt("Advertising budget for this campaign in ₦ (a campaign only launches when collections cover it):", String(Number(b.dataset.b) / 100)); if (v === null) return;
@@ -718,6 +771,7 @@
             await rpc("admin_consol_expense", { p_id: cid, p_kind: k.trim(), p_amount: Math.round(Number(a) * 100), p_note: note }); again(); return; }
           if (act === "stats") { var ch = window.prompt("Channel: facebook, instagram, tiktok or google", "facebook"); if (!ch) return; var im = window.prompt("Impressions reported by " + ch); if (im === null) return; var ck = window.prompt("Clicks reported by " + ch); if (ck === null) return;
             await rpc("admin_consol_platform_stats", { p_id: cid, p_channel: ch.trim(), p_impressions: Number(im) || 0, p_clicks: Number(ck) || 0, p_note: "typed in by admin" }); again(); return; }
+          if (act === "retry") { await rpc("admin_consol_retry", { p_id: cid, p_channel: b.dataset.ch }); again(); return; }
           if (act === "posted") { var url = window.prompt("Link to the post (https://…), or leave empty"); if (url === null) return; await rpc("admin_consol_post", { p_id: cid, p_channel: b.dataset.ch, p_status: "posted", p_url: url }); again(); return; }
           if (act === "events") { var ev = await rpc("admin_consol_events", { p_campaign: cid }); var bx = row.querySelector(".ac-rev");
             bx.innerHTML = ev.length ? ev.map(function (x) { return '<p class="muted" style="margin:4px 0">' + when(x.at) + " · <b>" + esc(String(x.kind).replace(/_/g, " ")) + "</b>" + (x.shop ? " · " + esc(x.shop) : "") + (x.detail ? " · " + esc(x.detail) : "") + "</p>"; }).join("") : '<p class="muted">No events yet.</p>'; return; }
@@ -799,7 +853,7 @@
     var t0 = Date.now(), h;
     try { h = await rpc("admin_health"); } catch (e) { if (!stale(my)) body(fail(e)); return; }
     var ms = Date.now() - t0; if (stale(my)) return;
-    function bar(used, cap, label) { var p = Math.min(100, Math.round(used / cap * 100)); return '<div class="ops-row"><b>' + label + "</b> · " + mb(used) + " of " + mb(cap) + " (" + p + '%)<div class="ops-bar"><i class="' + (p > 75 ? "hi" : "") + '" style="width:' + p + '%"></i></div>' + (p > 75 ? '<p class="ops-bad">Getting full. Plan an upgrade or clean up.</p>' : "") + "</div>";}
+    function bar(used, cap, label) { var p = Math.min(100, Math.round(used / cap * 100)); return '<div class="ops-row"><b>' + label + "</b> · " + mb(used) + " of " + mb(cap) + " (" + p + '%)<div class="ops-bar"><i class="' + (p > 75 ? "hi" : "") + '" style="width:' + p + '%"></i></div>' + (p > 75 ? '<p class="ops-bad">Getting full. Plan an upgrade or clean up.</p>' : "") + "</div>"; }
     var pub = (h.buckets || []).filter(function (b) { return b.name === "delivery-docs" && b.public; });
     var rls = h.rls_off || [];
     body('<div class="ops-row"><b>Database answered in ' + ms + ' ms</b> ' + (ms < 800 ? '<span class="ops-ok">✓ fast</span>' : '<span class="ops-warn">slow</span>') + "<br>" + (h.connections || 0) + " open connections</div>" +
@@ -839,7 +893,10 @@
     ["deals", "Uploaded deals.html and opened it once to check it loads"],
     ["paystack", "Deployed the paystack-cards function (JWT check OFF) and set PAYSTACK_SECRET + CRON_KEY"],
     ["hook", "Added the Paystack webhook URL and the hourly renewals.yml GitHub workflow"],
-    ["cardson", "Turned on Admin > Control > Cards, then Ad Centre > Automation"]
+    ["cardson", "Turned on Admin > Control > Cards, then Ad Centre > Automation"],
+    ["sql_tt", "Ran marketing.sql and deployed the marketing function (JWT check OFF; TikTok/Meta keys + TOKEN_KEY added)"],
+    ["sql_pub", "Ran consol_publish.sql and deployed the publish-ads function (JWT check OFF)"],
+    ["social", "Added Facebook / Instagram / TikTok secrets and checked Ad Centre > Advertising channels shows Connected"]
   ];
   async function pChecklist(my) {
     var s;
