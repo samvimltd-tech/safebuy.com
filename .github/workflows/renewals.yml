@@ -1,4 +1,4 @@
-# Runs every hour: charges cards that are due (automatic renewal) and runs the Consolidation Advertising scheduler.
+# Runs every hour: charges cards that are due (automatic renewal), runs the Consolidation Advertising scheduler and publishes live campaigns to the social channels.
 # Needs two repository secrets: SUPABASE_URL (e.g. https://abcd.supabase.co) and CRON_KEY (same value as the Edge Function secret).
 name: Hourly renewals and campaigns
 on:
@@ -13,3 +13,13 @@ jobs:
         run: |
           curl -fsS -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/paystack-cards" \
             -H "x-cron-key: ${{ secrets.CRON_KEY }}" -H "Content-Type: application/json" -d '{}'
+      - name: Publish live campaigns to Facebook, Instagram and TikTok
+        if: always()
+        run: |
+          curl -fsS -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/publish-ads" \
+            -H "x-cron-key: ${{ secrets.CRON_KEY }}" -H "Content-Type: application/json" -d '{}' || echo "publish-ads not deployed yet"
+      - name: Publish waiting TikTok posts
+        if: always()
+        run: |
+          curl -fsS -X POST "${{ secrets.SUPABASE_URL }}/functions/v1/marketing" \
+            -H "x-cron-key: ${{ secrets.CRON_KEY }}" -H "Content-Type: application/json" -d '{}' || echo "marketing not deployed yet"
