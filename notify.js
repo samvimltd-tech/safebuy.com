@@ -8,6 +8,13 @@
   var cli = null, me = null, count = 0, isOpen = false, chan = null;
 
   var markP = null;
+  /* Role-aware: seller alerts show only in seller mode / the seller app; the buyer marketplace shows buyer alerts only. */
+  function sellerView() { return document.body.classList.contains("sb-seller") || /\/seller\/?/.test(location.pathname); }
+  function inView(q) { return sellerView() ? q.eq("role", "seller") : q.neq("role", "seller"); }
+  function markRead() {
+    var role = sellerView() ? "seller" : "buyer";
+    return cli.rpc("mark_notifications_read_role", { p_role: role }).then(function (r) { return r && r.error ? cli.rpc("mark_notifications_read") : r; });
+  }
   var baseTitle = document.title.replace(/^\(\d+\)\s*/, "");
 
   function esc(v) {
@@ -77,7 +84,7 @@
     if (!cli || !me) { fab.hidden = true; setCount(0); return; }
     fab.hidden = false;
     if (isOpen) return;
-    var r = await cli.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null);
+    var r = await inView(cli.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null));
     if (!r.error) setCount(r.count || 0);
   }
 
@@ -106,15 +113,15 @@
     root.classList.add("open");
     document.body.style.overflow = "hidden";
     bodyEl.innerHTML = '<p class="sbn-empty">Loading…</p>';
-    var r = await cli.from("notifications").select("id,role,title,body,read_at,created_at")
+    var r = await inView(cli.from("notifications").select("id,role,title,body,read_at,created_at"))
       .order("created_at", { ascending: false }).limit(50);
     if (r.error) { bodyEl.innerHTML = '<p class="sbn-empty">' + esc(r.error.message) + "</p>"; return; }
     var rows = r.data || [];
     bodyEl.innerHTML = rows.length
       ? rows.map(function (n) { return itemHtml(n, !n.read_at); }).join("")
-      : '<p class="sbn-empty">No notifications yet.<br>New orders and order updates will show here.</p>';
+      : '<p class="sbn-empty">No notifications yet.<br>'+(sellerView()?"Seller alerts":"New orders and order updates")+' will show here.</p>';
     setCount(0);
-    markP = cli.rpc("mark_notifications_read");
+    markP = markRead();
     try { await markP; } catch (e) {}
   }
   function closePanel() {
@@ -150,12 +157,13 @@
   function onNew(payload) {
     var n = payload.new;
     if (!n) return;
+    if ((n.role === "seller") !== sellerView()) return;
     beep();
     say(n.title + (n.body ? ": " + n.body : ""));
     if (isOpen) {
       var empty = bodyEl.querySelector(".sbn-empty"); if (empty) empty.remove();
       bodyEl.insertAdjacentHTML("afterbegin", itemHtml(n, true));
-      markP = cli.rpc("mark_notifications_read");
+      markP = markRead();
     } else {
       setCount(count + 1);
     }
@@ -181,6 +189,7 @@
     await loadMe();
     await refresh();
     subscribe();
+    try { new MutationObserver(function () { refresh(); }).observe(document.body, { attributes: true, attributeFilter: ["class"] }); } catch (e) {}
     setInterval(function () { if (!document.hidden) refresh(); }, 30000);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
     cli.auth.onAuthStateChange(function () {
