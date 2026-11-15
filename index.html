@@ -1,6 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+(function () {
+  /* Watchdog. Optional feature files that fail are retried once (with a fresh copy) and then skipped quietly: the page keeps working.
+     The red bar appears only if a core file or the database library cannot load. "Repair" clears saved copies and reloads, with no extra file needed. */
+  var shown = false, retried = {}, CORE = /\/(guard|supabase-config|shop-extras)\.js/;
+  window.__sbMissing = window.__sbMissing || [];
+  function repairNow(btn) {
+    try { btn.textContent = "Repairing..."; btn.style.pointerEvents = "none"; } catch (e) {}
+    var jobs = [];
+    try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (r) { return Promise.all(r.map(function (x) { return x.unregister(); })); })); } catch (e) {}
+    try { if (window.caches && caches.keys) jobs.push(caches.keys().then(function (k) { return Promise.all(k.map(function (n) { return caches.delete(n); })); })); } catch (e) {}
+    Promise.all(jobs).catch(function () {}).then(function () { location.replace(location.pathname + "?fresh=" + Date.now()); });
+  }
+  function repairBar() {
+    if (shown) return; if (!document.body) { document.addEventListener("DOMContentLoaded", repairBar); return; } shown = true;
+    var d = document.createElement("div");
+    d.setAttribute("role", "alert");
+    d.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:99998;background:#b91c1c;color:#fff;border-radius:14px;padding:12px 14px;font:700 14px/1.4 system-ui,sans-serif;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)";
+    d.innerHTML = '<span style="flex:1">The page could not finish loading. Check your connection, then repair.</span><button type="button" data-fix style="border:0;background:#fff;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:800;font-size:14px">Repair</button><button type="button" data-x aria-label="Close" style="border:0;background:transparent;color:#fff;font-size:22px;line-height:1;padding:0 4px">&times;</button>';
+    d.querySelector("[data-fix]").onclick = function () { repairNow(this); };
+    d.querySelector("[data-x]").onclick = function () { d.remove(); };
+    document.body.appendChild(d);
+  }
+  function gaveUp(u) {
+    window.__sbMissing.push(u); try { console.warn("SafeBuy: optional file not available, skipped:", u); } catch (e) {}
+    if (CORE.test(u)) setTimeout(repairBar, 300);
+  }
+  window.addEventListener("error", function (e) {
+    var t = e.target;
+    if (!(t && t.tagName === "SCRIPT" && t.src && t.src.indexOf(location.origin) === 0) || /vendor\//.test(t.src)) return;
+    var u = t.src.split("?")[0];
+    if (t.getAttribute("data-retry")) { gaveUp(u); return; }
+    if (retried[u]) return; retried[u] = 1;
+    setTimeout(function () {
+      var s = document.createElement("script"); s.src = u + "?r=" + Date.now(); s.async = false; s.setAttribute("data-retry", "1");
+      (document.body || document.head).appendChild(s);
+    }, 1500);
+  }, true);
+  window.__sbRepairBar = repairBar;
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#087f5b">
@@ -629,6 +671,7 @@ if ("serviceWorker" in navigator) window.addEventListener("load", function () { 
     <details>
       <summary>📦 Orders &amp; delivery</summary>
       <div class="d-links">
+        <button type="button" data-feature="dashboard"><span class="lbl">📊 My dashboard</span></button>
         <button type="button" data-feature="orders"><span class="lbl">📦 My orders</span></button>
         <button type="button" data-feature="delivery-orders"><span class="lbl">🚚 Deliveries</span></button>
         <button type="button" data-feature="neworders" hidden><span class="lbl">🔔 New orders</span></button>
@@ -1406,6 +1449,7 @@ updateCartCount();
   function sellerMode() { return document.body.classList.contains("sb-seller"); }
 
   function triggerFeature(name) {
+    if (name === "dashboard") { location.href = "./dashboard/"; return; }
     if (name === "verify") {
       var sell = document.querySelector('[data-action="sell"]');
       if (sell) sell.click();
@@ -1710,21 +1754,7 @@ updateCartCount();
     setTimeout(function () { if (!window.supabase) add(n + 1); }, 6000);
   }
   add(0);
-  /* Watchdog: if one of our own files fails to load, offer a one-tap repair instead of a silently dead page. */
-  var shown = false;
-  function repairBar() {
-    if (shown || !document.body) return; shown = true;
-    var d = document.createElement("div");
-    d.style.cssText = "position:fixed;left:10px;right:10px;top:10px;z-index:99998;background:#b91c1c;color:#fff;border-radius:14px;padding:12px 14px;font:700 14px/1.4 system-ui,sans-serif;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.3)";
-    d.innerHTML = '<span style="flex:1">Part of the page did not load.</span><a href="' + ROOT + 'reset.html" style="background:#fff;color:#b91c1c;border-radius:10px;padding:8px 12px;text-decoration:none;font-weight:800">Tap to repair</a><button type="button" aria-label="Close" style="border:0;background:transparent;color:#fff;font-size:18px">\u2715</button>';
-    d.querySelector("button").onclick = function () { d.remove(); };
-    document.body.appendChild(d);
-  }
-  window.addEventListener("error", function (e) {
-    var t = e.target;
-    if (t && t.tagName === "SCRIPT" && t.src && t.src.indexOf(location.origin) === 0 && !/vendor\//.test(t.src)) setTimeout(repairBar, 1500);
-  }, true);
-  setTimeout(function () { if (!window.supabase) repairBar(); }, 20000);
+  setTimeout(function () { if (!window.supabase && window.__sbRepairBar) window.__sbRepairBar(); }, 25000);
   setTimeout(function () { if (!window.supabase) window.__sbMarkReady(); }, 25000);
 })();
 </script>
@@ -1967,6 +1997,7 @@ updateCartCount();
       accMenu.innerHTML =
         '<div class="dd-user">Signed in as<br><strong>' + email + '</strong><br><span class="mode-chip" data-mode-chip>Buyer mode</span></div><hr>' +
         '<button type="button" data-feature="mode" hidden><span class="ico"></span><span class="lbl">🔄 Switch mode</span></button>' +
+        '<button type="button" data-feature="dashboard"><span class="ico">📊</span><span class="lbl">My dashboard</span></button>' +
         '<button type="button" data-feature="orders"><span class="ico">📦</span><span class="lbl">My orders</span></button>' +
         '<button type="button" data-feature="delivery-orders"><span class="ico">🚚</span><span class="lbl">Deliveries</span></button>' +
         '<button type="button" data-feature="neworders" hidden><span class="ico"></span><span class="lbl">🔔 New orders</span></button>' +
