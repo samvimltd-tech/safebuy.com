@@ -76,6 +76,7 @@ nav.tabs button{flex:1;position:relative;border:0;background:transparent;padding
 nav.tabs button span{display:block;font-size:22px;line-height:1.2}
 nav.tabs button[aria-current=page]{color:var(--brand)}
 nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px system-ui;padding:0 4px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px}.tile b{display:block;font-size:22px;line-height:1.2}.tile span{color:var(--mute);font-size:13px}.tile.hi{background:var(--brand);border-color:var(--brand);color:#fff}.tile.hi span{color:#ffffffcc}.card.act{border-left:4px solid var(--warn)}
 .skel{border-radius:18px;background:linear-gradient(90deg,var(--line),var(--card),var(--line));background-size:200% 100%;animation:sk 1.2s infinite;aspect-ratio:3/4}
 @keyframes sk{to{background-position:-200% 0}}
 .fade{animation:fd .22s ease-out both}@keyframes fd{from{opacity:0;transform:translateY(6px)}}
@@ -122,7 +123,7 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
 (function () {
   "use strict";
   var C = null, USER = null, TAB = "shop", CART_KEY = "safebuy_cart_v1", PKEY = "sbb-products-v1";
-  var PRODUCTS = [], LOADED = false, CAT = "All", Q = "", SORT = "new", ORDERS = [], OLOADED = false, ALERTS = [], CART = [], VIS = null;
+  var CONVS = [], UNREADMSG = 0, PRODUCTS = [], LOADED = false, CAT = "All", Q = "", SORT = "new", ORDERS = [], OLOADED = false, ALERTS = [], CART = [], VIS = null;
   var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
   var $ = function (id) { return document.getElementById(id); }, A = $("app");
   function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -165,14 +166,55 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
   function shell() {
     CART = readCart(); var cc = cartCount(), ao = actionOrders();
     A.innerHTML = '<header class="top"><div class="hrow"><div class="logo">S</div><h1>SafeBuy NG</h1>' + (USER ? '<button class="ib" id="bell" aria-label="Alerts">🔔' + (unread() ? "<b>" + Math.min(unread(), 9) + "</b>" : "") + "</button>" : '<button class="btn alt" id="sin" style="min-height:40px;padding:6px 14px">Sign in</button>') + "</div>" +
-      (TAB === "shop" ? '<form class="sbar" id="sf" role="search"><input id="q" type="search" placeholder="Search products or shops" value="' + esc(Q) + '" aria-label="Search" enterkeyhint="search"><button type="button" id="cam" aria-label="Search with a photo">📷</button></form>' : "") + '</header><main id="main"></main>' +
-      '<nav class="tabs" aria-label="Menu">' + [["shop", "🛍️", "Shop"], ["cart", "🛒", "Cart"], ["orders", "📦", "Orders"], ["me", "👤", "Account"]].map(function (t) { return '<button data-t="' + t[0] + '"' + (TAB === t[0] ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + t[2] + (t[0] === "cart" && cc ? "<b>" + cc + "</b>" : "") + (t[0] === "orders" && ao ? "<b>" + ao + "</b>" : "") + "</button>"; }).join("") + "</nav>";
+      (TAB === "shop" ? '<form class="sbar" id="sf" role="search"><input id="q" type="search" placeholder="Search products or shops" value="' + esc(Q) + '" aria-label="Search" enterkeyhint="search"><button type="button" id="cam" aria-label="Search with a photo">📷</button></form>' : "") + '</header>' + (TAB === "shop" ? '<a href="../groups/" style="display:block;margin:10px 14px 0;padding:11px 14px;border-radius:12px;background:#ffc629;color:#2b2100;font-weight:800;text-decoration:none">👥 Group buying: buy together, pay less →</a>' : "") + '<main id="main"></main>' +
+      '<nav class="tabs" aria-label="Menu">' + [["home", "🏠", "Home"], ["shop", "🛍️", "Shop"], ["cart", "🛒", "Cart"], ["orders", "📦", "Orders"], ["me", "👤", "Account"]].map(function (t) { return '<button data-t="' + t[0] + '"' + (TAB === t[0] ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + t[2] + (t[0] === "cart" && cc ? "<b>" + cc + "</b>" : "") + (t[0] === "orders" && ao ? "<b>" + ao + "</b>" : "") + (t[0] === "home" && USER && homeActions().length ? "<b>" + homeActions().length + "</b>" : "") + "</button>"; }).join("") + "</nav>";
     A.querySelectorAll("[data-t]").forEach(function (b) { b.onclick = function () { TAB = b.dataset.t; shell(); window.scrollTo(0, 0); if (TAB === "orders") refreshOrders(); }; });
     var bl = $("bell"); if (bl) bl.onclick = openAlerts; var si = $("sin"); if (si) si.onclick = function () { authSheet("in"); };
     var sf = $("sf"); if (sf) { sf.onsubmit = function (e) { e.preventDefault(); $("q").blur(); }; $("q").oninput = function () { Q = this.value; VIS = null; drawGrid(); }; $("cam").onclick = photoSearch; }
     draw();
   }
-  function draw() { var m = $("main"); if (!m) return; ({ shop: vShop, cart: vCart, orders: vOrders, me: vMe }[TAB] || vShop)(m); }
+  function draw() { var m = $("main"); if (!m) return; ({ home: vHome, shop: vShop, cart: vCart, orders: vOrders, me: vMe }[TAB] || vShop)(m); }
+
+
+  /* =========================== HOME (dashboard) =========================== */
+  function homeActions() {
+    var out = [];
+    ORDERS.forEach(function (o) {
+      var p = SP[o.id], t = esc(o.product_name || "your order"), D = DET[o.id];
+      if (p && p.status === "awaiting") out.push({ id: o.id, ico: "💳", t: "Pay for " + t, s: nk(p.amount_kobo) });
+      else if (o.status === "shipped") out.push({ id: o.id, ico: "📦", t: "Confirm you received " + t, s: "Tap only after you have the item in hand." });
+      if (D && D.info && D.info.delivery_code && D.info.delivery_status === "dispatched" && D.info.job_status !== "delivered") out.push({ id: o.id, ico: "🔑", t: "Delivery code for " + t, s: D.info.delivery_code + " . Give it to the rider only after checking your item." });
+      if (D && D.trk && D.trk.can_rate) out.push({ id: o.id, ico: "⭐", t: "Rate your rider for " + t, s: "It takes one tap." });
+      if (o.delivery_status === "requested" && !(p && p.status === "awaiting")) out.push({ id: o.id, ico: "🏍️", t: "Pay the delivery fee for " + t, s: "Open the order to see the fee." });
+    });
+    return out;
+  }
+  async function loadMsgs() {
+    if (!USER) return;
+    try {
+      var c = await C.from("conversations").select("id,product_name,shop_name,buyer_id,last_message,last_message_at").order("last_message_at", { ascending: false }).limit(5);
+      if (!c.error) CONVS = (c.data || []).filter(function (x) { return x.buyer_id === USER.id; });
+      var u = await C.from("messages").select("id", { count: "exact", head: true }).is("read_at", null).neq("sender_id", USER.id);
+      UNREADMSG = u.count || 0;
+    } catch (e) {}
+  }
+  function vHome(m) {
+    if (!USER) { m.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:42px">🏠</div><h3>Your SafeBuy home</h3><p class="muted">Sign in to see your orders, payments, deliveries and messages in one place.</p><button class="btn full" id="hin">Sign in or create account</button><button class="btn line full" style="margin-top:8px" id="hsh">Browse products</button></div>'; $("hin").onclick = function () { authSheet("in"); }; $("hsh").onclick = function () { TAB = "shop"; shell(); }; return; }
+    if (!OLOADED) { m.innerHTML = '<div class="skel" style="aspect-ratio:3/1;margin-bottom:12px"></div><div class="skel" style="aspect-ratio:3/1"></div>'; return; }
+    var live = ORDERS.filter(function (o) { return o.status !== "cancelled"; }), active = ORDERS.filter(function (o) { return ["placed", "paid", "shipped"].indexOf(o.status) > -1; }).length,
+        done = ORDERS.filter(function (o) { return o.status === "delivered"; }).length, spent = live.reduce(function (t, o) { return t + Number(o.total_kobo || 0); }, 0),
+        act = homeActions(), first = String((USER.user_metadata && USER.user_metadata.full_name) || "").trim().split(" ")[0];
+    var h = '<h2 style="margin:6px 0 2px">Hi' + (first ? ", " + esc(first) : "") + ' 👋</h2><p class="muted" style="margin:0">Everything about your orders, in one place.</p>' +
+      '<div class="tiles"><div class="tile hi"><b>' + active + '</b><span>Active orders</span></div><div class="tile"><b>' + done + '</b><span>Delivered</span></div><div class="tile"><b>' + ORDERS.length + '</b><span>All orders</span></div><div class="tile"><b>' + nk(spent) + "</b><span>Total ordered</span></div></div>" +
+      '<h3 style="margin:16px 0 8px">Needs your attention</h3>' +
+      (act.length ? act.map(function (a) { return '<div class="card act"><b>' + a.ico + " " + a.t + '</b><div class="muted">' + esc(a.s) + '</div><button class="btn alt full" style="margin-top:10px" data-go="' + esc(a.id) + '">Open order</button></div>'; }).join("") : '<div class="card" style="text-align:center"><div style="font-size:34px">✅</div><b>You are all caught up</b><p class="muted" style="margin:4px 0 0">Nothing needs you right now.</p></div>') +
+      '<h3 style="margin:16px 0 8px">Messages' + (UNREADMSG ? ' <span class="pill bad">' + UNREADMSG + " unread</span>" : "") + "</h3>" +
+      (CONVS.length ? CONVS.slice(0, 3).map(function (c) { return '<a class="card" style="display:block;text-decoration:none;color:inherit" href="../#messages"><b>' + esc(c.shop_name || "Seller") + '</b> <span class="muted">· ' + esc(c.product_name || "") + '</span><div>' + esc(c.last_message || "No messages yet") + '</div><div class="muted">' + (c.last_message_at ? ago(c.last_message_at) : "") + "</div></a>"; }).join("") + '<a class="btn alt full" href="../#messages">Open full inbox</a>' : '<div class="card"><p class="muted" style="margin:0">No messages yet. Open a product and tap “Message seller”.</p></div>') +
+      '<h3 style="margin:16px 0 8px">Recent orders</h3>' + (ORDERS.length ? ORDERS.slice(0, 3).map(function (o) { var st = o.status === "cancelled" ? ["bad", "Cancelled"] : [o.status === "delivered" ? "ok" : "", { placed: "Order placed", paid: "Paid", shipped: "On the way", delivered: "Delivered" }[o.status] || o.status]; return '<div class="card"><div class="line1"><div><b>' + esc(o.product_name || "Product") + " × " + o.quantity + '</b><div class="muted">' + esc(o.shop_name || "") + " · " + ago(o.created_at) + '</div></div><div style="text-align:right"><b>' + nk(o.total_kobo) + '</b><div><span class="pill ' + st[0] + '">' + esc(st[1]) + "</span></div></div></div></div>"; }).join("") + '<button class="btn line full" data-to="orders">See all orders</button>' : '<div class="card" style="text-align:center"><div style="font-size:34px">🛒</div><b>No orders yet</b><button class="btn full" style="margin-top:10px" data-to="shop">Start shopping</button></div>');
+    m.innerHTML = h;
+    m.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { TAB = "orders"; shell(); var el = $("o-" + b.dataset.go); if (el) el.scrollIntoView({ block: "start" }); refreshOrders(); }; });
+    m.querySelectorAll("[data-to]").forEach(function (b) { b.onclick = function () { TAB = b.dataset.to; shell(); window.scrollTo(0, 0); }; });
+  }
 
   /* =========================== SHOP =========================== */
   function vShop(m) {
@@ -250,9 +292,9 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
     var pod = d.pay === "pay_on_delivery";
     m.innerHTML = rows + '<div class="card"><div class="line1"><b>Estimated total</b><b style="font-size:20px">' + naira(total) + '</b></div><p class="muted" style="margin:4px 0 0">Delivery fee, if you request it, is shown separately.</p></div>' +
       '<div class="card"><h3>Your details</h3><label for="cn">Your name</label><input id="cn" maxlength="80" autocomplete="name" value="' + esc(d.name || (USER && USER.user_metadata && USER.user_metadata.full_name) || "") + '"><label for="cnote">Note for sellers (optional)</label><textarea id="cnote" maxlength="300" placeholder="Delivery area, size, colour…">' + esc(d.note || "") + '</textarea>' +
-      '<label>Payment</label><label class="chk"><input type="radio" name="pay" value="direct"' + (pod ? "" : " checked") + '><span><b>Pay the seller directly</b> (cash or transfer at pickup)</span></label><label class="chk"><input type="radio" name="pay" value="pay_on_delivery"' + (pod ? " checked" : "") + '><span><b>Pay on delivery</b>: pay when it arrives (the seller must confirm). Delivery fee applies.</span></label>' +
+      '<label>Payment</label><label class="chk"><input type="radio" name="pay" value="direct"' + (pod ? "" : " checked") + '><span>' + (SPI.on ? "<b>Pay with Safe Pay</b> (recommended): you pay SafeBuy NG, and the seller is only paid after you receive your item" : "<b>Pay the seller directly</b> (cash or transfer at pickup)") + '</span></label><label class="chk"><input type="radio" name="pay" value="pay_on_delivery"' + (pod ? " checked" : "") + '><span><b>Pay on delivery</b>: pay when it arrives (the seller must confirm). Delivery fee applies.</span></label>' +
       '<div id="aw"' + (pod ? "" : " hidden") + '><label for="ca">Delivery address</label><input id="ca" maxlength="300" placeholder="Street, area, city" value="' + esc(d.addr || "") + '"></div>' +
-      '<p class="muted" style="margin-top:12px"><b>How it works:</b> your order goes to the seller. The seller confirms payment, and you can request delivery from Orders. SafeBuy NG does not hold product payments yet, so never pay before you are comfortable.</p>' +
+      '<p class="muted" style="margin-top:12px"><b>How it works:</b> your order goes to the seller. The seller confirms payment, and you can request delivery from Orders. ' + (SPI.on ? "With Safe Pay, you pay SafeBuy NG first and your money is held safely until you receive your item." : "SafeBuy NG does not hold product payments yet, so never pay before you are comfortable.") + '</p>' +
       '<button class="btn full" id="place">Place order</button><p class="msg" id="cm"></p></div>';
     m.querySelectorAll("[data-q]").forEach(function (b) { b.onclick = function () { var it = CART.filter(function (i) { return (i.key || i.id) === b.dataset.k; })[0]; if (b.dataset.q === "inc" && it) it.qty = Math.min(50, it.qty + 1); if (b.dataset.q === "dec" && it) it.qty = Math.max(1, it.qty - 1); if (b.dataset.q === "rm") CART = CART.filter(function (i) { return (i.key || i.id) !== b.dataset.k; }); saveCart(); shell(); }; });
     m.querySelectorAll('input[name=pay]').forEach(function (r) { r.onchange = function () { $("aw").hidden = r.value !== "pay_on_delivery"; }; });
@@ -267,23 +309,42 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
     var rows = CART.map(function (i) { return { buyer_id: USER.id, product_id: i.id, quantity: Math.min(99, i.qty), color: i.color || null, size: i.size || null, buyer_name: name, note: note || null, pay_method: pay, address: addr || null }; });
     var r = await C.from("marketplace_orders").insert(rows);
     if (r.error) { setMsg("cm", /own product/i.test(r.error.message) ? "You cannot order your own product." : friendly(r.error), true); btn.disabled = false; return; }
-    CART = []; saveCart(); TAB = "orders"; toast(rows.length + " order" + (rows.length === 1 ? "" : "s") + " placed. Each seller will confirm."); shell(); refreshOrders();
+    CART = []; saveCart(); TAB = "orders"; toast(rows.length + " order" + (rows.length === 1 ? "" : "s") + " placed. " + (SPI.on ? "Open Orders to pay and secure it." : "Each seller will confirm.")); shell(); refreshOrders();
   }
 
   /* =========================== ORDERS + DELIVERY =========================== */
   var STEP = { placed: "Placed: waiting for seller", paid: "Paid", shipped: "On the way", delivered: "Delivered", cancelled: "Cancelled" };
   var JOB = { searching: "Finding a rider…", offered: "Finding a rider…", assigned: "Rider on the way to the seller", picked_up: "Rider has your item", delivered: "Delivered", unassigned: "No rider yet. SafeBuy NG is working on it." };
-  var DET = {};
+  var DET = {}, SP = {}, SPI = { on: false, hold_hours: 24 };
+  async function loadSpInfo() { try { var r = await C.rpc("sp_info"); if (!r.error && r.data) SPI = r.data; } catch (e) {} }
+  async function loadSp() { try { var r = await C.rpc("sp_my_payments"); SP = {}; if (!r.error && Array.isArray(r.data)) r.data.forEach(function (p) { SP[p.order_id] = p; }); } catch (e) {} }
+  var SPS = { awaiting: ["warn", "Pay now to secure your order"], reported: ["warn", "Checking your payment"], held: ["ok", "Payment secured by SafeBuy"], released: ["ok", "Seller has been paid"], disputed: ["bad", "Problem under review"], refund_due: ["warn", "Refund on its way"], refunded: ["ok", "Refunded"], expired: ["bad", "Not paid in time"], cancelled: ["bad", "Cancelled"] };
+  function spBox(o) {
+    var p = SP[o.id]; if (!p) return ""; var S = SPS[p.status] || ["", p.status], h = '<div class="box"><span class="pill ' + S[0] + '">🔒 ' + esc(S[1]) + "</span>";
+    if (p.status === "awaiting" || p.status === "reported") {
+      var b = p.bank || {};
+      h += '<p style="margin:8px 0 0">Amount to pay: <b>' + nk(p.amount_kobo) + '</b></p><p style="margin:6px 0 0">Pay to: <b>' + esc(b.bank_name || "") + '</b><br>Account number: <span class="code">' + esc(b.account_number || "") + '</span><br>Account name: <b>' + esc(b.account_name || "") + "</b><br>Reference / narration: <b>" + esc(p.ref) + "</b></p>" +
+        '<p class="muted" style="margin:6px 0 0">Pay the exact amount' + (p.pay_by ? " before " + new Date(p.pay_by).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) : "") + ". " + esc(b.note || "") + "</p>";
+      if (p.status === "awaiting") h += (p.note ? '<p class="msg bad" style="display:block">' + esc(p.note) + "</p>" : "") + '<label>Name on the account you paid from</label><input class="spn" maxlength="100" placeholder="e.g. Ada Obi"><button class="btn full" style="margin-top:10px" data-a="spaid" data-id="' + esc(o.id) + '">I have paid</button><p class="msg spm"></p>';
+      else h += '<p class="muted" style="margin:8px 0 0">Sent as <b>' + esc(p.reported_name || "") + "</b>. We confirm it as soon as we see it in our bank.</p>";
+    } else if (p.status === "held") {
+      h += '<p class="muted" style="margin:8px 0 0">Your <b>' + nk(p.amount_kobo) + "</b> is safe with SafeBuy NG. It only goes to the seller after you receive your item" + (p.release_at ? " (releases " + new Date(p.release_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) + " unless you report a problem)" : "") + ".</p>";
+      if (o.status === "shipped" || o.status === "delivered") h += '<button class="btn line full" style="margin-top:10px" data-a="spdform" data-id="' + esc(o.id) + '">Report a problem</button><div id="sd-' + esc(o.id) + '"></div>';
+    } else if (p.status === "disputed") h += '<p class="muted" style="margin:8px 0 0">SafeBuy NG is reviewing your report. The seller is not paid until this is solved.</p>';
+    else if (p.status === "refund_due") h += '<p class="muted" style="margin:8px 0 0">We will send ' + nk(p.amount_kobo) + " back to you by bank transfer.</p>";
+    return h + "</div>";
+  }
   async function refreshOrders() {
     if (!USER) { OLOADED = true; if (TAB === "orders") draw(); return; }
     var r = await C.from("marketplace_orders").select("*").eq("buyer_id", USER.id).order("created_at", { ascending: false }).limit(60);
     if (!r.error) { ORDERS = r.data || []; OLOADED = true; }
+    await loadSp();
     var jobs = ORDERS.filter(function (o) { return o.delivery_status && o.delivery_status !== "cancelled"; }).map(async function (o) {
       var a = await C.rpc("my_delivery_info", { p_order: o.id }), t = await C.rpc("order_tracking", { p_order: o.id });
       DET[o.id] = { info: a.error ? null : a.data && a.data[0], trk: t.error ? null : t.data };
     });
     await Promise.all(jobs);
-    if (TAB === "orders" && !$("sheet")) { var a = document.activeElement; if (!(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) draw(); }
+    if ((TAB === "orders" || TAB === "home") && !$("sheet")) { var a = document.activeElement; if (!(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) draw(); }
     var ao = actionOrders(), nb = A.querySelector("nav button[data-t=orders]"); if (nb) { var b = nb.querySelector("b"); if (ao) { if (!b) { b = document.createElement("b"); nb.appendChild(b); } b.textContent = ao; } else if (b) b.remove(); }
   }
   function vOrders(m) {
@@ -295,7 +356,8 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
   }
   function orderCard(o) {
     var ds = o.delivery_status && o.delivery_status !== "cancelled" ? o.delivery_status : "", st = o.status === "cancelled" ? 0 : ({ placed: 1, paid: 2, shipped: 3, delivered: 4 }[o.status] || 1), D = DET[o.id] || {}, inf = D.info, trk = D.trk, b = "", dl = "";
-    if (o.status === "placed" && ds !== "dispatched") b += '<button class="btn bad" data-a="cancel" data-id="' + esc(o.id) + '" data-ds="' + esc(ds) + '">Cancel order</button>';
+    var spp = SP[o.id], spLock = spp && (spp.status === "reported");
+    if (o.status === "placed" && ds !== "dispatched" && !spLock) b += '<button class="btn bad" data-a="cancel" data-id="' + esc(o.id) + '" data-ds="' + esc(ds) + '">Cancel order</button>';
     if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) b += '<button class="btn alt" data-a="chat" data-p="' + esc(o.product_id) + '">💬 Chat seller</button>';
     if (o.status === "shipped") b += '<button class="btn" data-a="recv" data-id="' + esc(o.id) + '">I received it</button>';
     if (["placed", "paid"].indexOf(o.status) > -1 && !ds) { dl = '<button class="btn alt full" style="margin-top:10px" data-a="dform" data-id="' + esc(o.id) + '">🏍️ Request delivery</button><div id="df-' + esc(o.id) + '"></div>'; }
@@ -312,10 +374,13 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
       else if (trk && trk.my_rating) dl += '<p class="muted">You rated this delivery ' + esc(trk.my_rating) + " ★. Thank you!</p>";
       if (trk && trk.events && trk.events.length) dl += '<details style="margin-top:8px"><summary><b>Order progress</b></summary>' + trk.events.map(function (ev) { return '<div class="muted" style="padding:4px 0">• ' + esc(ev.label) + " · " + new Date(ev.at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) + "</div>"; }).join("") + "</details>";
     }
-    return '<div class="card fade"><div class="line1"><div><b>' + esc(o.product_name || "Product") + " × " + o.quantity + '</b>' + (o.shop_name ? '<div class="muted">Seller: ' + esc(o.shop_name) + "</div>" : "") + (o.color || o.size ? '<div class="muted">' + esc([o.color, o.size].filter(Boolean).join(" · ")) + "</div>" : "") + '</div><div style="text-align:right"><b>' + nk(o.total_kobo) + '</b><div class="muted">' + ago(o.created_at) + '</div></div></div><span class="pill ' + (o.status === "cancelled" ? "bad" : o.status === "delivered" ? "ok" : o.status === "placed" ? "warn" : "") + '" style="margin-top:8px">' + esc(STEP[o.status] || o.status) + "</span>" + (o.status !== "cancelled" ? '<div class="steps">' + [1, 2, 3, 4].map(function (i) { return '<i class="' + (st >= i ? "on" : "") + '"></i>'; }).join("") + "</div>" : "") + dl + (b ? '<div class="row">' + b + "</div>" : "") + '<div class="muted" style="margin-top:8px">#' + esc(String(o.id).slice(0, 8)) + "</div></div>";
+    return '<div class="card fade" id="o-' + esc(o.id) + '"><div class="line1"><div><b>' + esc(o.product_name || "Product") + " × " + o.quantity + '</b>' + (o.shop_name ? '<div class="muted">Seller: ' + esc(o.shop_name) + "</div>" : "") + (o.color || o.size ? '<div class="muted">' + esc([o.color, o.size].filter(Boolean).join(" · ")) + "</div>" : "") + '</div><div style="text-align:right"><b>' + nk(o.total_kobo) + '</b><div class="muted">' + ago(o.created_at) + '</div></div></div><span class="pill ' + (o.status === "cancelled" ? "bad" : o.status === "delivered" ? "ok" : o.status === "placed" ? "warn" : "") + '" style="margin-top:8px">' + esc(STEP[o.status] || o.status) + "</span>" + (o.status !== "cancelled" ? '<div class="steps">' + [1, 2, 3, 4].map(function (i) { return '<i class="' + (st >= i ? "on" : "") + '"></i>'; }).join("") + "</div>" : "") + spBox(o) + dl + (b ? '<div class="row">' + b + "</div>" : "") + '<div class="muted" style="margin-top:8px">#' + esc(String(o.id).slice(0, 8)) + "</div></div>";
   }
   async function orderClick(e) {
     var b = e.target.closest("[data-a]"); if (!b) return; var a = b.dataset.a, id = b.dataset.id;
+    if (a === "spaid") { var bx0 = b.closest(".box"), m0 = bx0.querySelector(".spm"), nm = bx0.querySelector(".spn").value.trim(); m0.className = "msg spm bad"; if (nm.length < 2) { m0.textContent = "Enter the name on the account you paid from."; return; } if (!window.confirm("Only tap this after you have really sent the money. Continue?")) return; b.disabled = true; try { await rpc("sp_report_paid", { p_order: id, p_name: nm }); toast("Thanks. We are checking your payment."); refreshOrders(); } catch (err) { m0.textContent = friendly(err); b.disabled = false; } return; }
+    if (a === "spdform") { b.hidden = true; $("sd-" + id).innerHTML = '<div class="box"><label>What is wrong?</label><textarea class="sdr" maxlength="1000" placeholder="Describe the problem (at least 10 characters)"></textarea><button class="btn bad full" style="margin-top:10px" data-a="spdsend" data-id="' + esc(id) + '">Send report</button><p class="msg sdm"></p></div>'; return; }
+    if (a === "spdsend") { var bx1 = b.closest(".box"), m1 = bx1.querySelector(".sdm"); m1.className = "msg sdm bad"; if (bx1.querySelector(".sdr").value.trim().length < 10) { m1.textContent = "Please describe the problem (at least 10 characters)."; return; } b.disabled = true; try { await rpc("sp_dispute", { p_order: id, p_reason: bx1.querySelector(".sdr").value }); toast("Reported. The seller will not be paid until this is solved."); refreshOrders(); } catch (err) { m1.textContent = friendly(err); b.disabled = false; } return; }
     if (a === "dform") { var box = $("df-" + id); b.hidden = true; box.innerHTML = '<div class="box"><label>State</label><select class="ds">' + stateOpts("Lagos") + '</select><label>City / area</label><input class="dc" maxlength="60" placeholder="e.g. Ikeja"><label>Full delivery address</label><textarea class="da" maxlength="200" placeholder="House number, street, landmark"></textarea><label>Your phone (the rider may call)</label><input class="dp" type="tel" inputmode="tel" placeholder="08012345678"><button class="btn full" style="margin-top:12px" data-a="dsend" data-id="' + esc(id) + '">Get delivery quote</button><p class="msg dm"></p></div>'; return; }
     if (a === "dsend") { var bx = b.closest(".box"), m = bx.querySelector(".dm"), ph = phone(bx.querySelector(".dp").value); m.className = "msg dm bad"; if (!ph) { m.textContent = "Enter a valid Nigerian phone number."; return; } if (bx.querySelector(".dc").value.trim().length < 2 || bx.querySelector(".da").value.trim().length < 8) { m.textContent = "Enter your area and full address."; return; } b.disabled = true; m.className = "msg dm"; m.textContent = "Checking coverage…"; try { await rpc("order_request_delivery", { p_order: id, p_state: bx.querySelector(".ds").value, p_city: bx.querySelector(".dc").value, p_address: bx.querySelector(".da").value, p_phone: ph }); toast("Delivery requested. See the fee below."); refreshOrders(); } catch (err) { m.className = "msg dm bad"; m.textContent = friendly(err); b.disabled = false; } return; }
     if (a === "dcancel") { if (!window.confirm("Cancel this delivery request? You can request delivery again with the right address.")) return; b.disabled = true; try { await rpc("buyer_cancel_delivery_request", { p_order: id }); toast("Delivery request cancelled."); refreshOrders(); } catch (err) { toast(friendly(err)); b.disabled = false; } return; }
@@ -352,7 +417,7 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
         if (fg) { r = await C.auth.resetPasswordForEmail(em, { redirectTo: location.href.split("#")[0] }); if (r.error) throw r.error; setMsg("am", "Check your email for the reset link."); b.disabled = false; return; }
         if (up) { r = await C.auth.signUp({ email: em, password: pw, options: { data: { full_name: $("an").value.trim() } } }); if (r.error) throw r.error; if (!r.data.session) { setMsg("am", "Check your email to confirm, then sign in."); b.disabled = false; return; } }
         else { r = await C.auth.signInWithPassword({ email: em, password: pw }); if (r.error) throw r.error; }
-        closeSheet(); await afterAuth(); shell();
+        closeSheet(); await afterAuth(); TAB = "home"; shell();
       } catch (err) { setMsg("am", /Invalid login/i.test(err.message) ? "Wrong email or password." : friendly(err), true); b.disabled = false; }
     };
   }
@@ -360,13 +425,13 @@ nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;
   /* =========================== BOOT =========================== */
   var timer = null, chan = null;
   async function afterAuth() {
-    var s = await C.auth.getSession(); USER = s.data && s.data.session ? s.data.session.user : null;
-    if (USER) { try { C.rpc("claim_role", { p_role: "buyer" }).then(function () {}, function () {}); } catch (e) {} await Promise.all([loadAlerts(), refreshOrders()]);
+    loadSpInfo(); var s = await C.auth.getSession(); USER = s.data && s.data.session ? s.data.session.user : null;
+    if (USER) { try { C.rpc("claim_role", { p_role: "buyer" }).then(function () {}, function () {}); } catch (e) {} await Promise.all([loadAlerts(), refreshOrders(), loadMsgs()]);
       try { if (chan) C.removeChannel(chan); chan = C.channel("buy-" + USER.id).on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: "user_id=eq." + USER.id }, function (p) { if (p.new && p.new.role !== "seller" && p.new.role !== "rider") { toast(p.new.title); loadAlerts().then(function () { if (!$("sheet")) shell(); }); refreshOrders(); } }).subscribe(); } catch (e) {} }
   }
   async function start() {
     CART = readCart(); shell(); loadProducts();
-    await afterAuth(); shell();
+    await afterAuth(); if (USER && TAB === "shop" && !location.hash && !Q) TAB = "home"; shell();
     clearInterval(timer); timer = setInterval(function () { if (!document.hidden && USER) { refreshOrders(); loadAlerts(); } }, 20000);
     document.addEventListener("visibilitychange", function () { if (!document.hidden) { loadProducts(); if (USER) refreshOrders(); } });
     var q = new URLSearchParams(location.search); if (q.get("dfee")) { try { history.replaceState(null, "", location.pathname); } catch (e) {} TAB = "orders"; shell(); }
