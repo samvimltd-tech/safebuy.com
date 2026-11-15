@@ -5,8 +5,10 @@
   "use strict";
   var FEE = (window.SafeBuyProtect && window.SafeBuyProtect.CFG.inspectionFee) || 200000; // ₦2,000 in kobo
   var DELIVERY = 300000;                                                                   // ₦3,000 in kobo
-  var MARK = "[SafeBuy inspection requested: ₦2,000 fee]";
-  var protect = false;                                                                     // add-on ticked?
+  var MARKP = "[SafeBuy inspection requested";
+  var cfg = { enabled: true, def: false }, touched = false;      // set by Admin > Pricing > SafeBuy Protection
+  try { var cc = JSON.parse(localStorage.getItem("sb_protect_cfg") || "null"); if (cc) { cfg.enabled = cc.enabled !== false; cfg.def = !!cc.def; if (cc.fee >= 0) FEE = cc.fee; } } catch (e) {}
+  var protect = !!cfg.def;                                                                     // add-on ticked?
 
   function naira(k) { return "₦" + (k / 100).toLocaleString("en-NG"); }
   function subtotal() {
@@ -32,8 +34,8 @@
   function syncNote(podChecked) {                                   // keeps the order note in step with the add-on
     var n = document.getElementById("cx-note");
     if (!n) return;
-    var rest = n.value.split("\n").filter(function (l) { return l.indexOf(MARK) !== 0; }).join("\n").trim();
-    n.value = protect && podChecked ? MARK + (rest ? "\n" + rest : "") : rest;
+    var rest = n.value.split("\n").filter(function (l) { return l.indexOf(MARKP) !== 0; }).join("\n").trim();
+    n.value = protect && cfg.enabled && podChecked ? MARKP + ": " + naira(FEE) + " fee]" + (rest ? "\n" + rest : "") : rest;
   }
 
   function card(opt, selected, title, lines) {
@@ -60,13 +62,20 @@
     var aPickup = anchorOf(r.pickup), aPod = anchorOf(r.pod);
     if (!aPickup || !aPod) return;                                  // unknown markup: leave the original options alone
 
+    if (!cfg.enabled) {                                             // add-on switched off by the admin: show the original two options
+      var old = document.getElementById("cx-pay-ui"); if (old) old.remove();
+      aPickup.style.display = ""; aPod.style.display = "";
+      protect = false; syncNote(false);
+      return;
+    }
+
     aPickup.style.display = "none"; aPod.style.display = "none";
     var head = (aPickup.compareDocumentPosition(aPod) & 4 ? aPickup : aPod).previousElementSibling;
     if (head && /^\s*payment\s*$/i.test(head.textContent)) head.style.display = "none";
     syncNote(r.pod.checked);
 
     var sub = subtotal(), sel = r.pod.checked ? "pod" : r.pickup.checked ? "pickup" : "";
-    var key = sub + "|" + sel + "|" + protect;
+    var key = sub + "|" + sel + "|" + protect + "|" + FEE;
     var after = aPod.compareDocumentPosition(aPickup) & 4 ? aPickup : aPod;
     var ui = document.getElementById("cx-pay-ui");
     if (ui && ui.dataset.key === key && ui.previousElementSibling === after) return;
@@ -93,11 +102,12 @@
     var t = e.target.closest ? e.target.closest("#cx-pay-ui [data-opt], #cx-pay-ui [data-addon]") : null;
     if (!t) return;
     var r = radios();
+    touched = true;
     var isAddon = t.hasAttribute("data-addon");
     var wantPod = isAddon || t.dataset.opt === "pod";
     var wasPod = !!(r.pod && r.pod.checked);
     if (isAddon) protect = !(protect && wasPod);                    // tick / untick (ticking also selects Pay on Delivery)
-    else if (wantPod && !wasPod) protect = true;                    // choosing Pay on Delivery ticks SafeBuy Protection; the buyer can untick it
+    else if (wantPod && !wasPod) protect = !!cfg.def;               // ticked or not on choosing Pay on Delivery, as set in Admin
     var target = wantPod ? r.pod : r.pickup;
     if (target && !target.checked) target.click();                  // runs the original handlers (e.g. delivery address field)
     inject();
@@ -109,4 +119,20 @@
   document.addEventListener("change", function (e) { if (e.target && e.target.name === "cx-pay") inject(); });
   new MutationObserver(inject).observe(document.body, { childList: true, subtree: true });
   inject();
+
+  /* Live settings from Admin > Pricing > SafeBuy Protection (on/off, fee, ticked by default) */
+  var cli = window.safeBuySupabase;
+  if (cli && cli.rpc) {
+    cli.rpc("protect_info").then(function (r) {
+      var d = r && !r.error ? r.data : null;
+      if (!d) return;
+      var fee = Number(d.fee_kobo);
+      cfg.enabled = d.enabled !== false; cfg.def = !!d.default_on;
+      if (isFinite(fee) && fee >= 0) FEE = Math.round(fee);
+      if (window.SafeBuyProtect && window.SafeBuyProtect.CFG) window.SafeBuyProtect.CFG.inspectionFee = FEE;
+      if (!touched) protect = cfg.def;
+      try { localStorage.setItem("sb_protect_cfg", JSON.stringify({ enabled: cfg.enabled, def: cfg.def, fee: FEE })); } catch (e) {}
+      inject();
+    }).catch(function () {});
+  }
 })();
