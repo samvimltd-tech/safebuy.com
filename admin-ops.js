@@ -85,7 +85,7 @@
   document.addEventListener("click", function (e) { var t = e.target.closest("[data-tab],[data-go],[data-plustab]"); if (t && t !== tab && !tab.contains(t)) hide(); }, true);
 
   function nav() {
-    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["adcentre", "Ad Centre"], ["tiktok", "Social Auto-Post"], ["cards", "Cards"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
+    return '<div class="ops-nav">' + [["live", "Live"], ["orders", "Orders"], ["users", "Users"], ["reports", "Reports"], ["promote", "Promote"], ["requests", "Requests"], ["revenue", "Revenue"], ["payments", "Payments"], ["pricing", "Pricing"], ["sellers", "Seller control"], ["photos", "Photo search"], ["ads", "Ads"], ["social", "Social"], ["reviews", "Reviews"], ["message", "Message"], ["plans", "Plans"], ["switches", "Switches"], ["health", "Health"], ["security", "Security"], ["errors", "Errors"], ["checklist", "Checklist"], ["adcentre", "Ad Centre"], ["tiktok", "Social Auto-Post"], ["safepay", "Safe Pay"], ["groups", "Group Buying"], ["cards", "Cards"], ["cleanup", "Clean-up"], ["audit", "Audit"]].map(function (v) {
       return '<button type="button" data-v="' + v[0] + '" class="' + (view === v[0] ? "on" : "") + '">' + v[1] + "</button>";
     }).join("") + "</div>";
   }
@@ -101,7 +101,7 @@
   function go(v) {
     view = v; clearInterval(timer); timer = null; var my = ++seq;
     body('<p class="muted">Loading…</p>');
-    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup, adcentre: pAdCentre, tiktok: pTikTok, cards: pCards })[v](my);
+    ({ live: pLive, orders: pOrders, users: pUsers, security: pSecurity, errors: pErrors, promote: pPromote, requests: pRequests, revenue: pRevenue, payments: pPayments, pricing: pPricing, sellers: pSellers, photos: pPhotos, ads: pAds, social: pSocial, reviews: pReviews, message: pMessage, audit: pAudit, reports: pReports, plans: pPlans, switches: pSwitches, health: pHealth, checklist: pChecklist, cleanup: pCleanup, adcentre: pAdCentre, tiktok: pTikTok, safepay: pSafePay, groups: pGroups, cards: pCards })[v](my);
   }
   function stale(my) { return my !== seq || !isOpen(); }
 
@@ -435,6 +435,7 @@
   async function pPricing(my) {
     var d; try { d = await rpc("admin_get_prices"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "control.sql")); return; }
     if (stale(my)) return;
+    var PT = null; try { PT = await rpc("admin_protect_get"); } catch (e) { PT = null; }
     var P = d.pricing || {}, C = P.commission || {}, B = d.bank || {}, A = P.ad_day_kobo || {}, PL = d.plans || {}, S = d.social || {}, R = d.referral || {}, nv = function (k) { return Math.round(Number(k || 0) / 100); };
     function f(id, label, val, hint, mode) { return '<label style="display:block;margin-top:10px;font-weight:700;font-size:13px" for="' + id + '">' + esc(label) + '</label><input type="text" id="' + id + '" value="' + esc(val == null ? "" : val) + '" ' + (hint ? 'placeholder="' + esc(hint) + '" ' : "") + 'inputmode="' + (mode || "decimal") + '" autocomplete="off" style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px">'; }
     function ck(id, label, on) { return '<label style="display:flex;gap:9px;align-items:center;margin-top:10px"><input type="checkbox" id="' + id + '" style="width:auto"' + (on ? " checked" : "") + "><span>" + esc(label) + "</span></label>"; }
@@ -447,8 +448,20 @@
       sec("Verified badge plans", "What sellers pay to keep the Verified badge.", ck("pr-req", "The badge needs a paid plan (off = badge is free)", PL.required) + f("pr-mo", "Monthly price (₦)", nv(PL.monthly_kobo)) + f("pr-yr", "12 months price (₦)", nv(PL.yearly_kobo))) +
       sec("Social media marketing", "Facebook, Instagram and TikTok tools and managed campaigns.", ck("pr-son", "Sellers can order campaigns", S.enabled !== false) + f("pr-spass", "Social Pass price (₦)", nv(S.pass_kobo)) + f("pr-spd", "Social Pass lasts (days)", S.pass_days || 30) + f("pr-sfree", "Free scheduled posts per seller", S.free_scheduled) + f("pr-spct", "Management fee (% of ad budget)", S.fee_pct) + f("pr-smin", "Smallest management fee (₦)", nv(S.fee_min_kobo)) + f("pr-sbud", "Smallest ad budget (₦)", nv(S.min_budget_kobo))) +
       sec("Invite and earn", "Free Verified-badge days a seller earns for each shop they invite that gets approved.", ck("pr-ren", "Invite and earn is on", R.enabled !== false) + f("pr-rdays", "Free days per approved invite", R.reward_days) + f("pr-rmax", "Most rewards one seller can earn", R.max_rewards)) +
+      (PT ? sec("SafeBuy Protection add-on (checkout)", "The optional inspection add-on buyers see when they choose Pay on Delivery. It has its own Save button. Changes apply to buyers within a minute.",
+        ck("pt-on", "Show the Protection add-on at checkout (off = buyers do not see it)", PT.enabled !== false) + f("pt-fee", "Protection fee (₦)", nv(PT.fee_kobo)) +
+        ck("pt-def", "Ticked by default when a buyer picks Pay on Delivery (off = buyer must tick it)", !!PT.default_on) +
+        '<button class="button full" id="pt-save" type="button" style="margin-top:12px">Save Protection add-on</button><p id="pt-msg" class="muted" role="status"></p>') : "") +
       '<button class="button full" id="pr-save" type="button">Save all prices and settings</button><p id="pr-msg" class="muted" role="status"></p>' +
       '<p class="muted">Need a different price for one seller? Open Seller control: you can give any seller their own fee rate, a discount, free promotions, or free badge days.</p>');
+    if ($("pt-save")) $("pt-save").onclick = async function () {
+      var m = $("pt-msg"), fee = Math.round(Number(String($("pt-fee").value).replace(/[^0-9.]/g, "")) * 100);
+      if (!isFinite(fee) || fee < 10000 || fee > 5000000) { m.className = "ops-bad"; m.textContent = "Enter a fee from 100 to 50,000 naira."; return; }
+      m.className = "muted"; m.textContent = "Saving…"; $("pt-save").disabled = true;
+      try { await rpc("admin_set_protect", { p_enabled: $("pt-on").checked, p_fee_kobo: fee, p_default_on: $("pt-def").checked }); m.className = "ops-ok"; m.textContent = "Saved."; }
+      catch (er) { m.className = "ops-bad"; m.textContent = "Not saved: " + er.message; }
+      $("pt-save").disabled = false;
+    };
     $("pr-save").onclick = async function () {
       var m = $("pr-msg"), num = function (id) { var v = Number(String($(id).value).replace(/[^0-9.]/g, "")); return isFinite(v) ? v : 0; }, k = function (id) { return Math.round(num(id) * 100); };
       var pricing = { charge_promos: $("pr-charge").checked, promote_day_kobo: k("pr-prom"), boost_day_kobo: k("pr-boost"), ad_day_kobo: { home_top: k("pr-top"), home_mid: k("pr-mid") },
@@ -654,6 +667,139 @@
       try { await rpc("admin_mk_decide", { p_id: row.dataset.id, p_ok: ok, p_caption: row.querySelector(".tt-cap").value, p_when: w ? new Date(w).toISOString() : null, p_note: row.querySelector(".tt-note").value }); pTikTok(my); } catch (e) { msg(e.message, true); }
     }; });
     document.querySelectorAll("[data-r]").forEach(function (b) { b.onclick = async function () { try { await rpc("admin_mk_retry", { p_id: b.dataset.r }); pTikTok(my); } catch (e) { msg(e.message, true); } }; });
+  }
+  /* ---- Safe Pay: escrow for bank-transfer orders. Admin confirms money received, holds it, releases to seller. ---- */
+  async function pSafePay(my) {
+    var d; try { d = await rpc("admin_sp"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "safepay.sql")); return; }
+    if (stale(my)) return;
+    var c = d.cfg || {}, n = d.counts || {}, N = function (k) { return Number(n[k] || 0); };
+    var inp = 'style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px;margin-top:4px"';
+    function sec(t, k) { return '<h3 style="margin:14px 0 6px">' + t + " (" + k + ")</h3>"; }
+    var h = '<div class="ops-row"><b>Safe Pay (escrow)</b> <span class="' + (c.enabled ? "ops-ok" : "ops-bad") + '">' + (c.enabled ? "ON" : "OFF") + '</span>' +
+      '<p class="muted">When ON, a buyer pays SafeBuy first (bank transfer). You confirm the money arrived, the seller ships, and the money is released to the seller after delivery plus the safety window. SafeBuy NG holds customer money, so get legal and accounting advice before turning this ON for real customers. Orders with pay on delivery are not affected.</p>' +
+      '<div class="ops-grid">' + card(money(d.held_kobo || 0), "held now") + card(N("reported"), "to confirm") + card(N("disputed"), "disputes") + card(N("refund_due"), "refunds due") + card(N("payouts"), "payouts due") + "</div></div>";
+    h += '<div class="ops-row"><b>Settings</b>' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Bank name</label><input id="sp-bn" ' + inp + ' value="' + esc(c.bank_name || "") + '">' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Account number (10 digits)</label><input id="sp-an" inputmode="numeric" maxlength="10" ' + inp + ' value="' + esc(c.account_number || "") + '">' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Account name</label><input id="sp-ac" ' + inp + ' value="' + esc(c.account_name || "") + '">' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Safety window after delivery (hours)</label><input id="sp-hh" inputmode="numeric" ' + inp + ' value="' + esc(c.hold_hours == null ? 24 : c.hold_hours) + '">' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Time the buyer has to pay (hours)</label><input id="sp-pw" inputmode="numeric" ' + inp + ' value="' + esc(c.pay_window_hours || 24) + '">' +
+      '<label style="display:block;margin-top:8px;font-weight:700;font-size:13px">Note shown to buyers (optional)</label><input id="sp-nt" ' + inp + ' value="' + esc(c.note || "") + '">' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="sp-on"' + (c.enabled ? " checked" : "") + '> Safe Pay is ON</label>' +
+      '<button class="button full" type="button" id="sp-save" style="margin-top:10px">Save settings</button></div>';
+    h += sec("Payments to confirm", (d.queue || []).length) + ((d.queue || []).length ? d.queue.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.shop || "Seller") + (q.product ? " · " + esc(q.product) : "") +
+        '<p class="muted">Buyer says paid from: <b>' + esc(q.reported_name || "?") + "</b>" + (q.reported_at ? " · " + when(q.reported_at) : "") + '. Check your bank app for exactly this amount and the reference ' + esc(q.ref) + '.</p>' +
+        '<input class="sp-rcv" inputmode="numeric" placeholder="Amount you received in naira" ' + inp + '>' +
+        '<input class="sp-nte" placeholder="Reason (if rejecting)" ' + inp + '>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-a="confirm">Money received</button><button type="button" class="button" data-a="reject" style="background:#b42318">Not received</button></div></div>';
+    }).join("") : '<p class="muted">Nothing waiting.</p>');
+    h += sec("Disputes", (d.disputes || []).length) + ((d.disputes || []).length ? d.disputes.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.shop || "Seller") + (q.product ? " · " + esc(q.product) : "") +
+        '<p>' + esc(q.reason || "") + '</p><input class="sp-nte" placeholder="Note for the record" ' + inp + '>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-a="release">Pay the seller</button><button type="button" class="button" data-a="refund" style="background:#b42318">Refund the buyer</button></div></div>';
+    }).join("") : '<p class="muted">No disputes.</p>');
+    h += sec("Refunds to send", (d.refunds || []).length) + ((d.refunds || []).length ? d.refunds.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> to " + esc(q.buyer || "buyer") +
+        '<p class="muted">Send this amount back to the buyer by bank transfer, then enter the transfer reference.</p><input class="sp-ref" placeholder="Transfer reference" ' + inp + '><button type="button" class="button full" data-a="refunded" style="margin-top:8px">Refund sent</button></div>';
+    }).join("") : '<p class="muted">None.</p>');
+    h += sec("Seller payouts to send", (d.payouts || []).length) + ((d.payouts || []).length ? d.payouts.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + money(q.net_kobo) + "</b> to " + esc(q.shop || "Seller") + ' <span class="muted">(' + esc(q.ref) + ", commission kept " + money(q.commission_kobo || 0) + ")</span>" +
+        (q.account_number ? "<p>" + esc(q.bank) + " · <b>" + esc(q.account_number) + "</b> · " + esc(q.account_name) + "</p>" : '<p class="ops-bad">This seller has not added bank details yet.</p>') +
+        '<input class="sp-ref" placeholder="Transfer reference" ' + inp + '><button type="button" class="button full" data-a="paid" style="margin-top:8px">Payout sent</button></div>';
+    }).join("") : '<p class="muted">None.</p>');
+    h += sec("Money being held", (d.held || []).length) + ((d.held || []).length ? d.held.map(function (q) {
+      return '<div class="ops-row"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.shop || "Seller") + '<p class="muted">Order: ' + esc(q.order_status || "?") + (q.release_at ? " · releases " + when(q.release_at) : " · waiting for delivery") + "</p></div>";
+    }).join("") : '<p class="muted">Nothing held.</p>');
+    h += '<button class="button full" type="button" id="sp-run" style="margin-top:10px">Run the timers now</button><p id="sp-m" class="muted" role="status"></p>';
+    body(h);
+    function msg(t, bad) { var m = $("sp-m"); if (m) { m.className = bad ? "ops-bad" : "ops-ok"; m.textContent = t; } }
+    async function go(fn) { try { await fn(); pSafePay(my); } catch (e) { msg(e.message, true); } }
+    $("sp-save").onclick = function () {
+      var on = $("sp-on").checked;
+      if (on && !c.enabled && !window.confirm("Turn Safe Pay ON? New bank-transfer orders will have to be paid to SafeBuy first.")) return;
+      go(function () { return rpc("admin_sp_set", { p_cfg: { enabled: on, bank_name: $("sp-bn").value, account_number: $("sp-an").value, account_name: $("sp-ac").value, hold_hours: parseInt($("sp-hh").value, 10), pay_window_hours: parseInt($("sp-pw").value, 10), note: $("sp-nt").value } }); });
+    };
+    $("sp-run").onclick = function () { go(function () { return rpc("admin_sp_run"); }); };
+    document.querySelectorAll("[data-a]").forEach(function (b) { b.onclick = function () {
+      var row = b.closest(".ops-row"), id = row.dataset.id, a = b.dataset.a, q = function (s) { var e = row.querySelector(s); return e ? e.value : ""; };
+      if (a === "confirm") {
+        var k = Math.round(parseFloat(String(q(".sp-rcv")).replace(/[^0-9.]/g, "")) * 100);
+        if (!(k > 0)) { msg("Type the exact amount you received.", true); return; }
+        return go(function () { return rpc("admin_sp_confirm", { p_id: id, p_received_kobo: k }); });
+      }
+      if (a === "reject") { if (!window.confirm("Tell the buyer the money was not received?")) return; return go(function () { return rpc("admin_sp_reject", { p_id: id, p_note: q(".sp-nte") || "We did not receive this payment." }); }); }
+      if (a === "release" || a === "refund") { if (!window.confirm(a === "release" ? "Pay the seller for this order?" : "Refund the buyer for this order?")) return; return go(function () { return rpc("admin_sp_resolve", { p_id: id, p_action: a, p_note: q(".sp-nte") }); }); }
+      if (a === "refunded") { if (!q(".sp-ref")) { msg("Enter the transfer reference.", true); return; } return go(function () { return rpc("admin_sp_refund_done", { p_id: id, p_ref: q(".sp-ref") }); }); }
+      if (a === "paid") { if (!q(".sp-ref")) { msg("Enter the transfer reference.", true); return; } return go(function () { return rpc("admin_sp_payout_done", { p_id: id, p_ref: q(".sp-ref") }); }); }
+    }; });
+  }
+  /* ---- Group Buying: approve group sellers/riders, confirm payments, disputes, refunds, payouts ---- */
+  async function pGroups(my) {
+    var d; try { d = await rpc("admin_gb"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "groupbuy.sql")); return; }
+    if (stale(my)) return;
+    var c = d.cfg || {}, n = d.counts || {}, N = function (k) { return Number(n[k] || 0); };
+    var inp = 'style="width:100%;padding:9px;border:1px solid #cfd5da;border-radius:8px;margin-top:4px"';
+    var lab = 'style="display:block;margin-top:8px;font-weight:700;font-size:13px"';
+    function sec(t, k) { return '<h3 style="margin:14px 0 6px">' + t + " (" + k + ")</h3>"; }
+    var h = '<div class="ops-row"><b>Group Buying</b> <span class="' + (c.enabled ? "ops-ok" : "ops-bad") + '">' + (c.enabled ? "ON" : "OFF") + '</span>' +
+      '<p class="muted">Buyers in a state pool an order. When the group is full each buyer pays SafeBuy (bank transfer to the account in Safe Pay). You confirm each payment; when all have paid the seller packs, a rider inspects and delivers, and money is released per buyer after they confirm. SafeBuy NG holds customer money here, so get legal and accounting advice before turning this ON.</p>' +
+      (d.bank_ok ? "" : '<p class="ops-bad">Add your bank details in Safe Pay first. Buyers pay into that account.</p>') +
+      '<div class="ops-grid">' + card(money(d.held_kobo), "held now") + card(N("to_confirm"), "payments to confirm") + card(N("disputes"), "disputes") + card(N("refunds"), "refunds due") + card(N("payouts"), "payouts due") + card(N("pending_accounts"), "accounts to approve") + card(N("groups_open"), "groups forming") + card(money((d.earned_kobo || 0)), "fees earned") + "</div></div>";
+    h += '<div class="ops-row"><b>Settings</b>' +
+      '<label ' + lab + '>Platform fee on the seller (percent)</label><input id="gb-fee" inputmode="decimal" ' + inp + ' value="' + esc(c.fee_pct) + '">' +
+      '<label ' + lab + '>Rider fee per stop (naira)</label><input id="gb-stop" inputmode="numeric" ' + inp + ' value="' + esc(Math.round(Number(c.stop_fee_kobo || 0) / 100)) + '">' +
+      '<label ' + lab + '>Hours a buyer has to pay once the group is full</label><input id="gb-pw" inputmode="numeric" ' + inp + ' value="' + esc(c.pay_window_hours) + '">' +
+      '<label ' + lab + '>Days a group stays open to fill</label><input id="gb-gd" inputmode="numeric" ' + inp + ' value="' + esc(c.group_days) + '">' +
+      '<label ' + lab + '>Hours a buyer has to confirm delivery before it auto-confirms</label><input id="gb-ch" inputmode="numeric" ' + inp + ' value="' + esc(c.confirm_hours) + '">' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:700"><input type="checkbox" id="gb-on"' + (c.enabled ? " checked" : "") + '> Group Buying is ON</label>' +
+      '<button class="button full" type="button" id="gb-save" style="margin-top:10px">Save settings</button></div>';
+    h += sec("Group sellers and riders to approve", (d.accounts || []).length) + ((d.accounts || []).length ? d.accounts.map(function (q) {
+      return '<div class="ops-row" data-u="' + esc(q.user_id) + '" data-r="' + esc(q.role) + '"><b>' + esc(q.name) + "</b> · Group " + esc(q.role) + " · " + esc(q.state) + '<p class="muted">Phone ' + esc(q.phone || "?") + " · applied " + when(q.created_at) + '</p><div style="display:flex;gap:8px"><button type="button" class="button" data-g="approved">Approve</button><button type="button" class="button" data-g="suspended" style="background:#b42318">Reject</button></div></div>';
+    }).join("") : '<p class="muted">Nobody waiting.</p>');
+    h += sec("Payments to confirm", (d.queue || []).length) + ((d.queue || []).length ? d.queue.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.product) + " (" + esc(q.state) + ')<p class="muted">Buyer says paid from: <b>' + esc(q.reported_name || "?") + "</b>" + (q.reported_at ? " · " + when(q.reported_at) : "") + '. Check your bank app for exactly this amount and the reference ' + esc(q.ref) + '.</p>' +
+        '<input class="gb-rcv" inputmode="decimal" placeholder="Amount you received in naira" ' + inp + '><input class="gb-nte" placeholder="Reason (if rejecting)" ' + inp + '>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-g="confirm">Money received</button><button type="button" class="button" data-g="reject" style="background:#b42318">Not received</button></div></div>';
+    }).join("") : '<p class="muted">Nothing waiting.</p>');
+    h += sec("Disputes", (d.disputes || []).length) + ((d.disputes || []).length ? d.disputes.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.product) + '<p class="muted">Buyer ' + esc(q.buyer) + " · seller " + esc(q.seller || "?") + " · rider " + esc(q.rider || "?") + "</p><p>" + esc(q.reason || "") + '</p><input class="gb-nte" placeholder="Note for the record" ' + inp + '>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-g="release">Pay the seller</button><button type="button" class="button" data-g="refund" style="background:#b42318">Refund the buyer</button></div></div>';
+    }).join("") : '<p class="muted">No disputes.</p>');
+    h += sec("Refunds to send", (d.refunds || []).length) + ((d.refunds || []).length ? d.refunds.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> to " + esc(q.buyer) + " · " + esc(q.product) + (q.note ? '<p class="muted">' + esc(q.note) + "</p>" : "") + '<p class="muted">Send this amount back by bank transfer, then enter the reference (or "not received" if nothing came in).</p><input class="gb-ref" placeholder="Transfer reference" ' + inp + '><button type="button" class="button full" data-g="refunded" style="margin-top:8px">Refund done</button></div>';
+    }).join("") : '<p class="muted">None.</p>');
+    h += sec("Payouts to send", (d.payouts || []).length) + ((d.payouts || []).length ? d.payouts.map(function (q) {
+      return '<div class="ops-row" data-lid="' + esc(q.id) + '"><b>' + money(q.amount_kobo) + "</b> to " + esc(q.name || q.role) + ' <span class="muted">(' + esc(q.kind === "rider_fee" ? "rider fee" : "seller payout") + " · " + esc(q.product) + ")</span>" +
+        (q.account_number ? "<p>" + esc(q.bank) + " · <b>" + esc(q.account_number) + "</b> · " + esc(q.account_name) + "</p>" : '<p class="ops-bad">No bank details added yet.</p>') + '<input class="gb-ref" placeholder="Transfer reference" ' + inp + '><button type="button" class="button full" data-g="paid" style="margin-top:8px">Payout sent</button></div>';
+    }).join("") : '<p class="muted">None.</p>');
+    h += sec("Groups that look stuck (3+ days)", (d.stuck || []).length) + ((d.stuck || []).length ? d.stuck.map(function (q) {
+      return '<div class="ops-row"><b>' + esc(q.product) + "</b> (" + esc(q.state) + ') · ' + esc(q.status) + '<p class="muted">Seller ' + esc(q.seller || "?") + " · rider " + esc(q.rider || "none yet") + " · since " + when(q.since) + "</p></div>";
+    }).join("") : '<p class="muted">None.</p>');
+    h += sec("Recently lapsed buyers", (d.lapsed || []).length) + ((d.lapsed || []).length ? '<p class="muted">If a buyer paid after their place lapsed, confirm the amount to put them back (when there is room) or refund it.</p>' + d.lapsed.map(function (q) {
+      return '<div class="ops-row" data-id="' + esc(q.id) + '"><b>' + esc(q.ref) + " · " + money(q.amount_kobo) + "</b> · " + esc(q.buyer) + " · " + esc(q.product) + '<input class="gb-rcv" inputmode="decimal" placeholder="Amount received in naira (if they paid)" ' + inp + '><div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="button" data-g="confirm">Money received</button><button type="button" class="button" data-g="refundlapsed" style="background:#b42318">Refund it</button></div></div>';
+    }).join("") : '<p class="muted">None.</p>');
+    h += '<button class="button full" type="button" id="gb-run" style="margin-top:10px">Run the timers now</button><p id="gb-m" class="muted" role="status"></p>';
+    body(h);
+    function msg(t, bad) { var m = $("gb-m"); if (m) { m.className = bad ? "ops-bad" : "ops-ok"; m.textContent = t; } }
+    async function go(fn, ok) { try { await fn(); if (ok) toastOk(ok); pGroups(my); } catch (e) { msg(e.message, true); } }
+    function toastOk(t) { msg(t, false); }
+    $("gb-save").onclick = function () {
+      var on = $("gb-on").checked;
+      if (on && !c.enabled && !window.confirm("Turn Group Buying ON? Buyers will be able to join groups and pay SafeBuy.")) return;
+      go(function () { return rpc("admin_gb_set", { p_cfg: { enabled: on, fee_pct: parseFloat($("gb-fee").value), stop_fee_kobo: Math.round(parseFloat($("gb-stop").value) * 100), pay_window_hours: parseInt($("gb-pw").value, 10), group_days: parseInt($("gb-gd").value, 10), confirm_hours: parseInt($("gb-ch").value, 10) } }); });
+    };
+    $("gb-run").onclick = function () { go(function () { return rpc("admin_gb_run"); }); };
+    document.querySelectorAll("[data-g]").forEach(function (b) { b.onclick = function () {
+      var row = b.closest(".ops-row"), g = b.dataset.g, id = row.dataset.id, q = function (s) { var e = row.querySelector(s); return e ? e.value : ""; };
+      if (g === "approved" || g === "suspended") { if (g === "suspended" && !window.confirm("Reject this account?")) return; return go(function () { return rpc("admin_gb_approve", { p_user: row.dataset.u, p_role: row.dataset.r, p_status: g }); }); }
+      if (g === "confirm") { var k = Math.round(parseFloat(String(q(".gb-rcv")).replace(/[^0-9.]/g, "")) * 100); if (!(k > 0)) { msg("Type the exact amount you received.", true); return; } return go(function () { return rpc("admin_gb_confirm", { p_member: id, p_received_kobo: k }); }); }
+      if (g === "reject") { if (!window.confirm("Tell the buyer the money was not received?")) return; return go(function () { return rpc("admin_gb_reject", { p_member: id, p_note: q(".gb-nte") || "We did not receive this payment." }); }); }
+      if (g === "release" || g === "refund") { if (!window.confirm(g === "release" ? "Pay the seller for this share?" : "Refund the buyer for this share?")) return; return go(function () { return rpc("admin_gb_resolve", { p_member: id, p_action: g, p_note: q(".gb-nte") }); }); }
+      if (g === "refundlapsed") { if (!window.confirm("Mark this payment to be refunded?")) return; return go(function () { return rpc("admin_gb_refund_lapsed", { p_member: id }); }); }
+      if (g === "refunded") { if (!q(".gb-ref")) { msg("Enter the transfer reference.", true); return; } return go(function () { return rpc("admin_gb_refund_done", { p_member: id, p_ref: q(".gb-ref") }); }); }
+      if (g === "paid") { if (!q(".gb-ref")) { msg("Enter the transfer reference.", true); return; } return go(function () { return rpc("admin_gb_payout_done", { p_id: Number(row.dataset.lid), p_ref: q(".gb-ref") }); }); }
+    }; });
   }
   async function pCards(my) {
     var d; try { d = await rpc("admin_autorenew"); } catch (e) { if (!stale(my)) body(fail(e).replace("admin_ops.sql", "autorenew.sql")); return; }
