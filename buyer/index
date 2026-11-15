@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b7a55">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SafeBuy">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0AgMAAABAo+6hAAAADFBMVEX////P5d4/l3kLelXth+dBAAACDklEQVR42u2YvU4CQRDH/4t8FJpAI5GPxEfQN/B8AysLLWyswII30AewoNDOUmwsrK3gEexsKTgVY0GBCR6GtcA7Vm7vZjbRwmS22mR/zO7Mzv5nDqXhMDIQWmihhRZaaKGFFppP65vdzH6zZ8N1fLQBALnb+IqFHoSGDhn0zIv2PVpeU7F+8H0tmhZHpJfnKTGJ2dbG72nbgVO8X5zofuplLgfJM9aKVARNJ2kvtVNWTQEAjW7Q4Zx7DAA1rbUeevFzW/P7GADK97TtEQAVJiNpe2T4UmtTtvsACjpp2Gxn/6lCfDrRUyd6duZ07isuXQIA/4T5dr4fWtN+l7asAoADFj0O9yxz8iTKkdcaw8tcNHtq0cpmbKZmpG210BO9Td+OoT6PtFaZytYla8PEoDdJhcgbR3mja9qD4RRdd4JCcgzjGZtfqIju0dX1Y7G4Q+tgfvBDXai3U7tOomHN405CKbHT2p/Tqxz9BqoDJ62qeqzKHQ6/DqAwYdKzFQudqJrKSWOV94f67W47S9DP0azHsB20XPqTfj5s9GxZFe+r6kZ/VSK99Fsp/VVcfNRd1HFuEfndB6Aa3eACAHDKoJOlLZ3WvLeTEIJUOudEbzjRJSe6zazFc4kj62XFeAQVuu74i5fZZXyT+IlfJFYdHM4PU9UsWgeXe1hv2MRUyf/fQgsttNBCCy200L9CfwEeROhrSfSNPwAAAABJRU5ErkJggg==">
+<title>SafeBuy NG: Shop safely</title>
+<meta name="description" content="Shop from verified Nigerian sellers on SafeBuy NG. Order, track your delivery and pay safely.">
+<style>
+:root{--bg:#f6f7f5;--card:#fff;--ink:#14231c;--mute:#5d6f65;--line:#e4e9e5;--brand:#0b7a55;--brand2:#065f42;--soft:#e6f5ee;--warn:#b45309;--warnbg:#fff4e0;--bad:#b42318;--badbg:#fdecea;--ok:#067647;--okbg:#e3f6ec;--sh:0 1px 2px #0001,0 6px 18px #0000000d;--r:16px}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1612;--card:#16211b;--ink:#eaf2ed;--mute:#9bb0a4;--line:#26352c;--brand:#2fbf8a;--brand2:#1c9a6c;--soft:#173125;--warn:#f0b04a;--warnbg:#33260f;--bad:#ff8a7e;--badbg:#3a1815;--ok:#5fd59a;--okbg:#143324;--sh:0 1px 2px #0006}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.25}
+a{color:var(--brand)}
+.muted{color:var(--mute);font-size:14px}
+#app{max-width:720px;margin:0 auto;min-height:100vh;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+header.top{position:sticky;top:0;z-index:20;padding:10px 16px 10px;padding-top:calc(10px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;flex:0 0 36px}
+.hrow h1{font-size:18px;flex:1}
+.sbar{display:flex;gap:8px;margin-top:10px}
+.sbar input{flex:1;min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);min-height:46px}
+.sbar button{width:46px;height:46px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-size:19px;cursor:pointer}
+.ib{position:relative;width:42px;height:42px;border:1px solid var(--line);border-radius:50%;background:var(--card);font-size:19px;cursor:pointer}
+.ib b{position:absolute;top:-4px;right:-4px;min-width:19px;height:19px;border-radius:10px;background:var(--bad);color:#fff;font:700 11px/19px system-ui;padding:0 5px;text-align:center}
+main{padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 12px;box-shadow:var(--sh)}
+.hero{background:linear-gradient(135deg,var(--brand2),var(--brand));color:#fff;border:0;border-radius:20px;padding:18px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:#ffffff1a}
+.hero h2{font-size:20px}.hero p{margin:6px 0 0;opacity:.92;font-size:15px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 14px;border:1px solid var(--line);border-radius:99px;background:var(--card);font-weight:600;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+@media(prefers-color-scheme:dark){.chip[aria-pressed=true],.btn{color:#04150d}}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--sh);cursor:pointer;text-align:left;padding:0;display:block;width:100%;transition:transform .12s}
+.pc:active{transform:scale(.97)}
+.pc .im{aspect-ratio:1/1;background:var(--soft);position:relative}
+.pc img{width:100%;height:100%;object-fit:cover;display:block}
+.pc .bd{padding:10px 12px 12px}
+.pc .nm{font-weight:600;font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.pc .pr{font-weight:800;font-size:16px;margin-top:4px}
+.pc .sl{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{position:absolute;left:8px;top:8px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#14231cd9;color:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:10px 16px;border:0;border-radius:13px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;text-decoration:none}
+.btn.alt{background:var(--soft);color:var(--brand2)}
+@media(prefers-color-scheme:dark){.btn.alt{color:var(--brand)}}
+.btn.line{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.bad{background:var(--badbg);color:var(--bad)}
+.btn.full{width:100%}.btn:disabled{opacity:.55}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.row .btn{flex:1 1 130px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--soft);color:var(--brand2)}
+.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.bad{background:var(--badbg);color:var(--bad)}.pill.ok{background:var(--okbg);color:var(--ok)}
+@media(prefers-color-scheme:dark){.pill{color:var(--brand)}}
+label{display:block;margin:12px 0 4px;font-size:14px;font-weight:600}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);min-height:46px}
+textarea{min-height:84px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400}.chk input{width:22px;height:22px;min-height:0;flex:0 0 22px}
+.msg{min-height:20px;margin:8px 0 0;font-size:14px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ok)}
+.opt{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}.opt label{margin:0;font-weight:400}.opt input{position:absolute;opacity:0;pointer-events:none;width:0;min-height:0}.opt span{display:inline-block;padding:8px 14px;border:1px solid var(--line);border-radius:99px;font-size:14px;cursor:pointer;background:var(--card)}.opt input:checked+span{background:var(--brand);border-color:var(--brand);color:#fff}
+.steps{display:flex;gap:4px;margin:10px 0 2px}.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}.steps i.on{background:var(--brand)}
+.box{margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+.code{display:inline-block;margin:4px 0;padding:4px 14px;border-radius:10px;background:var(--card);border:1px dashed var(--brand);font-size:26px;font-weight:800;letter-spacing:6px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;max-width:720px;margin:0 auto;padding:6px 8px calc(6px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+nav.tabs button{flex:1;position:relative;border:0;background:transparent;padding:6px 2px;border-radius:12px;color:var(--mute);font-size:11px;font-weight:700;cursor:pointer}
+nav.tabs button span{display:block;font-size:22px;line-height:1.2}
+nav.tabs button[aria-current=page]{color:var(--brand)}
+nav.tabs button b{position:absolute;top:2px;left:55%;min-width:18px;height:18px;border-radius:9px;background:var(--bad);color:#fff;font:700 11px/18px system-ui;padding:0 4px}
+.skel{border-radius:18px;background:linear-gradient(90deg,var(--line),var(--card),var(--line));background-size:200% 100%;animation:sk 1.2s infinite;aspect-ratio:3/4}
+@keyframes sk{to{background-position:-200% 0}}
+.fade{animation:fd .22s ease-out both}@keyframes fd{from{opacity:0;transform:translateY(6px)}}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:90%;background:#14231c;color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;z-index:300;box-shadow:var(--sh)}
+.sheet{position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;animation:up .26s cubic-bezier(.22,1,.36,1)}
+@keyframes up{from{transform:translateY(6%);opacity:0}}
+.sheet .bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.sheet .bar strong{flex:1;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet .in{max-width:720px;margin:0 auto;padding:14px 16px 40px}
+.x{width:40px;height:40px;border:0;border-radius:50%;background:var(--soft);color:var(--brand2);font-size:19px;cursor:pointer}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:18px;background:var(--soft);scrollbar-width:none}.gal::-webkit-scrollbar{display:none}
+.gal img{flex:0 0 100%;width:100%;aspect-ratio:1/1;object-fit:cover;scroll-snap-align:center}
+.dots{display:flex;justify-content:center;gap:6px;margin:8px 0}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--brand)}
+.rv{padding:10px 0;border-top:1px solid var(--line)}.rv span{color:var(--warn)}
+.auth{max-width:420px;margin:0 auto;padding:calc(30px + env(safe-area-inset-top)) 20px 40px}
+.auth .logo{width:60px;height:60px;border-radius:18px;font-size:28px;margin:0 auto 14px}
+.qty{display:inline-flex;align-items:center;gap:10px}.qty button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:18px;cursor:pointer}
+.line1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" hidden role="status" aria-live="polite"></div>
+<script src="../supabase-config.js"></script>
+<script>
+(function () {
+  var ROOT = location.href.split("#")[0].split("?")[0].replace(/(buyer|seller|rider)\/(index\.html)?$/, "").replace(/index\.html$/, "");
+  window.__ROOT = ROOT;
+  var SRC = [ROOT + "vendor/supabase-2.45.4.js", "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js", "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"];
+  var i = 0, ready = [];
+  window.__sbWhenReady = function (f) { if (window.safeBuySupabase || window.__sbFailed) f(); else ready.push(f); };
+  function done() { ready.splice(0).forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); }
+  function mk() {
+    var cfg = window.SAFEbuySupabaseConfig;
+    if (window.supabase && cfg && cfg.url && cfg.publishableKey) { try { window.safeBuySupabase = window.supabase.createClient(cfg.url, cfg.publishableKey); } catch (e) {} }
+    if (!window.safeBuySupabase) window.__sbFailed = true;
+    done();
+  }
+  function next() { if (window.supabase || i >= SRC.length) { mk(); return; } var s = document.createElement("script"); s.src = SRC[i++]; s.onload = next; s.onerror = next; document.head.appendChild(s); }
+  next();
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var C = null, USER = null, TAB = "shop", CART_KEY = "safebuy_cart_v1", PKEY = "sbb-products-v1";
+  var PRODUCTS = [], LOADED = false, CAT = "All", Q = "", SORT = "new", ORDERS = [], OLOADED = false, ALERTS = [], CART = [], VIS = null;
+  var STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","FCT","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara"];
+  var $ = function (id) { return document.getElementById(id); }, A = $("app");
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function naira(n) { return "₦" + Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 2 }); }
+  function nk(k) { return naira(Number(k || 0) / 100); }
+  function ago(iso) { var s = (Date.now() - new Date(iso)) / 1000; if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + " min ago"; if (s < 86400) return Math.floor(s / 3600) + " h ago"; return new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "short" }); }
+  var tt; function toast(t) { var e = $("toast"); e.textContent = t; e.hidden = false; clearTimeout(tt); tt = setTimeout(function () { e.hidden = true; }, 3200); }
+  window.showToast = toast;
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} return null; }
+  function friendly(e) { var m = (e && e.message) || String(e || ""); if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return "No connection. Check your data and try again."; return m || "Something went wrong. Try again."; }
+  function phone(v) { var d = String(v || "").replace(/[\s\-()]/g, ""); if (/^0\d{10}$/.test(d)) return "+234" + d.slice(1); if (/^234\d{10}$/.test(d)) return "+" + d; if (/^\+234\d{10}$/.test(d)) return d; return ""; }
+  function waNum(p) { var d = String(p || "").replace(/\D/g, ""); if (d.indexOf("234") === 0) return d; if (d.charAt(0) === "0") return "234" + d.slice(1); if (d.length === 10) return "234" + d; return d; }
+  function setMsg(id, t, bad) { var m = $(id); if (m) { m.textContent = t || ""; m.className = "msg " + (bad ? "bad" : t ? "ok" : ""); } }
+  function stateOpts(sel) { return STATES.map(function (s) { return '<option' + (s.toLowerCase() === String(sel || "").toLowerCase() ? " selected" : "") + ">" + esc(s) + "</option>"; }).join(""); }
+  function readCart() { try { var a = JSON.parse(store(CART_KEY) || "[]"); return Array.isArray(a) ? a.filter(function (i) { return i && i.id && i.qty > 0; }) : []; } catch (e) { return []; } }
+  function saveCart() { store(CART_KEY, JSON.stringify(CART)); }
+  function cartCount() { return CART.reduce(function (t, i) { return t + i.qty; }, 0); }
+  async function rpc(n, a) { var r = await C.rpc(n, a || {}); if (r.error) throw r.error; return r.data; }
+
+  /* =========================== PRODUCTS (instant: cached first, then fresh) =========================== */
+  function mapRow(r) { return { id: r.id, name: r.name || "Product", category: r.category || "Other", price: Number(r.price_kobo || 0) / 100, seller: r.shop_name || "Seller", image: /^https:/.test(r.image_url || "") ? r.image_url : "", desc: r.description || "", verified: !!r.verified, inStock: r.in_stock !== false, slug: r.slug, cond: r.condition || "", colors: r.colors || [], sizes: r.sizes || [], weight: Number(r.weight_kg) || 0, pickup: r.pickup_address || "", at: r.created_at || "" }; }
+  async function loadProducts() {
+    try { var c = JSON.parse(store(PKEY) || "null"); if (c && c.length && !LOADED) { PRODUCTS = c; LOADED = true; if (TAB === "shop") draw(); } } catch (e) {}
+    var r = await C.from("seller_products_public").select("*").order("created_at", { ascending: false });
+    if (!r.error && r.data) { PRODUCTS = r.data.map(mapRow); LOADED = true; try { store(PKEY, JSON.stringify(PRODUCTS.slice(0, 120))); } catch (e) { store(PKEY, null); } if (TAB === "shop" && !$("sheet")) draw(); }
+    else if (!LOADED) { LOADED = true; if (TAB === "shop") draw(); toast("Could not load products. Pull to retry."); }
+  }
+  function filtered() {
+    var q = Q.trim().toLowerCase(), v = VIS;
+    var list = PRODUCTS.filter(function (p) { return (CAT === "All" || p.category === CAT) && (!q || (p.name + " " + p.seller + " " + p.category).toLowerCase().indexOf(q) > -1) && (!v || v.ids.indexOf(p.id) > -1); });
+    if (v) list.sort(function (a, b) { return (v.score[b.id] || 0) - (v.score[a.id] || 0); });
+    else if (SORT === "low") list.sort(function (a, b) { return a.price - b.price; });
+    else if (SORT === "high") list.sort(function (a, b) { return b.price - a.price; });
+    return list;
+  }
+
+  /* =========================== SHELL =========================== */
+  function unread() { return ALERTS.filter(function (n) { return !n.read_at; }).length; }
+  function actionOrders() { return ORDERS.filter(function (o) { return o.delivery_status === "requested" || o.status === "shipped"; }).length; }
+  function shell() {
+    CART = readCart(); var cc = cartCount(), ao = actionOrders();
+    A.innerHTML = '<header class="top"><div class="hrow"><div class="logo">S</div><h1>SafeBuy NG</h1>' + (USER ? '<button class="ib" id="bell" aria-label="Alerts">🔔' + (unread() ? "<b>" + Math.min(unread(), 9) + "</b>" : "") + "</button>" : '<button class="btn alt" id="sin" style="min-height:40px;padding:6px 14px">Sign in</button>') + "</div>" +
+      (TAB === "shop" ? '<form class="sbar" id="sf" role="search"><input id="q" type="search" placeholder="Search products or shops" value="' + esc(Q) + '" aria-label="Search" enterkeyhint="search"><button type="button" id="cam" aria-label="Search with a photo">📷</button></form>' : "") + '</header><main id="main"></main>' +
+      '<nav class="tabs" aria-label="Menu">' + [["shop", "🛍️", "Shop"], ["cart", "🛒", "Cart"], ["orders", "📦", "Orders"], ["me", "👤", "Account"]].map(function (t) { return '<button data-t="' + t[0] + '"' + (TAB === t[0] ? ' aria-current="page"' : "") + "><span>" + t[1] + "</span>" + t[2] + (t[0] === "cart" && cc ? "<b>" + cc + "</b>" : "") + (t[0] === "orders" && ao ? "<b>" + ao + "</b>" : "") + "</button>"; }).join("") + "</nav>";
+    A.querySelectorAll("[data-t]").forEach(function (b) { b.onclick = function () { TAB = b.dataset.t; shell(); window.scrollTo(0, 0); if (TAB === "orders") refreshOrders(); }; });
+    var bl = $("bell"); if (bl) bl.onclick = openAlerts; var si = $("sin"); if (si) si.onclick = function () { authSheet("in"); };
+    var sf = $("sf"); if (sf) { sf.onsubmit = function (e) { e.preventDefault(); $("q").blur(); }; $("q").oninput = function () { Q = this.value; VIS = null; drawGrid(); }; $("cam").onclick = photoSearch; }
+    draw();
+  }
+  function draw() { var m = $("main"); if (!m) return; ({ shop: vShop, cart: vCart, orders: vOrders, me: vMe }[TAB] || vShop)(m); }
+
+  /* =========================== SHOP =========================== */
+  function vShop(m) {
+    var cats = ["All"].concat(PRODUCTS.map(function (p) { return p.category; }).filter(function (c, i, a) { return a.indexOf(c) === i; }).sort());
+    m.innerHTML = (!Q && CAT === "All" && !VIS ? '<div class="hero fade"><h2>Shop safely from verified sellers</h2><p>Order, pay the seller, and track your delivery. Every order is confirmed before it moves.</p></div><div style="height:12px"></div>' : "") +
+      '<div class="chips">' + cats.map(function (c) { return '<button class="chip" data-c="' + esc(c) + '" aria-pressed="' + (CAT === c) + '">' + esc(c === "Home" ? "Home & living" : c) + "</button>"; }).join("") + '</div>' +
+      '<div class="line1" style="margin:0 0 10px;align-items:center"><span class="muted" id="cnt"></span><select id="sort" aria-label="Sort" style="width:auto;min-height:38px;padding:6px 10px"><option value="new">Newest</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select></div>' +
+      (VIS ? '<div class="box" style="display:flex;gap:10px;align-items:center"><span style="flex:1">Closest matches to your photo</span><button class="btn alt" id="vclr" style="min-height:36px">Clear</button></div>' : "") + '<div id="grid"></div>';
+    $("sort").value = SORT; $("sort").onchange = function () { SORT = this.value; drawGrid(); };
+    m.querySelectorAll("[data-c]").forEach(function (b) { b.onclick = function () { CAT = b.dataset.c; vShop(m); }; });
+    var vc = $("vclr"); if (vc) vc.onclick = function () { VIS = null; vShop(m); };
+    drawGrid();
+  }
+  function drawGrid() {
+    var g = $("grid"); if (!g) return;
+    if (!LOADED) { g.innerHTML = '<div class="grid">' + '<div class="skel"></div>'.repeat(6) + "</div>"; return; }
+    var l = filtered(); var c = $("cnt"); if (c) c.textContent = l.length + " product" + (l.length === 1 ? "" : "s");
+    if (!l.length) { g.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:38px">🔍</div><h3>Nothing found</h3><p class="muted">Try a different word or category.</p></div>'; return; }
+    g.innerHTML = '<div class="grid">' + l.map(function (p) { return '<button class="pc fade" data-id="' + esc(p.id) + '"><div class="im">' + (p.image ? '<img loading="lazy" decoding="async" src="' + esc(p.image) + '" alt="' + esc(p.name) + '">' : "") + (!p.inStock ? '<span class="tag">Sold out</span>' : p.verified ? '<span class="tag" style="background:#067647d9">✓ Verified</span>' : "") + '</div><div class="bd"><div class="nm">' + esc(p.name) + '</div><div class="pr">' + naira(p.price) + '</div><div class="sl">' + esc(p.seller) + "</div></div></button>"; }).join("") + "</div>";
+    g.querySelectorAll("[data-id]").forEach(function (b) { b.onclick = function () { openProduct(b.dataset.id); }; });
+  }
+  async function photoSearch() {
+    var f = document.createElement("input"); f.type = "file"; f.accept = "image/*"; f.onchange = async function () {
+      var file = f.files && f.files[0]; if (!file) return;
+      var first = !store("sb-vs-model"); if (first && !window.confirm("Photo search needs a one-time download of about 15 MB. After that it is quick. Continue?")) return;
+      try {
+        toast("Getting photo search ready…");
+        if (!window.sbVision) await new Promise(function (ok, bad) { var s = document.createElement("script"); s.src = window.__ROOT + "visual-search.js?v=1"; s.onload = ok; s.onerror = function () { bad(new Error("Photo search could not load.")); }; document.head.appendChild(s); });
+        var m = await window.sbVision.model(), url = URL.createObjectURL(file), img = await new Promise(function (ok, bad) { var i = new Image(); i.onload = function () { ok(i); }; i.onerror = function () { bad(new Error("Could not open that photo.")); }; i.src = url; });
+        var vec = window.sbVision.embed(m, window.sbVision.toCanvas(img)); URL.revokeObjectURL(url);
+        var rows = await rpc("search_by_photo", { p_vec: vec, p_model: window.sbVision.tag, p_limit: 12 });
+        if (!rows || !rows.length) { toast("No close matches yet. Try the search box."); return; }
+        VIS = { ids: rows.map(function (x) { return x.id; }), score: rows.reduce(function (a, x) { a[x.id] = x.score; return a; }, {}) }; Q = ""; CAT = "All"; shell();
+      } catch (e) { toast(/function/i.test(e.message) ? "Photo search is not switched on yet." : friendly(e)); }
+    }; f.click();
+  }
+
+  /* =========================== PRODUCT SHEET =========================== */
+  function sheet(title, html) { closeSheet(); var d = document.createElement("div"); d.id = "sheet"; d.className = "sheet"; d.innerHTML = '<div class="bar"><strong>' + esc(title) + '</strong><button class="x" aria-label="Close">✕</button></div><div class="in">' + html + "</div>"; document.body.appendChild(d); d.querySelector(".x").onclick = closeSheet; document.body.style.overflow = "hidden"; return d; }
+  function closeSheet() { var d = $("sheet"); if (d) d.remove(); document.body.style.overflow = ""; }
+  function chips(g, list) { return list.length ? '<div class="opt">' + list.map(function (v) { return '<label><input type="radio" name="o-' + g + '" value="' + esc(v) + '"><span>' + esc(v) + "</span></label>"; }).join("") + "</div>" : ""; }
+  async function openProduct(id) {
+    var p = PRODUCTS.filter(function (x) { return String(x.id) === String(id); })[0]; if (!p) return;
+    var d = sheet(p.name, '<div class="gal" id="gal">' + (p.image ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '">' : "") + '</div><div class="dots" id="dots"></div>' +
+      '<div class="line1" style="margin-top:6px"><div><h2 style="font-size:22px">' + esc(p.name) + '</h2><div class="muted">by ' + esc(p.seller) + (p.verified ? " · ✓ Verified" : "") + (p.cond ? " · " + esc(p.cond) : "") + '</div></div><b style="font-size:22px">' + naira(p.price) + "</b></div>" +
+      (p.desc ? '<p style="margin:10px 0 0">' + esc(p.desc) + "</p>" : "") + (p.weight ? '<p class="muted">Weight: ' + esc(p.weight) + " kg</p>" : "") + (p.pickup ? '<div class="box"><b>Pickup address:</b> ' + esc(p.pickup) + "</div>" : "") +
+      (p.colors.length ? '<label>Colour</label>' + chips("color", p.colors) : "") + (p.sizes.length ? '<label>Size</label>' + chips("size", p.sizes) : "") +
+      (p.inStock ? '<button class="btn full" style="margin-top:14px" id="add">Add to cart</button>' : '<button class="btn full" disabled style="margin-top:14px">Sold out</button>') + '<p class="msg" id="pm"></p><div id="rv"></div>');
+    d.querySelector("#add") && (d.querySelector("#add").onclick = function () {
+      var col = d.querySelector('input[name="o-color"]:checked'), sz = d.querySelector('input[name="o-size"]:checked');
+      if (p.colors.length && !col) { setMsg("pm", "Please choose a colour.", true); return; } if (p.sizes.length && !sz) { setMsg("pm", "Please choose a size.", true); return; }
+      CART = readCart(); var key = [p.id, col ? col.value : "", sz ? sz.value : ""].join("|"), e = CART.filter(function (i) { return (i.key || i.id) === key; })[0];
+      if (e) e.qty = Math.min(50, e.qty + 1); else CART.push({ key: key, id: String(p.id), name: p.name, price: p.price, category: p.category, color: col ? col.value : "", size: sz ? sz.value : "", qty: 1 });
+      saveCart(); toast(p.name + " added to your cart."); var nb = A.querySelector('nav button[data-t=cart]'); if (nb) { var b = nb.querySelector("b"); if (!b) { b = document.createElement("b"); nb.appendChild(b); } b.textContent = cartCount(); }
+      this.textContent = "Added ✓ Add another";
+    });
+    var ex = await C.from("product_images").select("image_url,position").eq("product_id", id).order("position");
+    var urls = [p.image].concat((ex.data || []).map(function (x) { return x.image_url; }).filter(function (u) { return /^https:/.test(u); })).filter(Boolean);
+    if (urls.length > 1 && $("gal")) { $("gal").innerHTML = urls.map(function (u, i) { return '<img src="' + esc(u) + '" alt="Photo ' + (i + 1) + '">'; }).join(""); var dots = $("dots"); dots.innerHTML = urls.map(function (u, i) { return "<i" + (i ? "" : ' class="on"') + "></i>"; }).join(""); $("gal").onscroll = function () { var k = Math.round(this.scrollLeft / this.clientWidth); [].forEach.call(dots.children, function (x, i) { x.classList.toggle("on", i === k); }); }; }
+    var rs = await Promise.all([C.from("reviews").select("reviewer_name,rating,comment").eq("product_id", id).order("created_at", { ascending: false }).limit(20), C.from("product_rating_public").select("avg_rating,review_count").eq("product_id", id).maybeSingle()]);
+    var rev = rs[0].data || [], rt = rs[1].data, box = $("rv"); if (!box) return;
+    box.innerHTML = '<h3 style="margin:16px 0 6px">Reviews</h3><p><b>' + (rt && rt.review_count ? "★ " + esc(rt.avg_rating) + " · " + esc(rt.review_count) + " review" + (rt.review_count === 1 ? "" : "s") : "No reviews yet") + "</b></p>" + rev.map(function (r) { return '<div class="rv"><span>' + "★★★★★".slice(0, r.rating) + "☆☆☆☆☆".slice(0, 5 - r.rating) + "</span> <b>" + esc(r.reviewer_name) + "</b>" + (r.comment ? "<br>" + esc(r.comment) : "") + "</div>"; }).join("") +
+      (USER ? '<div class="card" style="margin-top:12px"><b>Bought this? Leave a review</b><select id="rr"><option value="5">★★★★★ Excellent</option><option value="4">★★★★ Good</option><option value="3">★★★ Okay</option><option value="2">★★ Poor</option><option value="1">★ Bad</option></select><textarea id="rt" maxlength="1000" placeholder="What was it like? (optional)"></textarea><button class="btn alt full" style="margin-top:8px" id="rsend">Post review</button><button class="btn line full" style="margin-top:8px" id="rrep">Report this listing</button><p class="msg" id="rm"></p></div>' : '<p class="muted"><a href="#" id="rsi">Sign in</a> to review or report this listing.</p>');
+    var rsi = $("rsi"); if (rsi) rsi.onclick = function (e) { e.preventDefault(); closeSheet(); authSheet("in"); };
+    if ($("rsend")) $("rsend").onclick = async function () { this.disabled = true; var r = await C.from("reviews").insert({ product_id: id, user_id: USER.id, reviewer_name: String((USER.user_metadata && USER.user_metadata.full_name) || "Buyer").slice(0, 60), rating: Number($("rr").value), comment: $("rt").value.trim() || null }); this.disabled = false; if (r.error) { setMsg("rm", r.error.code === "23505" ? "You have already reviewed this item." : r.error.code === "42501" ? "Only buyers who ordered this item can review it." : friendly(r.error), true); return; } toast("Thanks for your review."); openProduct(id); };
+    if ($("rrep")) $("rrep").onclick = function () { var why = window.prompt("What is wrong with this listing? (scam, fake item, wrong price, prohibited item, seller does not respond, other)"); if (!why) return; var map = /scam/i.test(why) ? "scam" : /fake|counterfeit/i.test(why) ? "fake" : /price|detail/i.test(why) ? "wrong_info" : /prohibit/i.test(why) ? "prohibited" : /respond/i.test(why) ? "no_response" : "other"; C.from("reports").insert({ reporter_id: USER.id, product_id: id, reason: map, details: why.slice(0, 1000) }).then(function (r) { setMsg("rm", r.error ? (r.error.code === "23505" ? "You already reported this listing." : friendly(r.error)) : "Thanks. SafeBuy NG will review this listing.", !!r.error); }); };
+  }
+
+  /* =========================== CART & CHECKOUT =========================== */
+  function vCart(m) {
+    CART = readCart();
+    if (!CART.length) { m.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:42px">🛒</div><h3>Your cart is empty</h3><p class="muted">Find something you like and tap Add to cart.</p><button class="btn full" id="go">Start shopping</button></div>'; $("go").onclick = function () { TAB = "shop"; shell(); }; return; }
+    var total = 0, d = JSON.parse(store("sbb-draft") || "{}");
+    var rows = CART.map(function (i) { total += i.price * i.qty; var k = i.key || i.id, v = [i.color, i.size].filter(Boolean).join(" · "); return '<div class="card"><div class="line1"><div><b>' + esc(i.name) + "</b>" + (v ? '<div class="muted">' + esc(v) + "</div>" : "") + '<div class="muted">' + naira(i.price) + ' each</div></div><b>' + naira(i.price * i.qty) + '</b></div><div class="line1" style="margin-top:8px;align-items:center"><div class="qty"><button data-q="dec" data-k="' + esc(k) + '" aria-label="Fewer">−</button><b>' + i.qty + '</b><button data-q="inc" data-k="' + esc(k) + '" aria-label="More">+</button></div><button class="btn line" style="min-height:36px" data-q="rm" data-k="' + esc(k) + '">Remove</button></div></div>'; }).join("");
+    var pod = d.pay === "pay_on_delivery";
+    m.innerHTML = rows + '<div class="card"><div class="line1"><b>Estimated total</b><b style="font-size:20px">' + naira(total) + '</b></div><p class="muted" style="margin:4px 0 0">Delivery fee, if you request it, is shown separately.</p></div>' +
+      '<div class="card"><h3>Your details</h3><label for="cn">Your name</label><input id="cn" maxlength="80" autocomplete="name" value="' + esc(d.name || (USER && USER.user_metadata && USER.user_metadata.full_name) || "") + '"><label for="cnote">Note for sellers (optional)</label><textarea id="cnote" maxlength="300" placeholder="Delivery area, size, colour…">' + esc(d.note || "") + '</textarea>' +
+      '<label>Payment</label><label class="chk"><input type="radio" name="pay" value="direct"' + (pod ? "" : " checked") + '><span><b>Pay the seller directly</b> (cash or transfer at pickup)</span></label><label class="chk"><input type="radio" name="pay" value="pay_on_delivery"' + (pod ? " checked" : "") + '><span><b>Pay on delivery</b>: pay when it arrives (the seller must confirm). Delivery fee applies.</span></label>' +
+      '<div id="aw"' + (pod ? "" : " hidden") + '><label for="ca">Delivery address</label><input id="ca" maxlength="300" placeholder="Street, area, city" value="' + esc(d.addr || "") + '"></div>' +
+      '<p class="muted" style="margin-top:12px"><b>How it works:</b> your order goes to the seller. The seller confirms payment, and you can request delivery from Orders. SafeBuy NG does not hold product payments yet, so never pay before you are comfortable.</p>' +
+      '<button class="btn full" id="place">Place order</button><p class="msg" id="cm"></p></div>';
+    m.querySelectorAll("[data-q]").forEach(function (b) { b.onclick = function () { var it = CART.filter(function (i) { return (i.key || i.id) === b.dataset.k; })[0]; if (b.dataset.q === "inc" && it) it.qty = Math.min(50, it.qty + 1); if (b.dataset.q === "dec" && it) it.qty = Math.max(1, it.qty - 1); if (b.dataset.q === "rm") CART = CART.filter(function (i) { return (i.key || i.id) !== b.dataset.k; }); saveCart(); shell(); }; });
+    m.querySelectorAll('input[name=pay]').forEach(function (r) { r.onchange = function () { $("aw").hidden = r.value !== "pay_on_delivery"; }; });
+    $("place").onclick = placeOrder;
+  }
+  async function placeOrder() {
+    if (!USER) { toast("Sign in to place your order. Your cart is saved."); authSheet("in"); return; }
+    var name = $("cn").value.trim(), pr = document.querySelector('input[name=pay]:checked'), pay = pr && pr.value === "pay_on_delivery" ? "pay_on_delivery" : "direct", addr = $("ca").value.trim(), note = $("cnote").value.trim();
+    if (!name) { setMsg("cm", "Enter your name.", true); return; } if (pay === "pay_on_delivery" && !addr) { setMsg("cm", "Enter your delivery address.", true); return; }
+    store("sbb-draft", JSON.stringify({ name: name, note: note, pay: pay, addr: addr }));
+    var btn = $("place"); btn.disabled = true; setMsg("cm", "Placing your order…");
+    var rows = CART.map(function (i) { return { buyer_id: USER.id, product_id: i.id, quantity: Math.min(99, i.qty), color: i.color || null, size: i.size || null, buyer_name: name, note: note || null, pay_method: pay, address: addr || null }; });
+    var r = await C.from("marketplace_orders").insert(rows);
+    if (r.error) { setMsg("cm", /own product/i.test(r.error.message) ? "You cannot order your own product." : friendly(r.error), true); btn.disabled = false; return; }
+    CART = []; saveCart(); TAB = "orders"; toast(rows.length + " order" + (rows.length === 1 ? "" : "s") + " placed. Each seller will confirm."); shell(); refreshOrders();
+  }
+
+  /* =========================== ORDERS + DELIVERY =========================== */
+  var STEP = { placed: "Placed: waiting for seller", paid: "Paid", shipped: "On the way", delivered: "Delivered", cancelled: "Cancelled" };
+  var JOB = { searching: "Finding a rider…", offered: "Finding a rider…", assigned: "Rider on the way to the seller", picked_up: "Rider has your item", delivered: "Delivered", unassigned: "No rider yet. SafeBuy NG is working on it." };
+  var DET = {};
+  async function refreshOrders() {
+    if (!USER) { OLOADED = true; if (TAB === "orders") draw(); return; }
+    var r = await C.from("marketplace_orders").select("*").eq("buyer_id", USER.id).order("created_at", { ascending: false }).limit(60);
+    if (!r.error) { ORDERS = r.data || []; OLOADED = true; }
+    var jobs = ORDERS.filter(function (o) { return o.delivery_status && o.delivery_status !== "cancelled"; }).map(async function (o) {
+      var a = await C.rpc("my_delivery_info", { p_order: o.id }), t = await C.rpc("order_tracking", { p_order: o.id });
+      DET[o.id] = { info: a.error ? null : a.data && a.data[0], trk: t.error ? null : t.data };
+    });
+    await Promise.all(jobs);
+    if (TAB === "orders" && !$("sheet")) { var a = document.activeElement; if (!(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) draw(); }
+    var ao = actionOrders(), nb = A.querySelector("nav button[data-t=orders]"); if (nb) { var b = nb.querySelector("b"); if (ao) { if (!b) { b = document.createElement("b"); nb.appendChild(b); } b.textContent = ao; } else if (b) b.remove(); }
+  }
+  function vOrders(m) {
+    if (!USER) { m.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:42px">📦</div><h3>Sign in to see your orders</h3><button class="btn full" style="margin-top:10px" id="oin">Sign in</button></div>'; $("oin").onclick = function () { authSheet("in"); }; return; }
+    if (!OLOADED) { m.innerHTML = '<div class="skel" style="aspect-ratio:3/1;margin-bottom:12px"></div><div class="skel" style="aspect-ratio:3/1"></div>'; return; }
+    if (!ORDERS.length) { m.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:42px">📭</div><h3>No orders yet</h3><p class="muted">Your orders and deliveries show here.</p></div>'; return; }
+    m.innerHTML = ORDERS.map(orderCard).join("");
+    m.onclick = orderClick;
+  }
+  function orderCard(o) {
+    var ds = o.delivery_status && o.delivery_status !== "cancelled" ? o.delivery_status : "", st = o.status === "cancelled" ? 0 : ({ placed: 1, paid: 2, shipped: 3, delivered: 4 }[o.status] || 1), D = DET[o.id] || {}, inf = D.info, trk = D.trk, b = "", dl = "";
+    if (o.status === "placed" && ds !== "dispatched") b += '<button class="btn bad" data-a="cancel" data-id="' + esc(o.id) + '" data-ds="' + esc(ds) + '">Cancel order</button>';
+    if (["paid", "shipped", "delivered"].indexOf(o.status) > -1) b += '<button class="btn alt" data-a="chat" data-p="' + esc(o.product_id) + '">💬 Chat seller</button>';
+    if (o.status === "shipped") b += '<button class="btn" data-a="recv" data-id="' + esc(o.id) + '">I received it</button>';
+    if (["placed", "paid"].indexOf(o.status) > -1 && !ds) { dl = '<button class="btn alt full" style="margin-top:10px" data-a="dform" data-id="' + esc(o.id) + '">🏍️ Request delivery</button><div id="df-' + esc(o.id) + '"></div>'; }
+    else if (inf) {
+      if (inf.delivery_status === "requested") dl = '<div class="box"><span class="pill warn">Waiting for your payment</span><p style="margin:8px 0 0">Delivery fee: <b>' + nk(inf.fee_kobo) + "</b></p><p class=\"muted\" style=\"margin:6px 0 0\">" + esc(inf.instructions || "") + " Quote order #" + esc(String(o.id).slice(0, 8)) + ' when you pay.</p><button class="btn line full" style="margin-top:10px" data-a="dcancel" data-id="' + esc(o.id) + '">Cancel or change this request</button></div>';
+      else if (inf.delivery_status === "fee_paid") dl = '<div class="box"><span class="pill ok">Delivery fee confirmed</span><p class="muted" style="margin:8px 0 0">' + (o.status === "paid" ? "We are finding a rider for you." : "We find a rider as soon as the seller marks your order Paid.") + "</p></div>";
+      else if (inf.delivery_status === "dispatched") {
+        var rp = trk && trk.rider, wa = rp && waNum(rp.phone);
+        dl = '<div class="box"><span class="pill ' + (inf.job_status === "delivered" ? "ok" : inf.job_status === "unassigned" ? "bad" : "warn") + '">' + esc(JOB[inf.job_status] || inf.job_status) + "</span>" + (inf.rider_name ? '<p style="margin:8px 0 0">Rider: <b>' + esc(inf.rider_name) + "</b>" + (inf.rider_vehicle ? " (" + esc(inf.rider_vehicle) + ")" : "") + (rp && rp.rating_count ? " · ★ " + esc(rp.rating_avg) + " (" + esc(rp.rating_count) + ")" : "") + "</p>" : "") +
+          (inf.delivery_code ? '<p style="margin:8px 0 0">Your delivery code:<br><span class="code">' + esc(inf.delivery_code) + '</span><br><span class="muted">Give it to the rider only after you have received and checked your item.</span></p>' : "") +
+          (rp && wa ? '<div class="row"><a class="btn alt" href="tel:' + esc(phone(rp.phone) || "") + '">📞 Call rider</a><a class="btn" style="background:#25d366;color:#fff" target="_blank" rel="noopener" href="https://wa.me/' + wa + "?text=" + encodeURIComponent("Hello, I am the buyer of order #" + String(o.id).slice(0, 8) + " on SafeBuy NG.") + '">💬 WhatsApp</a></div>' : "") + "</div>";
+      }
+      if (trk && trk.can_rate) dl += '<div class="box"><b>How was your rider?</b><div id="st-' + esc(o.id) + '" style="font-size:32px">' + [1, 2, 3, 4, 5].map(function (n) { return '<button class="x" style="width:auto;background:none;font-size:32px;color:var(--warn)" data-a="rate" data-id="' + esc(o.id) + '" data-n="' + n + '" aria-label="' + n + ' stars">★</button>'; }).join("") + "</div></div>";
+      else if (trk && trk.my_rating) dl += '<p class="muted">You rated this delivery ' + esc(trk.my_rating) + " ★. Thank you!</p>";
+      if (trk && trk.events && trk.events.length) dl += '<details style="margin-top:8px"><summary><b>Order progress</b></summary>' + trk.events.map(function (ev) { return '<div class="muted" style="padding:4px 0">• ' + esc(ev.label) + " · " + new Date(ev.at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }) + "</div>"; }).join("") + "</details>";
+    }
+    return '<div class="card fade"><div class="line1"><div><b>' + esc(o.product_name || "Product") + " × " + o.quantity + '</b>' + (o.shop_name ? '<div class="muted">Seller: ' + esc(o.shop_name) + "</div>" : "") + (o.color || o.size ? '<div class="muted">' + esc([o.color, o.size].filter(Boolean).join(" · ")) + "</div>" : "") + '</div><div style="text-align:right"><b>' + nk(o.total_kobo) + '</b><div class="muted">' + ago(o.created_at) + '</div></div></div><span class="pill ' + (o.status === "cancelled" ? "bad" : o.status === "delivered" ? "ok" : o.status === "placed" ? "warn" : "") + '" style="margin-top:8px">' + esc(STEP[o.status] || o.status) + "</span>" + (o.status !== "cancelled" ? '<div class="steps">' + [1, 2, 3, 4].map(function (i) { return '<i class="' + (st >= i ? "on" : "") + '"></i>'; }).join("") + "</div>" : "") + dl + (b ? '<div class="row">' + b + "</div>" : "") + '<div class="muted" style="margin-top:8px">#' + esc(String(o.id).slice(0, 8)) + "</div></div>";
+  }
+  async function orderClick(e) {
+    var b = e.target.closest("[data-a]"); if (!b) return; var a = b.dataset.a, id = b.dataset.id;
+    if (a === "dform") { var box = $("df-" + id); b.hidden = true; box.innerHTML = '<div class="box"><label>State</label><select class="ds">' + stateOpts("Lagos") + '</select><label>City / area</label><input class="dc" maxlength="60" placeholder="e.g. Ikeja"><label>Full delivery address</label><textarea class="da" maxlength="200" placeholder="House number, street, landmark"></textarea><label>Your phone (the rider may call)</label><input class="dp" type="tel" inputmode="tel" placeholder="08012345678"><button class="btn full" style="margin-top:12px" data-a="dsend" data-id="' + esc(id) + '">Get delivery quote</button><p class="msg dm"></p></div>'; return; }
+    if (a === "dsend") { var bx = b.closest(".box"), m = bx.querySelector(".dm"), ph = phone(bx.querySelector(".dp").value); m.className = "msg dm bad"; if (!ph) { m.textContent = "Enter a valid Nigerian phone number."; return; } if (bx.querySelector(".dc").value.trim().length < 2 || bx.querySelector(".da").value.trim().length < 8) { m.textContent = "Enter your area and full address."; return; } b.disabled = true; m.className = "msg dm"; m.textContent = "Checking coverage…"; try { await rpc("order_request_delivery", { p_order: id, p_state: bx.querySelector(".ds").value, p_city: bx.querySelector(".dc").value, p_address: bx.querySelector(".da").value, p_phone: ph }); toast("Delivery requested. See the fee below."); refreshOrders(); } catch (err) { m.className = "msg dm bad"; m.textContent = friendly(err); b.disabled = false; } return; }
+    if (a === "dcancel") { if (!window.confirm("Cancel this delivery request? You can request delivery again with the right address.")) return; b.disabled = true; try { await rpc("buyer_cancel_delivery_request", { p_order: id }); toast("Delivery request cancelled."); refreshOrders(); } catch (err) { toast(friendly(err)); b.disabled = false; } return; }
+    if (a === "rate") { try { await rpc("rate_delivery", { p_order: id, p_stars: Number(b.dataset.n) }); toast("Thanks for rating your rider."); refreshOrders(); } catch (err) { toast(friendly(err)); } return; }
+    if (a === "chat") { var win = window.open("about:blank", "_blank"); try { var n = waNum(await rpc("seller_contact", { p_product: b.dataset.p })); if (!n) { if (win) win.close(); toast("Seller contact is not available yet."); return; } var u = "https://wa.me/" + n + "?text=" + encodeURIComponent("Hello, this is about my SafeBuy NG order."); if (win) win.location.href = u; else location.href = u; } catch (err) { if (win) win.close(); toast("Seller contact is not available yet."); } return; }
+    if (a === "cancel" && b.dataset.ds && !window.confirm("You requested delivery for this order. If you already paid the delivery fee, contact SafeBuy NG about a refund. Cancel anyway?")) return;
+    if (a === "cancel" && !b.dataset.ds && !window.confirm("Cancel this order?")) return;
+    b.disabled = true; var st = a === "cancel" ? "cancelled" : "delivered"; var r = await C.rpc("mp_update_order_status", { p_order: id, p_status: st }); if (r.error) { toast(friendly(r.error)); b.disabled = false; return; } toast("Order updated."); refreshOrders();
+  }
+
+  /* =========================== ACCOUNT / ALERTS / AUTH =========================== */
+  function vMe(m) {
+    if (!USER) { m.innerHTML = '<div class="card" style="text-align:center"><div style="font-size:42px">👤</div><h3>Welcome to SafeBuy NG</h3><p class="muted">Sign in to order, track deliveries and review products.</p><button class="btn full" id="ai">Sign in or create account</button></div>' + sideLinks(); $("ai").onclick = function () { authSheet("in"); }; return; }
+    m.innerHTML = '<div class="card fade"><h3>' + esc((USER.user_metadata && USER.user_metadata.full_name) || "My account") + '</h3><p class="muted" style="margin:4px 0 8px">' + esc(USER.email) + '</p><span class="pill">Buyer account</span></div>' +
+      '<div class="card"><h3>Change password</h3><label for="np">New password (8+ characters)</label><input id="np" type="password" autocomplete="new-password" minlength="8"><button class="btn alt full" style="margin-top:10px" id="npb">Update password</button><p class="msg" id="npm"></p></div>' + sideLinks() +
+      '<div class="card"><button class="btn line full" id="so">Sign out</button></div>';
+    $("npb").onclick = async function () { var v = $("np").value; if (v.length < 8) { setMsg("npm", "Use at least 8 characters.", true); return; } var r = await C.auth.updateUser({ password: v }); setMsg("npm", r.error ? friendly(r.error) : "Password updated.", !!r.error); if (!r.error) $("np").value = ""; };
+    $("so").onclick = async function () { try { await C.auth.signOut(); } catch (e) {} location.reload(); };
+  }
+  function sideLinks() { return '<div class="card"><h3>This is your Buyer account</h3><p class="muted">Selling and delivering use separate accounts with their own apps. You can use the same email for each.</p><div class="row"><a class="btn alt" href="../seller/">🏪 Seller app</a><a class="btn alt" href="../rider/">🏍️ Rider app</a></div></div>'; }
+  async function loadAlerts() { if (!USER) return; var r = await C.from("notifications").select("id,role,title,body,read_at,created_at").not("role", "in", "(seller,rider)").order("created_at", { ascending: false }).limit(40); if (!r.error) ALERTS = r.data || []; }
+  async function openAlerts() {
+    await loadAlerts();
+    sheet("Alerts", ALERTS.length ? ALERTS.map(function (n) { return '<div class="card"' + (n.read_at ? "" : ' style="border-color:var(--brand)"') + "><b>" + esc(n.title) + "</b>" + (n.body ? '<p class="muted" style="margin:4px 0 0">' + esc(n.body) + "</p>" : "") + '<div class="muted">' + ago(n.created_at) + "</div></div>"; }).join("") : '<div class="card"><p class="muted" style="margin:0">No alerts yet.</p></div>');
+    if (unread()) { var r = await C.rpc("mark_notifications_read_role", { p_role: "buyer" }); if (r.error) await C.rpc("mark_notifications_read"); ALERTS.forEach(function (n) { n.read_at = n.read_at || new Date().toISOString(); }); var b = $("bell"); if (b && b.querySelector("b")) b.querySelector("b").remove(); }
+  }
+  function authSheet(mode) {
+    var up = mode === "up", fg = mode === "forgot";
+    var d = sheet(fg ? "Reset password" : up ? "Create your account" : "Sign in", '<div class="auth" style="padding-top:8px"><p class="muted" style="text-align:center;margin:0 0 14px">This is your SafeBuy <b>Buyer</b> account. Sellers and riders use their own apps.</p><form id="af" class="card">' + (up ? '<label for="an">Your name</label><input id="an" autocomplete="name" required maxlength="80">' : "") + '<label for="ae">Email</label><input id="ae" type="email" autocomplete="email" inputmode="email" required>' + (fg ? "" : '<label for="ap">Password</label><input id="ap" type="password" autocomplete="' + (up ? "new-password" : "current-password") + '" required minlength="8">') + '<button class="btn full" style="margin-top:16px" id="ab">' + (fg ? "Send reset link" : up ? "Create account" : "Sign in") + '</button><p class="msg" id="am" role="status"></p></form><p style="text-align:center">' + (mode === "in" ? '<a href="#" data-m="forgot">Forgot password?</a><br><a href="#" data-m="up">New here? Create an account</a>' : '<a href="#" data-m="in">Back to sign in</a>') + "</p></div>");
+    d.querySelectorAll("[data-m]").forEach(function (a) { a.onclick = function (e) { e.preventDefault(); authSheet(a.dataset.m); }; });
+    $("af").onsubmit = async function (e) {
+      e.preventDefault(); var b = $("ab"); b.disabled = true; setMsg("am", "Please wait…"); var em = $("ae").value.trim(), pw = $("ap") ? $("ap").value : "";
+      try { var r;
+        if (fg) { r = await C.auth.resetPasswordForEmail(em, { redirectTo: location.href.split("#")[0] }); if (r.error) throw r.error; setMsg("am", "Check your email for the reset link."); b.disabled = false; return; }
+        if (up) { r = await C.auth.signUp({ email: em, password: pw, options: { data: { full_name: $("an").value.trim() } } }); if (r.error) throw r.error; if (!r.data.session) { setMsg("am", "Check your email to confirm, then sign in."); b.disabled = false; return; } }
+        else { r = await C.auth.signInWithPassword({ email: em, password: pw }); if (r.error) throw r.error; }
+        closeSheet(); await afterAuth(); shell();
+      } catch (err) { setMsg("am", /Invalid login/i.test(err.message) ? "Wrong email or password." : friendly(err), true); b.disabled = false; }
+    };
+  }
+
+  /* =========================== BOOT =========================== */
+  var timer = null, chan = null;
+  async function afterAuth() {
+    var s = await C.auth.getSession(); USER = s.data && s.data.session ? s.data.session.user : null;
+    if (USER) { try { C.rpc("claim_role", { p_role: "buyer" }).then(function () {}, function () {}); } catch (e) {} await Promise.all([loadAlerts(), refreshOrders()]);
+      try { if (chan) C.removeChannel(chan); chan = C.channel("buy-" + USER.id).on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: "user_id=eq." + USER.id }, function (p) { if (p.new && p.new.role !== "seller" && p.new.role !== "rider") { toast(p.new.title); loadAlerts().then(function () { if (!$("sheet")) shell(); }); refreshOrders(); } }).subscribe(); } catch (e) {} }
+  }
+  async function start() {
+    CART = readCart(); shell(); loadProducts();
+    await afterAuth(); shell();
+    clearInterval(timer); timer = setInterval(function () { if (!document.hidden && USER) { refreshOrders(); loadAlerts(); } }, 20000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { loadProducts(); if (USER) refreshOrders(); } });
+    var q = new URLSearchParams(location.search); if (q.get("dfee")) { try { history.replaceState(null, "", location.pathname); } catch (e) {} TAB = "orders"; shell(); }
+    var h = document.createElement("script"); h.src = window.__ROOT + "instant.js?v=2"; h.async = true; document.body.appendChild(h);
+  }
+  window.__sbWhenReady(function () {
+    C = window.safeBuySupabase;
+    if (!C) { A.innerHTML = '<div class="auth"><div class="card"><h3>No connection</h3><p class="muted">We could not reach SafeBuy. Check your data and try again.</p><button class="btn full" onclick="location.reload()">Try again</button></div></div>'; return; }
+    C.auth.onAuthStateChange(function (ev) { if (ev === "SIGNED_OUT" && USER) location.reload(); if (ev === "PASSWORD_RECOVERY") { var p = window.prompt("Enter a new password (8+ characters)"); if (p && p.length >= 8) C.auth.updateUser({ password: p }).then(function (r) { toast(r.error ? friendly(r.error) : "Password updated."); }); } });
+    start();
+  });
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(function () {});
+})();
+</script>
+</body>
+</html>
