@@ -1449,7 +1449,7 @@ updateCartCount();
   function sellerMode() { return document.body.classList.contains("sb-seller"); }
 
   function triggerFeature(name) {
-    if (name === "dashboard") { location.href = "./dashboard/"; return; }
+    if (name === "dashboard") { location.href = "./buyer/"; return; }
     if (name === "verify") {
       var sell = document.querySelector('[data-action="sell"]');
       if (sell) sell.click();
