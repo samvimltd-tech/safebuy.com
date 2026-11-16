@@ -856,7 +856,7 @@ html body header.sb-scrolled{box-shadow:0 10px 34px #0a3d2124}
 @media (prefers-reduced-motion:reduce){html body .hero,html body .sc-slide.on .sc-img img{animation:none}html body .sb-rv{opacity:1;transform:none;transition:none}}
 
 /* ================= CLEAN MODE: one clear path, no clutter ================= */
-html body #sc-ann:empty,html body .delivery-bar,html body #sc-ddrow,html body #sc-quick,html body #sc-paths,html body #sc-notice,html body #pulse,html body #sb-stats{display:none!important}
+html body #sc-ann:empty,html body #sc-ddrow,html body #sc-quick,html body #sc-paths,html body #sc-notice,html body #pulse,html body #sb-stats{display:none!important}
 html body #sb-home .sbg:nth-child(n+3){display:none}
 html body #sb-home{margin-top:6px}
 html body #sb-home .sbg h3{margin:0 0 14px;font-size:clamp(24px,3.2vw,32px);font-weight:900;letter-spacing:-.8px}
@@ -894,6 +894,126 @@ html body .hero h1{font-size:38px;letter-spacing:-1.2px}
 html body .showcase{height:360px}
 html body .hero-art.has-sc{margin:28px 0 34px}
 }
+</style>
+<style id="sb-choose">
+html body .choose{position:relative;padding:clamp(34px,5vw,64px) 0 clamp(26px,4vw,46px);background:#fff;scroll-margin-top:76px}
+html body .choose-head{text-align:center;max-width:720px;margin:0 auto 30px}
+html body .choose-eyebrow{display:inline-block;font:900 13px/1 system-ui,sans-serif;letter-spacing:1.8px;color:#d9590a;background:#fff1e4;padding:8px 14px;border-radius:30px}
+html body .choose-head h2{margin:14px 0 10px;font-size:clamp(32px,6vw,48px);line-height:1.1;letter-spacing:-.6px;color:#10241a}
+html body .choose-head p{margin:0;font-size:clamp(18px,2.4vw,21px);line-height:1.5;color:#46594e}
+html body .choose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+html body .rc{position:relative;overflow:hidden;border-radius:26px;padding:28px 24px 24px;color:#fff;background-size:260% 260%;animation:rcShift 12s ease-in-out infinite;box-shadow:0 18px 40px rgba(16,36,26,.22);transition:transform .25s,box-shadow .25s}
+html body .rc:hover{transform:translateY(-6px);box-shadow:0 26px 54px rgba(16,36,26,.3)}
+html body .rc:after{content:"";position:absolute;right:-70px;top:-70px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.16);pointer-events:none}
+@keyframes rcShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+html body .rc-buyer{background-image:linear-gradient(135deg,#047a3e,#0cc263,#0a8f4c,#065f33)}
+html body .rc-seller{background-image:linear-gradient(135deg,#c2410c,#f97316,#ea580c,#9a3412)}
+html body .rc-rider{background-image:linear-gradient(135deg,#031d12,#0b4a2f,#052e1d,#0a3d27)}
+html body .rc-ico{width:64px;height:64px;border-radius:18px;background:#fff;display:grid;place-items:center;font-size:34px;box-shadow:0 8px 20px rgba(0,0,0,.22);margin-bottom:16px;position:relative;z-index:1}
+html body .rc h3{margin:0 0 8px;font-size:clamp(28px,3.4vw,34px);line-height:1.1;font-weight:900;position:relative;z-index:1;color:#fff}
+html body .rc-d{margin:0 0 14px;font-size:18px;line-height:1.5;opacity:.97;position:relative;z-index:1;min-height:54px}
+html body .rc-live{margin:0 0 14px;font-weight:800;font-size:16px;color:#fde68a;position:relative;z-index:1}
+html body .rc-btn{position:relative;z-index:1;display:block;text-align:center;text-decoration:none;font:900 19px/1.2 system-ui,sans-serif;padding:16px;border-radius:15px;margin-top:11px;transition:transform .12s}
+html body .rc-btn:active{transform:scale(.98)}
+html body .rc-main{background:#fff;color:#10241a;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+html body .rc-buyer .rc-main{color:#065f33}html body .rc-seller .rc-main{color:#9a3412}
+html body .rc-rider .rc-main{background:#f97316;color:#fff}
+html body .rc-alt{border:2px solid rgba(255,255,255,.75);color:#fff;background:rgba(255,255,255,.12)}
+html body .rc-app{color:#fff;background:rgba(0,0,0,.24);font-size:17px;padding:14px}
+html body .choose-note{text-align:center;margin:22px auto 0;max-width:620px;color:#46594e;font-size:17px;line-height:1.5}
+@media(max-width:900px){html body .choose-grid{grid-template-columns:1fr}html body .rc-d{min-height:0}}
+@media(prefers-reduced-motion:reduce){html body .rc{animation:none}html body .rc:hover{transform:none}}
+</style>
+<style id="sb-folds">
+html body .fold{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px rgba(16,36,26,.07);overflow:hidden}
+html body .fold>summary{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;list-style:none}
+html body .fold>summary::-webkit-details-marker{display:none}
+html body .fold .fi{width:48px;height:48px;border-radius:14px;background:var(--green-light);display:grid;place-items:center;font-size:26px;flex:none}
+html body .fold .ft{flex:1;font-size:clamp(20px,3vw,24px);font-weight:900;color:var(--ink);line-height:1.2}
+html body .fold .ft small{display:block;margin-top:3px;font-size:16px;font-weight:600;color:var(--muted)}
+html body .fold .chev,html body .rc .chev{font-size:24px;font-weight:900;transition:transform .2s}
+html body .fold[open]>summary .chev{transform:rotate(180deg)}
+html body .fold[open]>summary{border-bottom:1px solid var(--line)}
+html body .fold-in{padding:20px}
+html body #how-it-works{padding:18px 0}
+html body #lead-fold{margin:18px auto;max-width:var(--maxw,1180px)}
+html body #lead-fold .lead-card{box-shadow:none;margin:0;border-radius:0}
+/* chooser cards as dropdowns */
+html body .rc{padding:0}
+html body .rc>summary{display:flex;align-items:center;gap:14px;padding:22px 22px;cursor:pointer;list-style:none;position:relative;z-index:1}
+html body .rc>summary::-webkit-details-marker{display:none}
+html body .rc .rc-ico{margin:0;flex:none}
+html body .rc .rc-t{flex:1;min-width:0}
+html body .rc .rc-t h3{margin:0 0 4px}
+html body .rc .rc-t .rc-d{display:block;margin:0;min-height:0;font-size:17px}
+html body .rc .chev{color:#fff;flex:none}
+html body .rc[open]>summary .chev{transform:rotate(180deg)}
+html body .rc .rc-body{padding:0 22px 22px;position:relative;z-index:1}
+html body .rc .rc-body .rc-btn:first-of-type{margin-top:4px}
+@media(min-width:901px){html body .rc>summary{flex-direction:column;align-items:flex-start;cursor:default;pointer-events:none;padding:28px 24px 14px}html body .rc .chev{display:none}html body .rc .rc-t .rc-d{min-height:54px}}
+html body footer .footer-row{gap:18px}
+</style>
+<style id="sb-one">
+html body .choose-grid,html body .rc{display:none!important}
+html body .rone{position:relative;overflow:hidden;max-width:720px;margin:0 auto;border-radius:30px;color:#fff;padding:14px 14px 22px;box-shadow:0 22px 50px rgba(16,36,26,.28);isolation:isolate}
+html body .rbg{position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .55s ease;background-size:240% 240%;animation:rcShift 12s ease-in-out infinite}
+html body .rbg-buyer{background-image:linear-gradient(135deg,#047a3e,#0cc263,#0a8f4c,#065f33)}
+html body .rbg-seller{background-image:linear-gradient(135deg,#c2410c,#f97316,#ea580c,#9a3412)}
+html body .rbg-rider{background-image:linear-gradient(135deg,#031d12,#0b4a2f,#052e1d,#0a3d27)}
+html body .rone[data-role=buyer] .rbg-buyer,html body .rone[data-role=seller] .rbg-seller,html body .rone[data-role=rider] .rbg-rider{opacity:1}
+html body .rone:after{content:"";position:absolute;right:-80px;top:40px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.13);z-index:-1;pointer-events:none}
+html body .rtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(0,0,0,.22);padding:6px;border-radius:20px}
+html body .rtabs button{border:0;border-radius:15px;padding:14px 6px;font:900 clamp(17px,4.4vw,20px)/1 system-ui,sans-serif;background:transparent;color:#fff;cursor:pointer;transition:background .25s,color .25s,transform .12s}
+html body .rtabs button:active{transform:scale(.97)}
+html body .rtabs button[aria-selected=true]{background:#fff;color:#10241a;box-shadow:0 6px 16px rgba(0,0,0,.22)}
+html body .rone[data-role=buyer] .rtabs button[aria-selected=true]{color:#065f33}
+html body .rone[data-role=seller] .rtabs button[aria-selected=true]{color:#9a3412}
+html body .rpanel{padding:22px 10px 0;animation:rIn .4s ease}
+@keyframes rIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+html body .rpanel h3{margin:0 0 8px;font-size:clamp(30px,7.5vw,40px);line-height:1.08;font-weight:900;color:#fff;letter-spacing:-.4px}
+html body .rpanel>p{margin:0 0 14px;font-size:clamp(18px,4.6vw,21px);line-height:1.5;opacity:.97;color:#fff}
+html body .rchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+html body .rchips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:30px;padding:8px 14px;font:800 15px/1 system-ui,sans-serif}
+html body .rlive{font-weight:800;color:#fde68a!important;font-size:16px!important}
+html body .rbtn{display:block;text-align:center;text-decoration:none;font:900 20px/1.2 system-ui,sans-serif;padding:17px 10px;border-radius:16px;transition:transform .12s}
+html body .rbtn:active{transform:scale(.98)}
+html body .rmain{background:#fff;color:#10241a;box-shadow:0 10px 24px rgba(0,0,0,.22)}
+html body .rone[data-role=buyer] .rmain{color:#065f33}html body .rone[data-role=seller] .rmain{color:#9a3412}
+html body .rone[data-role=rider] .rmain{background:#f97316;color:#fff}
+html body .rrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+html body .ralt{border:2px solid rgba(255,255,255,.8);color:#fff;background:rgba(255,255,255,.12)}
+html body .rapp{background:rgba(0,0,0,.28);color:#fff}
+@media(min-width:760px){html body .rone{padding:18px 22px 28px}html body .rpanel{padding:26px 12px 0}}
+@media(max-width:759px){html body .choose{padding-top:26px}html body .choose-eyebrow,html body .choose-head p{display:none}html body .choose-head{margin-bottom:16px}html body .choose-head h2{margin:0;font-size:30px}}
+@media(prefers-reduced-motion:reduce){html body .rbg,html body .rpanel{animation:none}}
+</style>
+<style id="sb-forefront">
+/* delivery bar: slim, one calm line */
+html body .delivery-bar{background:#fff7ed;border-bottom:1px solid #fed7aa;color:#7c3a06;font-size:15px;font-weight:700}
+html body .delivery-bar.ok{background:#ecfdf3;border-color:#bbf0d2;color:#065f33}
+html body .delivery-bar .container{display:flex;align-items:center;justify-content:center;gap:0 12px;flex-wrap:wrap;padding:7px 16px;text-align:center}
+html body .delivery-bar button{font-size:15px;font-weight:900;color:#c2410c;text-decoration:underline;padding:2px 4px}
+html body .delivery-bar.ok button{color:#047a3e}
+/* compact hero: message + two buttons, then products */
+html body .hero{padding:clamp(22px,3.4vw,44px) 0 clamp(34px,4.5vw,58px)}
+html body .hero h1{margin:0 0 12px;font-size:clamp(36px,5.4vw,60px);letter-spacing:-1.6px}
+html body .hero p{font-size:clamp(18px,2vw,21px);line-height:1.55}
+html body .hero-buttons{margin-top:20px;gap:12px}
+html body .hero-buttons .button{padding:16px 26px;font-size:19px}
+html body .hero-art{min-height:260px}
+html body .hero .eyebrow{margin-bottom:16px}
+@media(max-width:900px){
+ html body .hero{padding:18px 0 28px}
+ html body .hero .eyebrow{display:none}
+ html body .hero-art{display:none}
+ html body .hero h1{font-size:34px;letter-spacing:-1px}
+ html body .hero p{font-size:17px}
+ html body .hero-buttons{flex-direction:column;margin-top:16px}
+ html body .hero-buttons .button{width:100%;text-align:center;padding:15px 18px;font-size:19px}
+ html body #shop{padding-top:22px}
+}
+html body #shop{scroll-margin-top:84px}
+html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
 </style>
 </head>
 <body>
@@ -946,7 +1066,7 @@ html body .hero-art.has-sc{margin:28px 0 34px}
 
     <div class="header-actions">
       <button class="button button-outline delivery-btn" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
-      <button class="button button-light sell-header" type="button" data-action="sell">Start selling</button>
+      <a class="button button-light sell-header" href="#choose">Get started</a>
 
       <button class="button button-primary signin-btn" type="button" data-action="account">Sign in</button>
 
@@ -1033,10 +1153,10 @@ html body .hero-art.has-sc{margin:28px 0 34px}
         <div class="hero-copy">
           <span class="eyebrow">★ NIGERIA'S SAFER WAY TO SHOP</span>
           <h1>Shop with confidence.<br><span>Delivered to your door.</span></h1>
-          <p>Discover fashion, electronics, home and everyday essentials from verified Nigerian sellers. Chat before you buy, track every order, and shop with people who have your back.</p>
+          <p>Fashion, electronics, home and everyday essentials from verified Nigerian sellers. Safe payments, tracked delivery.</p>
           <div class="hero-buttons">
             <a class="button button-primary" href="#shop">Start shopping →</a>
-            <button class="button button-outline" type="button" data-action="sell">Open your shop</button>
+            <a class="button button-outline" href="#choose">Sign in or create account</a>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -1045,6 +1165,8 @@ html body .hero-art.has-sc{margin:28px 0 34px}
       </div>
     </div>
   </section>
+
+  
 
   <div class="container">
         
@@ -1123,6 +1245,32 @@ html body .hero-art.has-sc{margin:28px 0 34px}
   </section>
 
   <div class="container"><div data-ad-slot="home_mid" hidden></div></div>
+  <section class="choose" id="choose" aria-labelledby="choose-t">
+    <div class="container">
+      <div class="choose-head">
+        <span class="choose-eyebrow">ONE PLATFORM · THREE ACCOUNTS</span>
+        <h2 id="choose-t">How do you want to use SafeBuy?</h2>
+        <p>Pick one, create your account in a minute, then add the app to your phone.</p>
+      </div>
+      <div class="rone" id="rone" data-role="buyer">
+        <i class="rbg rbg-buyer"></i><i class="rbg rbg-seller"></i><i class="rbg rbg-rider"></i>
+        <div class="rtabs" role="tablist" aria-label="Choose your account">
+          <button type="button" role="tab" data-r="buyer" aria-selected="true">🛍️ Buy</button>
+          <button type="button" role="tab" data-r="seller" aria-selected="false">🏪 Sell</button>
+          <button type="button" role="tab" data-r="rider" aria-selected="false">🏍️ Ride</button>
+        </div>
+        <div class="rpanel" aria-live="polite">
+          <h3 id="r-title"></h3>
+          <p id="r-desc"></p>
+          <div class="rchips" id="r-chips"></div>
+          <p class="rlive" id="r-live" hidden></p>
+          <a class="rbtn rmain" id="r-up" href="#">Create account</a>
+          <div class="rrow"><a class="rbtn ralt" id="r-in" href="#">Sign in</a><a class="rbtn rapp" id="r-app" href="#">⬇ Get app</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section" id="how-it-works">
     <div class="container">
       <div class="section-heading">
@@ -1152,7 +1300,7 @@ html body .hero-art.has-sc{margin:28px 0 34px}
     </div>
   </section>
 
-  <section class="section" id="sell">
+  <section class="section" id="sell" hidden style="display:none">
     <div class="container">
       <div class="sell-panel" id="sc-sell">
         <div>
@@ -1182,6 +1330,12 @@ html body .hero-art.has-sc{margin:28px 0 34px}
         <button type="button" data-goto-category="Electronics">Electronics</button>
         <button type="button" data-goto-category="Fashion">Fashion</button>
         <button type="button" data-goto-category="Groceries">Groceries</button>
+      </details>
+      <details class="footer-col" open>
+        <summary>Apps</summary>
+        <a href="./buyer/">Buyer app</a>
+        <a href="./seller/">Seller app</a>
+        <a href="./rider/">Rider app</a>
       </details>
       <details class="footer-col" open>
         <summary>Account</summary>
@@ -3084,5 +3238,58 @@ document.addEventListener("click", function (e) {
   window.addEventListener("scroll", function () { var h = document.querySelector("header"); if (h) h.classList.toggle("sb-scrolled", scrollY > 8); }, { passive: true });
 })();
 </script>
+<script>
+(function(){var el=document.getElementById("rc-live-buyer");if(!el)return;var n=0,t=setInterval(function(){
+  var p=window.products;if(p&&p.length){clearInterval(t);el.textContent="🟢 "+p.length+" product"+(p.length===1?"":"s")+" live right now";el.hidden=false;}else if(++n>40)clearInterval(t);},500);})();
+</script>
+<script>
+(function(){
+  var mq=window.matchMedia("(min-width:901px)");
+  function layout(){
+    var big=mq.matches;
+    document.querySelectorAll(".rc").forEach(function(d,i){ d.open=big?true:(i===0&&!d.__touched); });
+        document.querySelectorAll("footer details.footer-col").forEach(function(d){ if(!d.__touched) d.open=big; });
+  }
+  document.querySelectorAll(".rc,footer details.footer-col").forEach(function(d){
+    d.addEventListener("toggle",function(){ if(d.__prog)return; });
+    d.querySelector("summary").addEventListener("click",function(){ d.__touched=true; if(d.classList.contains("rc")&&!mq.matches){ document.querySelectorAll(".rc").forEach(function(o){ if(o!==d) o.open=false; }); } });
+  });
+  layout(); (mq.addEventListener?mq.addEventListener("change",layout):mq.addListener(layout));
+  // lead capture (email / WhatsApp deals) becomes a dropdown too
+  function foldLead(){
+    var l=document.getElementById("lead-section"); if(!l||document.getElementById("lead-fold"))return !!document.getElementById("lead-fold");
+    var f=document.createElement("details"); f.className="fold"; f.id="lead-fold";
+    f.innerHTML='<summary><span class="fi">📩</span><span class="ft">Get deals and updates<small>Hear about new products and offers</small></span><span class="chev">⌄</span></summary>';
+    l.parentNode.insertBefore(f,l); f.appendChild(l); return true;
+  }
+  if(!foldLead()){ var mo=new MutationObserver(function(){ if(foldLead()) mo.disconnect(); }); mo.observe(document.body,{childList:true,subtree:true}); setTimeout(function(){mo.disconnect();},15000); }
+})();
+</script>
+<script>
+(function(){
+  var D={
+    buyer:{t:"Shop with confidence",d:"Verified sellers, protected payments and delivery you can track.",c:["🛡️ Safe payments","🚚 Tracked delivery","❤️ Wishlist"],up:"Create buyer account",u:"./buyer/",ap:"Get Buyer app"},
+    seller:{t:"Grow your business",d:"Open your shop, reach buyers across Nigeria and get paid after every delivery.",c:["🏪 Your own shop","🏍️ Riders deliver","💰 Safe payouts"],up:"Open seller account",u:"./seller/",ap:"Get Seller app"},
+    rider:{t:"Earn on every trip",d:"Go online, accept deliveries near you and get paid for every completed trip.",c:["⏰ Your hours","📍 Nearby jobs","💵 Paid per trip"],up:"Become a rider",u:"./rider/",ap:"Get Rider app"}
+  };
+  var box=document.getElementById("rone"); if(!box)return;
+  function $(i){return document.getElementById(i);}
+  function show(r,user){
+    var x=D[r]; box.setAttribute("data-role",r);
+    box.querySelectorAll(".rtabs button").forEach(function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-r")===r));});
+    $("r-title").textContent=x.t; $("r-desc").textContent=x.d;
+    $("r-chips").innerHTML=x.c.map(function(c){return "<span>"+c+"</span>";}).join("");
+    $("r-up").textContent=x.up; $("r-up").href=x.u+"?signup=1"; $("r-in").href=x.u+"?signin=1"; $("r-app").href=x.u+"?install=1"; $("r-app").textContent="⬇ Get app";
+    var l=$("r-live"); if(r==="buyer"&&window.products&&window.products.length){l.textContent="🟢 "+window.products.length+" product"+(window.products.length===1?"":"s")+" live right now";l.hidden=false;}else l.hidden=true;
+    var p=box.querySelector(".rpanel"); p.style.animation="none"; void p.offsetWidth; p.style.animation="";
+    try{sessionStorage.setItem("sb-role",r);}catch(e){}
+  }
+  box.querySelectorAll(".rtabs button").forEach(function(b){b.addEventListener("click",function(){clearInterval(auto);show(b.getAttribute("data-r"));});});
+  var order=["buyer","seller","rider"],i=0,auto=setInterval(function(){i=(i+1)%3;show(order[i]);},6500);
+  box.addEventListener("pointerdown",function(){clearInterval(auto);});
+  show("buyer");
+  var n=0,t=setInterval(function(){if(window.products&&window.products.length){clearInterval(t);if(box.getAttribute("data-role")==="buyer")show("buyer");}else if(++n>40)clearInterval(t);},500);
+})();
+</script>
 </body>
-  </html>
+</html>
