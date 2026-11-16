@@ -854,10 +854,50 @@ html body header.sb-scrolled{box-shadow:0 10px 34px #0a3d2124}
 @media (max-width:900px){html body .hero-art.has-sc{display:grid!important;order:0;min-height:0;margin:34px 0 40px}html body .showcase{height:400px;width:min(360px,100%)}}
 @media (max-width:650px){html body .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}html body .hero-stats .hs{flex-direction:column;align-items:flex-start;gap:0;padding:10px 12px}html body .hero-stats b{font-size:24px}html body .hero-stats span{font-size:13px}html body .hero-art.has-sc{display:grid!important}html body .showcase{height:380px}}
 @media (prefers-reduced-motion:reduce){html body .hero,html body .sc-slide.on .sc-img img{animation:none}html body .sb-rv{opacity:1;transform:none;transition:none}}
+
+/* ================= CLEAN MODE: one clear path, no clutter ================= */
+html body #sc-ann:empty,html body .delivery-bar,html body #sc-ddrow,html body #sc-quick,html body #sc-paths,html body #sc-notice,html body #pulse,html body #sb-stats{display:none!important}
+html body #sb-home .sbg:nth-child(n+3){display:none}
+html body #sb-home{margin-top:6px}
+html body #sb-home .sbg h3{margin:0 0 14px;font-size:clamp(24px,3.2vw,32px);font-weight:900;letter-spacing:-.8px}
+html body .hero{padding:clamp(34px,5vw,68px) 0 clamp(44px,6vw,84px)}
+html body .hero h1{font-size:clamp(40px,5.4vw,66px);line-height:1.06;letter-spacing:-2px;margin:18px 0 18px}
+html body .hero p{font-size:clamp(18px,1.9vw,21px);line-height:1.65;max-width:560px}
+html body .hero-buttons{margin-top:28px}
+html body .hero-buttons .button{font-size:18px;padding:17px 28px}
+html body .hero-art{min-height:380px}
+html body .showcase{height:420px}
+html body .section{padding:clamp(40px,5.5vw,76px) 0}
+html body .section-heading{margin-bottom:26px}
+html body .section-heading h2{font-size:clamp(30px,4.2vw,44px)}
+html body #lead-section .lead-card{border:0;border-radius:30px;background:linear-gradient(135deg,var(--green-light),#fff 60%,var(--orange-light));padding:clamp(26px,4vw,48px)}
+html body #lead-section h2{font-size:clamp(26px,3.6vw,36px);font-weight:900;letter-spacing:-.8px}
+html body #lead-section p{font-size:17px;color:var(--muted)}
+html body #lead-section input[type=email],html body #lead-section input[type=tel]{border:2px solid var(--line);border-radius:14px;font-size:17px;padding:14px}
+html body .toolbar{margin-bottom:18px}
+html body .guide{display:grid;gap:14px;margin-top:6px}
+html body .guide details.dd{position:static;background:#fff;border:2px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 4px 14px #0a3d210a}
+html body .guide details.dd[open]{border-color:var(--green)}
+html body .guide details.dd>summary{display:flex;align-items:center;gap:16px;padding:18px 20px;cursor:pointer;list-style:none;font-weight:800}
+html body .guide details.dd>summary::-webkit-details-marker{display:none}
+html body .guide .tile{flex:0 0 52px;height:52px;display:grid;place-items:center;border-radius:16px;background:var(--green-light);font-size:25px}
+html body .guide .tile.o{background:var(--orange-light)}
+html body .guide .dd-t{flex:1;font-size:20px;line-height:1.25}
+html body .guide .dd-t small{display:block;margin-top:2px;font-size:15px;font-weight:500;color:var(--muted)}
+html body .guide .chev{font-size:22px;color:var(--green-dark);transition:transform .18s}
+html body .guide details[open] .chev{transform:rotate(180deg)}
+html body .guide .dd-body{padding:4px 22px 22px;font-size:17px}
+html body .guide .steps{margin:0;padding-left:22px;line-height:1.8}
+@media (max-width:650px){
+html body .hero{padding:26px 0 40px}
+html body .hero h1{font-size:38px;letter-spacing:-1.2px}
+html body .showcase{height:360px}
+html body .hero-art.has-sc{margin:28px 0 34px}
+}
 </style>
 </head>
 <body>
-<div class="announcement" id="sc-ann">🇳🇬 Proudly Nigerian · Shop verified sellers</div>
+<div class="announcement" id="sc-ann"></div>
 
 <header>
   <div class="container header-row">
@@ -888,6 +928,7 @@ html body header.sb-scrolled{box-shadow:0 10px 34px #0a3d2124}
           <button type="button" data-action="sell"><span class="ico">🏪</span>Start selling / My shop</button>
           <button type="button" data-feature="verify"><span class="ico">✅</span>Get verified</button>
           <a href="#sell"><span class="ico">ℹ️</span>Why sell with us</a>
+          <a href="./seller/"><span class="ico">📱</span>Open the Seller app</a>
         </div>
       </div>
 
@@ -897,6 +938,7 @@ html body header.sb-scrolled{box-shadow:0 10px 34px #0a3d2124}
           <a href="#how-it-works"><span class="ico">💡</span>How it works</a>
           <button type="button" data-action="delivery"><span class="ico">🚚</span>Delivery areas</button>
           <button type="button" data-action="deliver"><span class="ico">🏍️</span>Deliver with us</button>
+          <a href="./rider/"><span class="ico">🛵</span>Open the Rider app</a>
           <button type="button" data-action="safety"><span class="ico">🛡️</span>Safety tips</button>
         </div>
       </div>
@@ -1011,10 +1053,10 @@ html body header.sb-scrolled{box-shadow:0 10px 34px #0a3d2124}
     fetch(String(c.url).replace(/\/+$/,"")+"/rest/v1/rpc/consol_public",{method:"POST",headers:{apikey:c.publishableKey,Authorization:"Bearer "+c.publishableKey,"Content-Type":"application/json"},body:"{}"})
     .then(function(r){return r.ok?r.json():[]}).then(function(l){l=(l||[]).filter(function(x){return x.products&&x.products.length});if(!l.length)return;
     var n=l.reduce(function(a,x){return a+x.products.length},0);document.getElementById("sc-deals-t").textContent="Today's deals · "+n+" product"+(n===1?"":"s")+" on offer";el.hidden=false;el.style.display="flex"}).catch(function(){})}catch(e){}});</script>
-    <div class="dd-row" id="sc-ddrow">
+    <div class="dd-row" id="sc-ddrow" hidden>
       <details class="dd-card"><summary><span class="ddi">⚡</span><span class="ddt">Your shortcuts<small>Orders, messages, delivery</small></span><span class="chev">⌄</span></summary><div class="dd-inner">
       <div class="quick-links" id="sc-quick" aria-label="Quick links">
-      <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Broowse products</small></span></a>
+      <a class="quick-link" href="#shop"><span class="ql-ico">🛍️</span><span>Shop<small>Browse products</small></span></a>
       <button class="quick-link" type="button" data-feature="orders"><span class="ql-ico">📦</span><span>My orders<small>Track purchases</small></span></button>
       <button class="quick-link" type="button" data-feature="messages"><span class="ql-ico">💬</span><span>Messages<small>Chat with sellers</small></span></button>
       <button class="quick-link" type="button" data-feature="notifications"><span class="ql-ico">🔔</span><span>Notifications<small>Order updates</small></span></button>
@@ -2710,7 +2752,7 @@ updateCartCount();
     box.innerHTML = myProducts.map(function (p) {
       var live = p.status === "published";
       var thumb = p.image_url && /^https:\/\//.test(p.image_url)
-      ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
+        ? '<img class="thumb" src="' + esc(p.image_url) + '" alt="">'
         : '<div class="thumb"></div>';
       return '<div class="seller-item">' +
         '<div class="seller-item-top">' + thumb + '<div class="grow"><strong>' + esc(p.name) + "</strong><br>" +
@@ -3034,7 +3076,6 @@ document.addEventListener("click", function (e) {
     if (key !== sig) {
       sig = key;
       var cats = categories(products);
-      stats(products, cats);
       showcase(products);
     }
     reveal();
