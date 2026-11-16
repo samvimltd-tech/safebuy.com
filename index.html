@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>try{var q=new URLSearchParams(location.search);if(q.get("app")==="1"||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true)document.documentElement.classList.add("sb-app");}catch(e){}</script>
 <script>
 (function () {
   /* Watchdog. Optional feature files that fail are retried once (with a fresh copy) and then skipped quietly: the page keeps working.
@@ -449,6 +450,7 @@ html::before,html::after,body::before,body::after{pointer-events:none!important}
   function done() { return standalone() || !!store(C.key + "-done"); }
   function hide() { if (card) { card.remove(); card = null; } }
   function hidePill() { if (pill) { pill.remove(); pill = null; } }
+  window.__roleInstall = function (f, r) { show(f, r); };
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); ev = e; makePill();
   });
@@ -895,35 +897,6 @@ html body .showcase{height:360px}
 html body .hero-art.has-sc{margin:28px 0 34px}
 }
 </style>
-<style id="sb-choose">
-html body .choose{position:relative;padding:clamp(34px,5vw,64px) 0 clamp(26px,4vw,46px);background:#fff;scroll-margin-top:76px}
-html body .choose-head{text-align:center;max-width:720px;margin:0 auto 30px}
-html body .choose-eyebrow{display:inline-block;font:900 13px/1 system-ui,sans-serif;letter-spacing:1.8px;color:#d9590a;background:#fff1e4;padding:8px 14px;border-radius:30px}
-html body .choose-head h2{margin:14px 0 10px;font-size:clamp(32px,6vw,48px);line-height:1.1;letter-spacing:-.6px;color:#10241a}
-html body .choose-head p{margin:0;font-size:clamp(18px,2.4vw,21px);line-height:1.5;color:#46594e}
-html body .choose-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-html body .rc{position:relative;overflow:hidden;border-radius:26px;padding:28px 24px 24px;color:#fff;background-size:260% 260%;animation:rcShift 12s ease-in-out infinite;box-shadow:0 18px 40px rgba(16,36,26,.22);transition:transform .25s,box-shadow .25s}
-html body .rc:hover{transform:translateY(-6px);box-shadow:0 26px 54px rgba(16,36,26,.3)}
-html body .rc:after{content:"";position:absolute;right:-70px;top:-70px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.16);pointer-events:none}
-@keyframes rcShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-html body .rc-buyer{background-image:linear-gradient(135deg,#047a3e,#0cc263,#0a8f4c,#065f33)}
-html body .rc-seller{background-image:linear-gradient(135deg,#c2410c,#f97316,#ea580c,#9a3412)}
-html body .rc-rider{background-image:linear-gradient(135deg,#031d12,#0b4a2f,#052e1d,#0a3d27)}
-html body .rc-ico{width:64px;height:64px;border-radius:18px;background:#fff;display:grid;place-items:center;font-size:34px;box-shadow:0 8px 20px rgba(0,0,0,.22);margin-bottom:16px;position:relative;z-index:1}
-html body .rc h3{margin:0 0 8px;font-size:clamp(28px,3.4vw,34px);line-height:1.1;font-weight:900;position:relative;z-index:1;color:#fff}
-html body .rc-d{margin:0 0 14px;font-size:18px;line-height:1.5;opacity:.97;position:relative;z-index:1;min-height:54px}
-html body .rc-live{margin:0 0 14px;font-weight:800;font-size:16px;color:#fde68a;position:relative;z-index:1}
-html body .rc-btn{position:relative;z-index:1;display:block;text-align:center;text-decoration:none;font:900 19px/1.2 system-ui,sans-serif;padding:16px;border-radius:15px;margin-top:11px;transition:transform .12s}
-html body .rc-btn:active{transform:scale(.98)}
-html body .rc-main{background:#fff;color:#10241a;box-shadow:0 8px 20px rgba(0,0,0,.2)}
-html body .rc-buyer .rc-main{color:#065f33}html body .rc-seller .rc-main{color:#9a3412}
-html body .rc-rider .rc-main{background:#f97316;color:#fff}
-html body .rc-alt{border:2px solid rgba(255,255,255,.75);color:#fff;background:rgba(255,255,255,.12)}
-html body .rc-app{color:#fff;background:rgba(0,0,0,.24);font-size:17px;padding:14px}
-html body .choose-note{text-align:center;margin:22px auto 0;max-width:620px;color:#46594e;font-size:17px;line-height:1.5}
-@media(max-width:900px){html body .choose-grid{grid-template-columns:1fr}html body .rc-d{min-height:0}}
-@media(prefers-reduced-motion:reduce){html body .rc{animation:none}html body .rc:hover{transform:none}}
-</style>
 <style id="sb-folds">
 html body .fold{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px rgba(16,36,26,.07);overflow:hidden}
 html body .fold>summary{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;list-style:none}
@@ -952,40 +925,6 @@ html body .rc .rc-body{padding:0 22px 22px;position:relative;z-index:1}
 html body .rc .rc-body .rc-btn:first-of-type{margin-top:4px}
 @media(min-width:901px){html body .rc>summary{flex-direction:column;align-items:flex-start;cursor:default;pointer-events:none;padding:28px 24px 14px}html body .rc .chev{display:none}html body .rc .rc-t .rc-d{min-height:54px}}
 html body footer .footer-row{gap:18px}
-</style>
-<style id="sb-one">
-html body .choose-grid,html body .rc{display:none!important}
-html body .rone{position:relative;overflow:hidden;max-width:720px;margin:0 auto;border-radius:30px;color:#fff;padding:14px 14px 22px;box-shadow:0 22px 50px rgba(16,36,26,.28);isolation:isolate}
-html body .rbg{position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .55s ease;background-size:240% 240%;animation:rcShift 12s ease-in-out infinite}
-html body .rbg-buyer{background-image:linear-gradient(135deg,#047a3e,#0cc263,#0a8f4c,#065f33)}
-html body .rbg-seller{background-image:linear-gradient(135deg,#c2410c,#f97316,#ea580c,#9a3412)}
-html body .rbg-rider{background-image:linear-gradient(135deg,#031d12,#0b4a2f,#052e1d,#0a3d27)}
-html body .rone[data-role=buyer] .rbg-buyer,html body .rone[data-role=seller] .rbg-seller,html body .rone[data-role=rider] .rbg-rider{opacity:1}
-html body .rone:after{content:"";position:absolute;right:-80px;top:40px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.13);z-index:-1;pointer-events:none}
-html body .rtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(0,0,0,.22);padding:6px;border-radius:20px}
-html body .rtabs button{border:0;border-radius:15px;padding:14px 6px;font:900 clamp(17px,4.4vw,20px)/1 system-ui,sans-serif;background:transparent;color:#fff;cursor:pointer;transition:background .25s,color .25s,transform .12s}
-html body .rtabs button:active{transform:scale(.97)}
-html body .rtabs button[aria-selected=true]{background:#fff;color:#10241a;box-shadow:0 6px 16px rgba(0,0,0,.22)}
-html body .rone[data-role=buyer] .rtabs button[aria-selected=true]{color:#065f33}
-html body .rone[data-role=seller] .rtabs button[aria-selected=true]{color:#9a3412}
-html body .rpanel{padding:22px 10px 0;animation:rIn .4s ease}
-@keyframes rIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-html body .rpanel h3{margin:0 0 8px;font-size:clamp(30px,7.5vw,40px);line-height:1.08;font-weight:900;color:#fff;letter-spacing:-.4px}
-html body .rpanel>p{margin:0 0 14px;font-size:clamp(18px,4.6vw,21px);line-height:1.5;opacity:.97;color:#fff}
-html body .rchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-html body .rchips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:30px;padding:8px 14px;font:800 15px/1 system-ui,sans-serif}
-html body .rlive{font-weight:800;color:#fde68a!important;font-size:16px!important}
-html body .rbtn{display:block;text-align:center;text-decoration:none;font:900 20px/1.2 system-ui,sans-serif;padding:17px 10px;border-radius:16px;transition:transform .12s}
-html body .rbtn:active{transform:scale(.98)}
-html body .rmain{background:#fff;color:#10241a;box-shadow:0 10px 24px rgba(0,0,0,.22)}
-html body .rone[data-role=buyer] .rmain{color:#065f33}html body .rone[data-role=seller] .rmain{color:#9a3412}
-html body .rone[data-role=rider] .rmain{background:#f97316;color:#fff}
-html body .rrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-html body .ralt{border:2px solid rgba(255,255,255,.8);color:#fff;background:rgba(255,255,255,.12)}
-html body .rapp{background:rgba(0,0,0,.28);color:#fff}
-@media(min-width:760px){html body .rone{padding:18px 22px 28px}html body .rpanel{padding:26px 12px 0}}
-@media(max-width:759px){html body .choose{padding-top:26px}html body .choose-eyebrow,html body .choose-head p{display:none}html body .choose-head{margin-bottom:16px}html body .choose-head h2{margin:0;font-size:30px}}
-@media(prefers-reduced-motion:reduce){html body .rbg,html body .rpanel{animation:none}}
 </style>
 <style id="sb-forefront">
 /* delivery bar: slim, one calm line */
@@ -1066,7 +1005,7 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
 
     <div class="header-actions">
       <button class="button button-outline delivery-btn" type="button" data-action="delivery" title="Delivery areas">🚚 Delivery</button>
-      <a class="button button-light sell-header" href="#choose">Get started</a>
+      <button class="button button-light sell-header" type="button" id="hdr-apps" data-open-apps>Switch app ▾</button>
 
       <button class="button button-primary signin-btn" type="button" data-action="account">Sign in</button>
 
@@ -1099,6 +1038,14 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
   </div>
   <div class="drawer-body" id="drawer-body">
     <a class="d-single" href="#home">🏠 Home</a>
+    <details class="d-apps" open>
+      <summary>🔁 Switch app</summary>
+      <div class="d-links">
+        <span class="d-here">🛍️ Buyer app · you are here ✓</span>
+        <a href="./seller/">🏪 Open the Seller app</a>
+        <a href="./rider/">🏍️ Open the Rider app</a>
+      </div>
+    </details>
     <details>
       <summary>🛍️ Shop by category</summary>
       <div class="d-links">
@@ -1156,7 +1103,7 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
           <p>Fashion, electronics, home and everyday essentials from verified Nigerian sellers. Safe payments, tracked delivery.</p>
           <div class="hero-buttons">
             <a class="button button-primary" href="#shop">Start shopping →</a>
-            <a class="button button-outline" href="#choose">Sign in or create account</a>
+            <button class="button button-outline" type="button" data-action="account">Sign in or create account</button>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -1245,28 +1192,34 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
   </section>
 
   <div class="container"><div data-ad-slot="home_mid" hidden></div></div>
-  <section class="choose" id="choose" aria-labelledby="choose-t">
+  <section class="windows" id="windows" aria-labelledby="win-t">
     <div class="container">
-      <div class="choose-head">
-        <span class="choose-eyebrow">ONE PLATFORM · THREE ACCOUNTS</span>
-        <h2 id="choose-t">How do you want to use SafeBuy?</h2>
-        <p>Pick one, create your account in a minute, then add the app to your phone.</p>
-      </div>
-      <div class="rone" id="rone" data-role="buyer">
-        <i class="rbg rbg-buyer"></i><i class="rbg rbg-seller"></i><i class="rbg rbg-rider"></i>
-        <div class="rtabs" role="tablist" aria-label="Choose your account">
-          <button type="button" role="tab" data-r="buyer" aria-selected="true">🛍️ Buy</button>
-          <button type="button" role="tab" data-r="seller" aria-selected="false">🏪 Sell</button>
-          <button type="button" role="tab" data-r="rider" aria-selected="false">🏍️ Ride</button>
-        </div>
-        <div class="rpanel" aria-live="polite">
-          <h3 id="r-title"></h3>
-          <p id="r-desc"></p>
-          <div class="rchips" id="r-chips"></div>
-          <p class="rlive" id="r-live" hidden></p>
-          <a class="rbtn rmain" id="r-up" href="#">Create account</a>
-          <div class="rrow"><a class="rbtn ralt" id="r-in" href="#">Sign in</a><a class="rbtn rapp" id="r-app" href="#">⬇ Get app</a></div>
-        </div>
+      <div class="win-head"><h2 id="win-t">Do more with SafeBuy</h2><p>Your Buyer account is just the start. Step into the Seller or Rider app.</p></div>
+      <div class="win-grid">
+        <article class="win win-seller">
+          <div class="win-bar"><i></i><i></i><i></i><span>SafeBuy Seller</span></div>
+          <div class="win-body">
+            <div class="win-ico">🏪</div>
+            <h3>Sell to all Nigeria</h3>
+            <p>Open your shop, list products and get paid safely after every delivery.</p>
+            <div class="win-chips"><span>🏪 Your own shop</span><span>🏍️ Riders deliver</span><span>💰 Safe payouts</span></div>
+            <p class="win-live" id="win-live-seller" hidden></p>
+            <a class="wbtn wmain" href="./seller/">Open Seller app →</a>
+            <div class="wrow"><a class="wbtn walt" href="./seller/?signup=1">Create account</a><a class="wbtn wapp" href="./seller/?install=1">⬇ Get app</a></div>
+          </div>
+        </article>
+        <article class="win win-rider">
+          <div class="win-bar"><i></i><i></i><i></i><span>SafeBuy Rider</span></div>
+          <div class="win-body">
+            <div class="win-ico">🏍️</div>
+            <h3>Earn on every trip</h3>
+            <p>Go online, accept deliveries near you and get paid for each completed trip.</p>
+            <div class="win-chips"><span>⏰ Your hours</span><span>📍 Nearby jobs</span><span>💵 Paid per trip</span></div>
+            <p class="win-live" id="win-live-rider" hidden></p>
+            <a class="wbtn wmain" href="./rider/">Open Rider app →</a>
+            <div class="wrow"><a class="wbtn walt" href="./rider/?signup=1">Become a rider</a><a class="wbtn wapp" href="./rider/?install=1">⬇ Get app</a></div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -1333,7 +1286,7 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
       </details>
       <details class="footer-col" open>
         <summary>Apps</summary>
-        <a href="./buyer/">Buyer app</a>
+        <a href="#" data-install-buyer>⬇ Install Buyer app</a>
         <a href="./seller/">Seller app</a>
         <a href="./rider/">Rider app</a>
       </details>
@@ -1367,7 +1320,7 @@ html body .choose{background:linear-gradient(180deg,#f3faf6,#fff)}
 <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
   <a class="current" href="#home" data-spy="home"><span class="nav-icon">⌂</span><span>Home</span></a>
   <a href="#shop" data-spy="shop"><span class="nav-icon">⌕</span><span>Shop</span></a>
-  <button type="button" data-action="sell"><span class="nav-icon">＋</span><span>Sell</span></button>
+  <button type="button" id="nav-apps" data-open-apps><span class="nav-icon">⊞</span><span>Apps</span></button>
   <button type="button" data-action="cart"><span class="nav-icon">🛒</span><span>Cart</span><span class="cart-count cart-count-mobile">0</span></button>
   <button type="button" id="mobile-menu-btn"><span class="nav-icon">☰</span><span>Menu</span></button>
 </nav>
@@ -3239,10 +3192,6 @@ document.addEventListener("click", function (e) {
 })();
 </script>
 <script>
-(function(){var el=document.getElementById("rc-live-buyer");if(!el)return;var n=0,t=setInterval(function(){
-  var p=window.products;if(p&&p.length){clearInterval(t);el.textContent="🟢 "+p.length+" product"+(p.length===1?"":"s")+" live right now";el.hidden=false;}else if(++n>40)clearInterval(t);},500);})();
-</script>
-<script>
 (function(){
   var mq=window.matchMedia("(min-width:901px)");
   function layout(){
@@ -3265,31 +3214,94 @@ document.addEventListener("click", function (e) {
   if(!foldLead()){ var mo=new MutationObserver(function(){ if(foldLead()) mo.disconnect(); }); mo.observe(document.body,{childList:true,subtree:true}); setTimeout(function(){mo.disconnect();},15000); }
 })();
 </script>
+
+<div id="sb-apps" class="apps-sheet" hidden>
+  <div class="apps-card" role="dialog" aria-modal="true" aria-label="Switch app">
+    <div class="apps-grab"></div>
+    <h2>Switch app</h2>
+    <p class="apps-sub">One SafeBuy. Three apps. Pick where you want to go.</p>
+    <div class="apps-here"><span class="ai ai-b">🛍️</span><span class="at"><b>Buyer</b><small>Shop and track orders</small></span><span class="ac">You are here ✓</span></div>
+    <a class="apps-go apps-s" href="./seller/"><span class="ai ai-s">🏪</span><span class="at"><b>Seller</b><small>Run your shop, get paid safely</small></span><span class="ac">Open →</span></a>
+    <a class="apps-go apps-r" href="./rider/"><span class="ai ai-r">🏍️</span><span class="at"><b>Rider</b><small>Deliver and earn on every trip</small></span><span class="ac">Open →</span></a>
+    <button type="button" class="apps-close" data-close-apps>Close</button>
+  </div>
+</div>
+<style id="sb-buyerapp">
+/* switch-app sheet */
+.apps-sheet{position:fixed;inset:0;z-index:120;background:rgba(8,20,14,.66);display:flex;align-items:flex-end;justify-content:center}
+.apps-sheet[hidden]{display:none}
+.apps-card{width:100vw;max-width:480px;background:#fff;border-radius:26px 26px 0 0;padding:14px 18px calc(20px + env(safe-area-inset-bottom));animation:appsUp .28s ease;max-height:92vh;overflow:auto}
+@keyframes appsUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:640px){.apps-sheet{align-items:center}.apps-card{border-radius:26px}}
+.apps-grab{width:44px;height:5px;border-radius:5px;background:#d3dcd7;margin:0 auto 14px}
+.apps-card h2{margin:0 0 4px;font-size:28px;color:#10241a}
+.apps-sub{margin:0 0 16px;color:#46594e;font-size:17px}
+.apps-here,.apps-go{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;margin-bottom:10px;text-decoration:none;color:#fff}
+.apps-here{background:linear-gradient(135deg,#047a3e,#0cc263);}
+.apps-s{background:linear-gradient(135deg,#c2410c,#f97316)}
+.apps-r{background:linear-gradient(135deg,#031d12,#0b4a2f)}
+.apps-card .ai{width:52px;height:52px;border-radius:15px;background:#fff;display:grid;place-items:center;font-size:28px;flex:none;box-shadow:0 6px 14px rgba(0,0,0,.2)}
+.apps-card .at{flex:1;min-width:0}.apps-card .at b{display:block;font-size:22px;font-weight:900}.apps-card .at small{display:block;font-size:15px;opacity:.95;margin-top:2px}
+.apps-card .ac{font:900 15px system-ui,sans-serif;background:rgba(255,255,255,.22);border-radius:30px;padding:8px 12px;white-space:nowrap}
+.apps-close{width:100%;border:0;background:#eef4f0;color:#10241a;font:900 18px system-ui,sans-serif;border-radius:15px;padding:15px;margin-top:4px;cursor:pointer}
+/* drawer door group */
+html body .drawer .d-here{display:block;padding:12px 14px;font-weight:900;color:#065f33;background:#e8f6ee;border-radius:12px;margin-bottom:6px}
+html body .drawer .d-apps summary{font-weight:900}
+/* windows section */
+html body .windows{background:linear-gradient(180deg,#f3faf6,#fff);padding:clamp(30px,5vw,58px) 0}
+html body .win-head{text-align:center;max-width:680px;margin:0 auto 24px}
+html body .win-head h2{margin:0 0 8px;font-size:clamp(30px,5.5vw,44px);line-height:1.1;color:#10241a;letter-spacing:-.5px}
+html body .win-head p{margin:0;font-size:clamp(18px,2.4vw,20px);color:#46594e;line-height:1.5}
+html body .win-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:960px;margin:0 auto}
+html body .win{border-radius:24px;overflow:hidden;color:#fff;box-shadow:0 18px 40px rgba(16,36,26,.22);transition:transform .25s,box-shadow .25s}
+html body .win:hover{transform:translateY(-5px);box-shadow:0 26px 52px rgba(16,36,26,.3)}
+html body .win-seller{background:linear-gradient(135deg,#c2410c,#f97316,#ea580c,#9a3412);background-size:240% 240%;animation:wShift 12s ease-in-out infinite}
+html body .win-rider{background:linear-gradient(135deg,#031d12,#0b4a2f,#052e1d,#0a3d27);background-size:240% 240%;animation:wShift 12s ease-in-out infinite}
+@keyframes wShift{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+html body .win-bar{display:flex;align-items:center;gap:6px;padding:11px 16px;background:rgba(0,0,0,.25);font:800 14px system-ui,sans-serif;letter-spacing:.4px}
+html body .win-bar i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.55);display:block}
+html body .win-bar span{margin-left:8px;opacity:.95}
+html body .win-body{padding:20px 20px 22px}
+html body .win-ico{width:60px;height:60px;border-radius:17px;background:#fff;display:grid;place-items:center;font-size:32px;box-shadow:0 8px 18px rgba(0,0,0,.22);margin-bottom:12px}
+html body .win h3{margin:0 0 6px;font-size:clamp(26px,3.4vw,32px);font-weight:900;color:#fff;line-height:1.1}
+html body .win-body>p{margin:0 0 12px;font-size:18px;line-height:1.5;color:#fff;opacity:.97}
+html body .win-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+html body .win-chips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:30px;padding:7px 12px;font:800 14px/1 system-ui,sans-serif}
+html body .win-body>.win-live{font-weight:800;color:#fde68a;font-size:16px}
+html body .wbtn{display:block;text-align:center;text-decoration:none;font:900 19px/1.2 system-ui,sans-serif;padding:16px 10px;border-radius:15px;transition:transform .12s}
+html body .wbtn:active{transform:scale(.98)}
+html body .wmain{background:#fff;color:#9a3412;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+html body .win-rider .wmain{background:#f97316;color:#fff}
+html body .wrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+html body .walt{border:2px solid rgba(255,255,255,.8);color:#fff;background:rgba(255,255,255,.12);font-size:17px}
+html body .wapp{background:rgba(0,0,0,.28);color:#fff;font-size:17px}
+@media(max-width:760px){html body .win-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html body .win-seller,html body .win-rider{animation:none}}
+/* installed / app mode: straight to shopping */
+html.sb-app #sc-hero,html.sb-app #how-it-works,html.sb-app footer,html.sb-app .sell-header{display:none!important}
+html.sb-app .delivery-bar{border-radius:0}
+html.sb-app body{padding-bottom:0}
+</style>
 <script>
 (function(){
-  var D={
-    buyer:{t:"Shop with confidence",d:"Verified sellers, protected payments and delivery you can track.",c:["🛡️ Safe payments","🚚 Tracked delivery","❤️ Wishlist"],up:"Create buyer account",u:"./buyer/",ap:"Get Buyer app"},
-    seller:{t:"Grow your business",d:"Open your shop, reach buyers across Nigeria and get paid after every delivery.",c:["🏪 Your own shop","🏍️ Riders deliver","💰 Safe payouts"],up:"Open seller account",u:"./seller/",ap:"Get Seller app"},
-    rider:{t:"Earn on every trip",d:"Go online, accept deliveries near you and get paid for every completed trip.",c:["⏰ Your hours","📍 Nearby jobs","💵 Paid per trip"],up:"Become a rider",u:"./rider/",ap:"Get Rider app"}
-  };
-  var box=document.getElementById("rone"); if(!box)return;
-  function $(i){return document.getElementById(i);}
-  function show(r,user){
-    var x=D[r]; box.setAttribute("data-role",r);
-    box.querySelectorAll(".rtabs button").forEach(function(b){b.setAttribute("aria-selected",String(b.getAttribute("data-r")===r));});
-    $("r-title").textContent=x.t; $("r-desc").textContent=x.d;
-    $("r-chips").innerHTML=x.c.map(function(c){return "<span>"+c+"</span>";}).join("");
-    $("r-up").textContent=x.up; $("r-up").href=x.u+"?signup=1"; $("r-in").href=x.u+"?signin=1"; $("r-app").href=x.u+"?install=1"; $("r-app").textContent="⬇ Get app";
-    var l=$("r-live"); if(r==="buyer"&&window.products&&window.products.length){l.textContent="🟢 "+window.products.length+" product"+(window.products.length===1?"":"s")+" live right now";l.hidden=false;}else l.hidden=true;
-    var p=box.querySelector(".rpanel"); p.style.animation="none"; void p.offsetWidth; p.style.animation="";
-    try{sessionStorage.setItem("sb-role",r);}catch(e){}
+  var sh=document.getElementById("sb-apps");
+  function open(){sh.hidden=false;document.body.style.overflow="hidden";}
+  function close(){sh.hidden=true;document.body.style.overflow="";}
+  document.addEventListener("click",function(e){
+    var t=e.target.closest&&e.target.closest("[data-open-apps]"); if(t){e.preventDefault();var d=document.getElementById("drawer");open();return;}
+    if(e.target.closest&&e.target.closest("[data-close-apps]")||e.target===sh){close();return;}
+    var i=e.target.closest&&e.target.closest("[data-install-buyer]"); if(i){e.preventDefault();if(window.__roleInstall)window.__roleInstall(true);}
+  });
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!sh.hidden)close();});
+  // live peeks (real data only)
+  function peeks(){
+    var p=window.products,n=p&&p.length,s=document.getElementById("win-live-seller"),r=document.getElementById("win-live-rider"),b=document.getElementById("delivery-bar");
+    if(n&&s){s.textContent="🟢 "+n+" product"+(n===1?"":"s")+" live from verified sellers";s.hidden=false;}
+    if(b&&r&&/available in/i.test(b.innerText)&&!/not available/i.test(b.innerText)){r.textContent="🟢 "+b.innerText.replace(/Show areas available|✓|🚚/g,"").trim();r.hidden=false;}
+    return !!(n&&s&&!s.hidden);
   }
-  box.querySelectorAll(".rtabs button").forEach(function(b){b.addEventListener("click",function(){clearInterval(auto);show(b.getAttribute("data-r"));});});
-  var order=["buyer","seller","rider"],i=0,auto=setInterval(function(){i=(i+1)%3;show(order[i]);},6500);
-  box.addEventListener("pointerdown",function(){clearInterval(auto);});
-  show("buyer");
-  var n=0,t=setInterval(function(){if(window.products&&window.products.length){clearInterval(t);if(box.getAttribute("data-role")==="buyer")show("buyer");}else if(++n>40)clearInterval(t);},500);
+  var k=0,t=setInterval(function(){peeks();if(++k>40)clearInterval(t);},750);
 })();
 </script>
 </body>
-</html>
+  </html>
