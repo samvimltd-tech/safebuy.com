@@ -1480,7 +1480,7 @@ function getVisibleProducts() {
   }
   const term = searchTerm.toLowerCase();
   const list = products.filter(function (product) {
-    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    const matchesCategory = (selectedCategory === "All" || product.category === selectedCategory) && (!window.__shopFilter || product.seller === window.__shopFilter);
     const text = (product.name + " " + product.category + " " + product.seller + " " + product.description).toLowerCase();
     return matchesCategory && text.includes(term);
   });
@@ -2405,8 +2405,7 @@ updateCartCount();
   var pw2Wrap = document.getElementById("account-pw2-wrap");
   var pw2Input = document.getElementById("account-pw2");
   var pwLabel = document.getElementById("account-pw-label");
-
-  function W() { return window.__sbWords || {}; }
+function W() { return window.__sbWords || {}; }
   function setMode(next) {
     mode = next;
     var signup = mode === "signup", forgot = mode === "forgot", newpass = mode === "newpass";
@@ -3281,6 +3280,50 @@ html body .wapp{background:rgba(0,0,0,.28);color:#fff;font-size:17px}
 html.sb-app #sc-hero,html.sb-app #how-it-works,html.sb-app footer,html.sb-app .sell-header{display:none!important}
 html.sb-app .delivery-bar{border-radius:0}
 html.sb-app body{padding-bottom:0}
+
+/* ===== signals: blinking coloured status lights ===== */
+@keyframes sigB{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+@keyframes sigP{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.65)}60%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+@keyframes sigG{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.6)}60%{box-shadow:0 0 0 8px rgba(22,163,74,0)}}
+@keyframes sigO{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,.65)}60%{box-shadow:0 0 0 8px rgba(249,115,22,0)}}
+.sig{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:middle;color:#16a34a;background:currentColor;animation:sigB 1.2s ease-in-out infinite,sigG 1.6s ease-out infinite}
+.sig.o{color:#f97316;animation:sigB 1.2s ease-in-out infinite,sigO 1.6s ease-out infinite}.sig.r{color:#dc2626;animation:sigB .9s ease-in-out infinite,sigP 1.3s ease-out infinite}
+@media(prefers-reduced-motion:reduce){.sig,.sig.o,.sig.r{animation:none}}
+html body .delivery-bar .container::before{content:"";flex:none;width:11px;height:11px;border-radius:50%;color:#f97316;background:currentColor;animation:sigB 1.2s ease-in-out infinite,sigO 1.6s ease-out infinite}
+html body .delivery-bar.ok .container::before{color:#16a34a;animation:sigB 1.2s ease-in-out infinite,sigG 1.6s ease-out infinite}
+html body .cart-count{animation:sigO 1.8s ease-out infinite}
+@media(prefers-reduced-motion:reduce){html body .delivery-bar .container::before,html body .cart-count{animation:none}}
+/* bold colour layer */
+html body{background:#d6f2e3!important}
+html body .site-header,html body header.header,html body header{background:linear-gradient(135deg,#034d2e,#0a8f55)!important;color:#fff}
+html body header a,html body header .brand-name,html body header button.menu-btn{color:#fff}
+html body .section,html body section.section{background:transparent}
+html body .product-card,html body .card{border:2px solid #7fd3a8}
+html body .section-title,html body .section-label{background:#0a8f55;color:#fff;padding:5px 14px;border-radius:99px;display:inline-block}
+html body .bottom-nav,html body nav.bottom{background:#04472a!important}
+html body .bottom-nav *,html body nav.bottom *{color:#fff!important}
+@media(prefers-color-scheme:dark){html body{background:#04361f!important}}
+/* multi-vendor: shops rail + shop page banner */
+html body .shops-rail{margin:0 0 18px}
+html body .shops-rail h3{margin:0 0 10px;font-size:clamp(20px,3vw,24px);color:var(--ink)}
+html body .shops-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+html body .shops-row::-webkit-scrollbar{display:none}
+html body .shop-chip{flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 10px;border-radius:40px;background:#fff;border:2px solid #d6e6dd;cursor:pointer;font:800 16px system-ui,sans-serif;color:#10241a;box-shadow:0 4px 12px rgba(16,36,26,.06);transition:transform .12s,border-color .2s}
+html body .shop-chip:active{transform:scale(.97)}
+html body .shop-chip.on{border-color:#0a8f4c;background:#e8f6ee}
+html body .shop-chip i{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font:900 18px system-ui,sans-serif;font-style:normal;background:linear-gradient(135deg,#047a3e,#0cc263)}
+html body .shop-chip:nth-child(3n+2) i{background:linear-gradient(135deg,#c2410c,#f97316)}
+html body .shop-chip:nth-child(3n) i{background:linear-gradient(135deg,#031d12,#0b4a2f)}
+html body .shop-chip small{display:block;font-weight:600;color:#46594e;font-size:13px}
+html body .shop-banner{display:none;margin:0 0 16px;padding:18px;border-radius:22px;color:#fff;background:linear-gradient(135deg,#047a3e,#0cc263,#0a8f4c);align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 14px 30px rgba(10,143,76,.28)}
+html body .shop-banner.show{display:flex}
+html body .shop-banner .sb-ico{width:56px;height:56px;border-radius:16px;background:#fff;color:#065f33;display:grid;place-items:center;font:900 28px system-ui,sans-serif}
+html body .shop-banner .sb-t{flex:1;min-width:150px}
+html body .shop-banner h3{margin:0;font-size:24px;color:#fff;line-height:1.15}
+html body .shop-banner p{margin:3px 0 0;font-size:15px;opacity:.96;color:#fff}
+html body .shop-banner button{border:0;border-radius:14px;padding:12px 16px;font:900 15px system-ui,sans-serif;cursor:pointer}
+html body .shop-banner .sb-share{background:#fff;color:#065f33}
+html body .shop-banner .sb-clear{background:rgba(0,0,0,.25);color:#fff}
 </style>
 <script>
 (function(){
@@ -3296,11 +3339,42 @@ html.sb-app body{padding-bottom:0}
   // live peeks (real data only)
   function peeks(){
     var p=window.products,n=p&&p.length,s=document.getElementById("win-live-seller"),r=document.getElementById("win-live-rider"),b=document.getElementById("delivery-bar");
-    if(n&&s){s.textContent="🟢 "+n+" product"+(n===1?"":"s")+" live from verified sellers";s.hidden=false;}
-    if(b&&r&&/available in/i.test(b.innerText)&&!/not available/i.test(b.innerText)){r.textContent="🟢 "+b.innerText.replace(/Show areas available|✓|🚚/g,"").trim();r.hidden=false;}
+    if(n&&s){s.innerHTML='<span class="sig"></span>'+n+" product"+(n===1?"":"s")+" live now";s.hidden=false;}
+    if(b&&r&&/available in/i.test(b.innerText)&&!/not available/i.test(b.innerText)){r.innerHTML='<span class="sig"></span>'+esc2(b.innerText.replace(/Show areas available|✓|🚚/g,"").trim());r.hidden=false;}
     return !!(n&&s&&!s.hidden);
   }
   var k=0,t=setInterval(function(){peeks();if(++k>40)clearInterval(t);},750);
+  // ===== multi-vendor shops =====
+  function esc2(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  var rail=null,banner=null,built=false;
+  function shopsFrom(list){var m={};list.forEach(function(p){if(!p.seller)return;(m[p.seller]=m[p.seller]||{n:p.seller,c:0}).c++;});return Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return b.c-a.c;});}
+  function setShop(name){window.__shopFilter=name||null;try{if(window.selectedCategory!==undefined){}}catch(e){}
+    if(typeof renderProducts==="function")renderProducts();
+    paint();if(name){var g=document.getElementById("shop");if(g)g.scrollIntoView({behavior:"smooth",block:"start"});}}
+  function paint(){
+    if(!rail)return;var cur=window.__shopFilter;
+    [].forEach.call(rail.querySelectorAll(".shop-chip"),function(c){c.classList.toggle("on",c.getAttribute("data-shop")===cur);});
+    var b=banner;if(!cur){b.classList.remove("show");return;}
+    var n=(typeof products!=="undefined"?products:[]).filter(function(p){return p.seller===cur;}).length;
+    b.innerHTML='<div class="sb-ico">'+esc2(cur.charAt(0).toUpperCase())+'</div><div class="sb-t"><h3>'+esc2(cur)+'</h3><p>'+n+' product'+(n===1?"":"s")+' · SafeBuy NG seller</p></div><button class="sb-share" type="button">Share shop</button><button class="sb-clear" type="button">All shops</button>';
+    b.classList.add("show");
+    b.querySelector(".sb-clear").onclick=function(){history.replaceState(null,"",location.pathname);setShop(null);};
+    b.querySelector(".sb-share").onclick=function(){var u=location.origin+location.pathname+"?shop="+encodeURIComponent(cur);if(navigator.share){navigator.share({title:cur+" on SafeBuy NG",url:u}).catch(function(){});}else if(navigator.clipboard){navigator.clipboard.writeText(u).then(function(){if(window.showToast)showToast("Shop link copied");});}};
+  }
+  function build(){
+    if(built||typeof products==="undefined"||!products.length)return false;
+    var grid=document.getElementById("product-grid");if(!grid)return false;
+    var list=shopsFrom(products);if(!list.length)return false;built=true;
+    rail=document.createElement("div");rail.className="shops-rail";rail.id="shops-rail";
+    rail.innerHTML='<h3>Shop by seller</h3><div class="shops-row">'+list.map(function(s){return '<button type="button" class="shop-chip" data-shop="'+esc2(s.n)+'"><i>'+esc2(s.n.charAt(0).toUpperCase())+'</i><span>'+esc2(s.n)+'<small>'+s.c+' item'+(s.c===1?"":"s")+'</small></span></button>';}).join("")+'</div>';
+    banner=document.createElement("div");banner.className="shop-banner";banner.id="shop-banner";
+    grid.parentNode.insertBefore(rail,grid);grid.parentNode.insertBefore(banner,grid);
+    rail.addEventListener("click",function(e){var c=e.target.closest(".shop-chip");if(!c)return;var n=c.getAttribute("data-shop");setShop(window.__shopFilter===n?null:n);});
+    var q=new URLSearchParams(location.search).get("shop");if(q){var hit=list.filter(function(s){return s.n.toLowerCase()===q.toLowerCase();})[0];if(hit)setShop(hit.n);}
+    return true;
+  }
+  var bt=0,bi=setInterval(function(){if(build()||++bt>60)clearInterval(bi);},700);
+
 })();
 </script>
 </body>
